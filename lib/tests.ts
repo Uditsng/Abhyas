@@ -43,10 +43,4 @@ export const testSeries: { [key: string]: Test[] } = {
       ],
     },
   ],
-  upsc: [
-    {
-      id: 'mock1',
-      title: 'UPSC GS Paper 1 - Mock Test',
-      duration: 120,
-      totalQuestions: 2,
-      questions: [
+}

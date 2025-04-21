@@ -9,11 +9,15 @@ export default function TakeTestPage() {
   const router = useRouter();
   const params = useParams();
 
-  const courseId = params.course as string;
-  const testId = params.test as string;
+  const courseId = Array.isArray(params.course) ? params.course[0] : params.course;
+  const testId = Array.isArray(params.test) ? params.test[0] : params.test;
 
-  const tests = testSeries[courseId];
-  const test = tests?.find((t) => t.id === testId);
+  // 🛠 Debug logs to help
+  console.log('courseId:', courseId); // should be 'ssc-cgl'
+  console.log('testId:', testId);     // should be 'mock1'
+
+  const tests: Test[] = testSeries[courseId] || [];
+  const test = tests.find((t) => t.id === testId);
 
   const [answers, setAnswers] = useState<{ [key: string]: string }>({});
 
@@ -34,7 +38,7 @@ export default function TakeTestPage() {
     <div className="p-6 max-w-3xl mx-auto">
       <h2 className="text-2xl font-bold mb-4">{test.title}</h2>
 
-      {test.questions.foreach((q, index) => (
+      {test.questions.map((q, index) => (
         <div
           key={q.id}
           className="mb-6 border p-4 rounded-lg bg-white shadow-sm"
