@@ -1,18 +1,33 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+
+  // Auto redirect if already logged in
+  useEffect(() => {
+    const user = localStorage.getItem('mockUser');
+    if (user) router.push('/dashboard');
+  }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // dummy login logic
-    if (email && password) {
+    if (!email || !password) {
+      setError('All fields are required');
+      return;
+    }
+
+    const storedUser = JSON.parse(localStorage.getItem('mockUser') || '{}');
+
+    if (storedUser.email === email && storedUser.password === password) {
       router.push('/dashboard');
+    } else {
+      setError('Invalid email or password');
     }
   };
 
@@ -24,15 +39,20 @@ export default function LoginPage() {
           type="email"
           className="w-full border px-3 py-2 mb-3"
           placeholder="Email"
+          value={email}
           onChange={(e) => setEmail(e.target.value)}
+          required
         />
         <input
           type="password"
           className="w-full border px-3 py-2 mb-4"
           placeholder="Password"
+          value={password}
           onChange={(e) => setPassword(e.target.value)}
+          required
         />
-        <button className="bg-blue-600 text-white w-full py-2 rounded">
+        {error && <p className="text-red-500 mb-2">{error}</p>}
+        <button type="submit" className="bg-blue-600 text-white w-full py-2 rounded">
           Login
         </button>
       </form>
