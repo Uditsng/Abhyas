@@ -33,7 +33,7 @@
     "**/*.tsx",
     "next-env.d.ts",
     ".next/types/**/*.ts"
-  ],
+, "app/auth/login/page.jsx", "app/auth/register/page.jsx", "app/dashboard/page.jsx", "app/results/[course]/[test]/page.jsx", "app/tests/[course]/page.jsx", "app/layout.jsx", "app/page.jsx", "components/CourseCard.jsx", "components/Footer.jsx", "components/Navbar.jsx", "components/TestCard.jsx", "lib/courses.js", "lib/tests.js", "next.config.js"  ],
   "exclude": [
     "node_modules"
   ]

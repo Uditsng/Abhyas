@@ -3,7 +3,6 @@
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { testSeries } from '@/lib/tests';
-import { Test } from '@/types/test';
 
 export default function TakeTestPage() {
   const router = useRouter();
@@ -16,16 +15,16 @@ export default function TakeTestPage() {
   console.log('courseId:', courseId); // should be 'ssc-cgl'
   console.log('testId:', testId);     // should be 'mock1'
 
-  const tests: Test[] = testSeries[courseId] || [];
+  const tests = testSeries[courseId] || [];
   const test = tests.find((t) => t.id === testId);
 
-  const [answers, setAnswers] = useState<{ [key: string]: string }>({});
+  const [answers, setAnswers] = useState({});
 
   if (!test) {
     return <div className="p-6 text-red-600">Test not found.</div>;
   }
 
-  const handleOptionChange = (qId: string, selected: string) => {
+  const handleOptionChange = (qId, selected) => {
     setAnswers((prev) => ({ ...prev, [qId]: selected }));
   };
 

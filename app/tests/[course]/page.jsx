@@ -2,8 +2,8 @@ import { testSeries } from '@/lib/tests';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 
-export default function CourseTestsPage({ params }: { params: { course: string } }) {
-  const courseTests = testSeries[params.course];
+export default function CourseTestsPage({ params }) {
+  const courseTests = testSeries[params.courseId];
 
   if (!courseTests) {
     return notFound(); // invalid courseId

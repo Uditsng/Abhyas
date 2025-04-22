@@ -3,14 +3,8 @@
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 
-interface Props {
-  id: string;
-  title: string;
-  description: string;
-  image: string;
-}
 
-export default function CourseCard({ id, title, description, image }: Props) {
+export default function CourseCard({ id, title, description, image }) {
   const router = useRouter();
 
   return (
