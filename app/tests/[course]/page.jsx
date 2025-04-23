@@ -1,4 +1,4 @@
-import { testSeries } from '@/lib/tests';
+import { testSeries } from '../../../lib/tests';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 

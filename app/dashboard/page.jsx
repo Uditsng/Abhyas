@@ -1,7 +1,7 @@
 'use client';
 
-import CourseCard from '@/components/CourseCard';
-import { courses } from '@/lib/courses';
+import CourseCard from '../../components/CourseCard';
+import { courses } from '../../lib/courses';
 
 export default function DashboardPage() {
   return (
