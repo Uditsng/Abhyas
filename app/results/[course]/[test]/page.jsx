@@ -2,15 +2,15 @@
 
 import { useParams } from 'next/navigation';
 import { testSeries } from '@/lib/tests';
-import { Test } from '@/types/test';
+import PropTypes from 'prop-types';
 
 export default function ResultPage() {
   const { course, test } = useParams();
-  const courseTests = testSeries[course as string];
-  const testData = courseTests?.find((t) => t.id === test) as Test;
+  const courseTests = testSeries[course];
+  const testData = courseTests?.find((t) => t.id === test);
 
   // Dummy answers
-  const submittedAnswers: { [key: string]: string } = {
+  const submittedAnswers = {
     q1: 'Delhi',
     q2: '12',
   };

@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from "next/navigation";
+import PropTypes from 'prop-types';
 
 export default function TestCard({ id, title, duration, category, isPaid, imageUrl }) {
     
@@ -18,6 +19,10 @@ export default function TestCard({ id, title, duration, category, isPaid, imageU
           src={imageUrl}
           alt={category + " logo"}
           className="h-12 w-12 object-contain"
+          onError={(e) => {
+            e.target.src = '/images/placeholder.png';
+            e.target.onerror = null;
+          }}
       />
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
@@ -34,3 +39,16 @@ export default function TestCard({ id, title, duration, category, isPaid, imageU
     </div>
   );
 }
+
+TestCard.propTypes = {
+  id: PropTypes.string.isRequired,
+  title: PropTypes.string.isRequired,
+  duration: PropTypes.number.isRequired,
+  category: PropTypes.string.isRequired,
+  isPaid: PropTypes.bool,
+  imageUrl: PropTypes.string.isRequired
+};
+
+TestCard.defaultProps = {
+  isPaid: false
+};
