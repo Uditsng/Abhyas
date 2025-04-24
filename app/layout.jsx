@@ -2,6 +2,7 @@
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { AuthProvider } from '@/components/AuthContext';
 
 export const metadata = {
   title: 'Mock Test Series App',
@@ -11,10 +12,13 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <Navbar/>
+      
       <body className="bg-gray-50 text-gray-900">
+      <Navbar/>
+      <AuthProvider>
         {children}
-        <Footer/>
+      </AuthProvider>
+      <Footer/>
       </body>
     </html>
   );

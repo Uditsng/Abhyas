@@ -1,30 +1,29 @@
 'use client'
 
 import { useRouter } from "next/navigation"
-import { onAuthStateChanged } from 'firebase/auth';
 import { useEffect, useState } from "react"
-import {auth} from '@/lib/firebase'
+
 
 export default function Navbar() {
 
     const router = useRouter()
-    const [username, setUsername] = useState(' ')
-    const [loggedIn, setLoggedIn] = useState(false)
+    const [username, setUsername] = useState('')
 
-   
     useEffect(() => {
-        const unsubscribe = onAuthStateChanged(auth, (user) => {
-          if (user) {
-            setLoggedIn(true);
-            setUsername( user.email);
-          } else {
-            setLoggedIn(false);
-            setUsername('');
-          }
-        });
-        return () => unsubscribe(); // Clean up the listener
-    }, []);
+        // Fetch username from local storage
+        const storedUser = JSON.parse(localStorage.getItem('mockUser'));
+        if (storedUser && storedUser.name) {
+            setUsername(storedUser.name); // Update the username state
+        }
+    }, []); // Runs once when the component mounts
 
+    const handleLogout =()=>{
+        localStorage.removeItem('mockUser')
+        setUsername('')
+        router.push('/') 
+
+    }
+    
     return(
         <nav 
         className="bg-white shadow px-6 py-4 flex justify-between items-center">
@@ -37,19 +36,42 @@ export default function Navbar() {
 
             <div className="space-x-4">
             {/* {condition && <div>Show this only if true</div>} */}
-                {username && <span className="text-gray-800">Welcome, {username} 🙌 </span> }
+                {username ? (
+                
+                // Show these options when the user is logged in
+                <>
+                <span className="text-gray-800">Welcome, {username} 🙌 </span> 
 
                 <button 
                 onClick={()=> router.push('/dashboard')}
-                className="test-blue-600 hover:underline" >
-                    Dashboard
+                className="text-red-600 hover:underline">
+                    Dashboard  
+                </button>
+                
+                <button
+                onClick={handleLogout}
+                className="text-red-600 hover:underline">
+                Logout
+                </button>
+                </>
+
+                ) : (
+
+                // Show these options when the user is not logged in
+                    <>
+                <button 
+                onClick={()=> router.push('/auth/register')}
+                className="text-blue-600 hover:underline" >
+                    Register
                 </button>
 
                 <button 
                 onClick={()=> router.push('/auth/login')}
-                className="test-blue-600 hover:underline" >
+                className="text-blue-600 hover:underline" >
                     Login
                 </button>
+                </>
+                )}  
             </div>
         </nav>
     )
