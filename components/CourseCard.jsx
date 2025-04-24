@@ -16,6 +16,7 @@ console.log("result",id)
         {/* Fallback for missing images */}
         <span className="text-gray-600 text-xs">{title.charAt(0)}</span>
       </div>
+      
       <h3 className="text-lg font-semibold">{title}</h3>
       <p className="text-gray-500 text-sm">{description}</p>
     </div>

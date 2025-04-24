@@ -1,12 +1,13 @@
 'use client';
 
+// app/tests/[course]/[test]/page.jsx
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { testSeries } from '@/lib/tests';
 
 export default function TakeTestPage() {
   const router = useRouter();
-  const params = useParams();
+  const params = useParams(); // grabs course + test ID from URL
 
   const courseId = Array.isArray(params.course) ? params.course[0] : params.course;
   const testId = Array.isArray(params.test) ? params.test[0] : params.test;
@@ -18,7 +19,7 @@ export default function TakeTestPage() {
   const tests = testSeries[courseId] || [];
   const test = tests.find((t) => t.id === testId);
 
-  const [answers, setAnswers] = useState({});
+  const [answers, setAnswers] = useState({}); // stores selected answers
 
   if (!test) {
     return <div className="p-6 text-red-600">Test not found.</div>;

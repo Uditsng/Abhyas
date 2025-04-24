@@ -1,8 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { testSeries } from '@/lib/tests';
-import PropTypes from 'prop-types';
+import { testSeries } from '@/lib/tests'; // taking test data from tests.js
 
 export default function ResultPage() {
   const { course, test } = useParams();
@@ -11,16 +10,19 @@ export default function ResultPage() {
 
   // Dummy answers
   const submittedAnswers = {
-    q1: 'Delhi',
-    q2: '12',
+    // q1: 'Delhi',
+    // q2: '12',
   };
-
+  
+  // if tst is not found
   if (!testData) {
     return <div className="p-6 text-red-600">Result not found.</div>;
   }
-
-  const totalCorrect = testData.questions.reduce((score, q) => {
-    return submittedAnswers[q.id] === q.answer ? score + 1 : score;
+  
+  // calculate total correct answers
+  const totalCorrect = testData.questions.reduce((score, {id, answer}) => {
+    //check if user's ans matches the correct ans
+    return submittedAnswers[id] === answer ? score + 1 : score;
   }, 0);
 
   return (
@@ -34,13 +36,17 @@ export default function ResultPage() {
       </div>
 
       <div className="space-y-4">
-        {testData.questions.map((q, index) => {
-          const userAnswer = submittedAnswers[q.id];
-          const isCorrect = userAnswer === q.answer;
+        {testData.questions.map(({id, question, answer}, index) => {
+
+          //get the user's ans for the current ques
+          const userAnswer = submittedAnswers[id];
+          
+          //check if user's ans is correct
+          const isCorrect = userAnswer === answer;
 
           return (
-            <div key={q.id} className="border p-4 rounded bg-white shadow-sm">
-              <p className="font-semibold">Q{index + 1}. {q.question}</p>
+            <div key={id} className="border p-4 rounded bg-white shadow-sm">
+              <p className="font-semibold">Q{index + 1}. {question}</p>
               <p>
                 Your Answer:{' '}
                 <span className={isCorrect ? 'text-green-600' : 'text-red-600'}>
@@ -48,7 +54,7 @@ export default function ResultPage() {
                 </span>
               </p>
               {!isCorrect && (
-                <p className="text-blue-600">Correct Answer: {q.answer}</p>
+                <p className="text-blue-600"> Correct Answer: {answer}</p>
               )}
             </div>
           );
