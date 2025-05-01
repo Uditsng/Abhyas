@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from "next/navigation";
+import Image from 'next/image';
 
 export default function TestCard({ id, title, duration, category, isPaid, imageUrl }) {
     
@@ -14,13 +15,15 @@ export default function TestCard({ id, title, duration, category, isPaid, imageU
     <div 
     onClick={handleClick}
     className="cursor-pointer border p-5 rounded-xl shadow hover:shadow-lg transition-all bg-white space-y-2">
-      <img
+      <Image
           src={imageUrl}
           alt={category + " logo"}
+          width={48}
+          height={48}
           className="h-12 w-12 object-contain"
           onError={(e) => {
+            // Next/Image handles errors differently
             e.target.src = '/images/placeholder.png';
-            e.target.onerror = null;
           }}
       />
       <div className="flex justify-between items-center">
