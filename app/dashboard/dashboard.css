@@ -35,3 +35,30 @@
 .slick-dots li.slick-active button:before {
   color: #1d4ed8; /* blue-700 */
 }
+
+.slick-track {
+  display: flex !important;
+}
+
+.slick-slide{
+  height: inherit !important;
+  display: flex !important
+}
+
+.slick-slide > div {
+  display: flex;
+  width: 100%;
+  height: 100%;
+}
+
+/* improve card appearance*/
+.slick-slide .cursor-pointer {
+  transition: all 0.3s ease;
+  border: 1px solid #f0f0f0;
+}
+
+.slick-slide .cursor-pointer:hover{
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+  border-color: #e0e0e0;
+}

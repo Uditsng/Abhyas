@@ -11,9 +11,9 @@ export default function CourseCard({ id, title, description, image }) {
   return (
     <div
       onClick={() => router.push(`/tests/${id}`)}
-      className="cursor-pointer bg-white rounded-xl shadow-md p-4 hover:shadow-lg transition"
+      className="cursor-pointer bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition flex flex-col items-center text-center h-full"
     >
-      <div className="w-20 h-20 mb-3 rounded bg-gray-300 flex items-center justify-center">
+      <div className="w-20 h-20 mb-4 rounded-full bg-blue-100 flex items-center justify-center overflow-hidden">
 
         {image ? (
           <Image
@@ -21,17 +21,17 @@ export default function CourseCard({ id, title, description, image }) {
             alt={`${title} logo`}
             width={80}
             height={80}
-            className="w-full h-full object-contain"
+            className="w-full h-full object-cover"
             onError={(e) => {
               e.target.src = '/images/placeholder.png';
             }}
           />
         ) : (
-          <span className="text-gray-600 text-2xl font-bold">{title.charAt(0)}</span>
+          <span className="text-blue-600 text-2xl font-bold">{title.charAt(0)}</span>
         )}
       </div>
       
-      <h3 className="text-lg font-semibold">{title}</h3>
+      <h3 className="text-lg font-semibold mb-2">{title}</h3>
       <p className="text-gray-500 text-sm">{description}</p>
     </div>
   );

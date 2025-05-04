@@ -18,7 +18,7 @@ export default function LoginPage() {
   const handleLogin = (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
     if (email && password) {
       setIsLoading(false);
       return;
@@ -31,7 +31,7 @@ export default function LoginPage() {
       const storedUser = JSON.parse(localStorage.getItem('mockUser'))
       if (storedUser && storedUser.email === email){
 
-        localStorage.setItem('mockUser', JSON.stringify 
+        localStorage.setItem('mockUser', JSON.stringify
           ({
             name: storedUser.name,
              email: email
@@ -47,7 +47,7 @@ export default function LoginPage() {
   return (
     <div className="max-w-md mx-auto mt-20 bg-white p-6 rounded shadow">
       <h2 className="text-xl font-semibold mb-4">Login</h2>
-      
+
       <form onSubmit={handleLogin}>
         <input
           type="email"
@@ -91,10 +91,28 @@ export default function LoginPage() {
           >
             {isLoading ? 'Signing in...' : 'Sign in with Google'}
           </button>
-          
+
           <div className="text-center mt-4">
             <p>Don't have an account? <Link href="/auth/register" className="text-blue-600 hover:underline">Register here</Link></p>
           </div>
+
+          <button
+            type="button"
+            onClick={() => {
+              // Create a mock user for testing
+              localStorage.setItem('mockUser', JSON.stringify({
+                name: 'Test User',
+                email: 'test@example.com',
+                phone: '1234567890',
+                address: '123 Test Street, Test City',
+                photoURL: null
+              }));
+              router.push('/profile');
+            }}
+            className="w-full bg-green-600 text-white mt-4 py-2 rounded-2xl p-3 hover:bg-green-700"
+          >
+            Create Test User & Go to Profile
+          </button>
 
       </form>
     </div>

@@ -32,6 +32,7 @@ export default function DashboardPage() {
     slidesToScroll: 1,
     autoplay: true,
     autoplaySpeed: 3000,
+    arrows: false,
     responsive:[
       {
         breakpoint:1024,
@@ -73,16 +74,16 @@ Loading...
 
       <div className="container mx-auto px-6 py-8">
         {/* Stats cards*/}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8 text-align-center">
           {[
             {label: 'Tests Taken',value: '12'},
             {label: "Avg. Score", value:' 72%'},
             {label:' Study Hours', value: '45h'},
             {label: 'Rank', value: '#222'},
             ].map((stat, index) =>(
-              <div key={index} className='bg-white rounded-xl shadow-md p-4 flex items-center'>
-                  <p className='text-2xl font-bold text-blue-700'>{stat.value}</p>
-                  <p className='text-sm text-gray-600'>{stat.label}</p>
+              <div key={index} className='bg-white rounded-xl shadow-md p-4 text-center  '>
+                  <p className='text-2xl font-bold text-blue-800'>{stat.value}</p>
+                  <p className='text-sm text-gray-600 pl-3'>{stat.label}</p>
               </div>
             ))}
         </div>
@@ -93,7 +94,7 @@ Loading...
           <div className="slick-container">
             <Slider {...sliderSettings}>
               {courses.map((course) => (
-                <div key={course.id} className="px-2">
+                <div key={course.id} className="px-2 h-full">
                   <CourseCard
                     id={course.id}
                     title={course.title}

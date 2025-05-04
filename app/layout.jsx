@@ -1,24 +1,20 @@
 
 import './globals.css';
-import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
-import { AuthProvider } from '@/components/AuthContext';
 
 export const metadata = {
   title: 'Mock Test Series App',
   description: 'Prepare for exams like SSC, UPSC, NEET, etc.',
 };
 
+import Providers from '@/components/Providers';
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      
       <body className="bg-gray-50 text-gray-900">
-      <Navbar/>
-      <AuthProvider>
-        {children}
-      </AuthProvider>
-      <Footer/>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );
