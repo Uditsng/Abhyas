@@ -10,8 +10,8 @@ import Providers from '@/components/Providers';
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
-      <body className="bg-gray-50 text-gray-900">
+    <html lang="en" className="h-full">
+      <body className="min-h-full bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
         <Providers>
           {children}
         </Providers>

@@ -3,20 +3,37 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
 import {auth} from '@/lib/firebase'
+import { syncBookmarks } from '@/lib/bookmarkService';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setLoading(true);
+      
       if (user) {
         setUser(user);
+        
+        // Sync bookmarks when user logs in
+        await syncBookmarks(user.uid);
+        
+        // Rest of your existing login logic
+        // ...
       } else {
         setUser(null);
+        
+        // Clear user-specific data from localStorage on logout
+        // but keep bookmarks for potential sync later
+        // ...
       }
+      
+      setLoading(false);
     });
+    
     return () => unsubscribe();
   }, []);
 
@@ -30,12 +47,23 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const logOut = () => {
-    return signOut(auth);
+  const signOut = async () => {
+    try {
+      // Sync bookmarks before signing out to ensure latest data is saved
+      if (user) {
+        await syncBookmarks(user.uid);
+      }
+      
+      await signOut(auth);
+      // Rest of your existing logout logic
+      // ...
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, signIn, logOut }}>
+    <AuthContext.Provider value={{ user, signIn, signOut, loading }}>
       {children}
     </AuthContext.Provider>
   );

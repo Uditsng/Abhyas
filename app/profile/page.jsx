@@ -27,8 +27,8 @@ import {
   Spinner,
   FormErrorMessage,
   Divider,
-  IconButton,
 } from "@chakra-ui/react";
+import { EditIcon } from "@chakra-ui/icons";
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -215,161 +215,138 @@ export default function ProfilePage() {
   }
 
   return (
-    <Container maxW="container.md" py={10}>
-      <Box bg="white" shadow="md" borderRadius="lg" overflow="hidden">
-        <Box bg="blue.600" p={6} color="white">
-          <Heading size="lg">User Profile</Heading>
-          <Text color="blue.100">Manage your account information</Text>
-        </Box>
+    <Container maxW="container.lg" py={8}>
+      <Box maxW="3xl" mx="auto">
+        <Heading as="h1" size="xl" mb={6} className="text-gray-900 dark:text-gray-100">
+          Your Profile
+        </Heading>
 
-        <Box p={6}>
-          <form onSubmit={handleSubmit(onSubmit)}>
-            {/* Profile Picture */}
-            <Flex direction="column" align="center" mb={6}>
-              <Avatar
-                size="2xl"
-                src={imagePreview}
-                mb={4}
-                name={localStorage.getItem("mockUser")
-                  ? JSON.parse(localStorage.getItem("mockUser")).name
-                  : authUser?.displayName || "User"}
-              />
-              {isEditing && (
-                <FormControl>
-                  <FormLabel
-                    htmlFor="profile-image"
-                    cursor="pointer"
-                    bg="blue.50"
-                    color="blue.600"
-                    px={3}
-                    py={1}
-                    borderRadius="md"
-                    _hover={{ bg: "blue.100" }}
-                  >
-                    Change Photo
-                  </FormLabel>
-                  <Input
-                    id="profile-image"
-                    type="file"
-                    accept="image/*"
-                    onChange={handleImageChange}
-                    display="none"
-                  />
-                </FormControl>
+        <Box bg="white" _dark={{ bg: "gray.800" }} rounded="lg" shadow="md" p={6} mb={6} className="transition-colors duration-200">
+          <Flex direction={{ base: "column", sm: "row" }} align={{ base: "center", sm: "flex-start" }} mb={6}>
+            <Box position="relative" w={{ base: "24", sm: "32" }} h={{ base: "24", sm: "32" }} mb={{ base: 4, sm: 0 }} mr={{ sm: 6 }}>
+              {imagePreview ? (
+                <Avatar
+                  size="full"
+                  src={imagePreview}
+                  alt="Profile"
+                />
+              ) : (
+                <Avatar
+                  size="full"
+                  bg="gray.200"
+                  _dark={{ bg: "gray.700" }}
+                  icon={<EditIcon fontSize="1.5rem" color="gray.400" />}
+                />
               )}
+
+              <Box position="absolute" bottom="0" right="0" bg="blue.600" _dark={{ bg: "blue.700" }} color="white" p={2} borderRadius="full" cursor="pointer">
+                <EditIcon w={4} h={4} />
+                <Input
+                  type="file"
+                  display="none"
+                  accept="image/*"
+                  onChange={handleImageChange}
+                />
+              </Box>
+            </Box>
+
+            <Box textAlign={{ base: "center", sm: "left" }}>
+              <Heading as="h2" size="md" color="gray.900" _dark={{ color: "gray.100" }}>
+                {authUser?.displayName || (localStorage.getItem("mockUser") && JSON.parse(localStorage.getItem("mockUser")).name) || 'User'}
+              </Heading>
+              <Text color="gray.600" _dark={{ color: "gray.400" }}>
+                {authUser?.email || (localStorage.getItem("mockUser") && JSON.parse(localStorage.getItem("mockUser")).email) || 'user@example.com'}
+              </Text>
+
+              <HStack mt={3} justify={{ base: "center", sm: "flex-start" }} spacing={2} flexWrap="wrap">
+                <Button
+                  size="sm"
+                  bg="gray.200"
+                  color="gray.800"
+                  _hover={{ bg: "gray.300" }}
+                  _dark={{
+                    bg: "gray.700",
+                    color: "gray.200",
+                    _hover: { bg: "gray.600" }
+                  }}
+                  onClick={() => router.push("/change-password")}
+                >
+                  Change Password
+                </Button>
+
+                <Button
+                  size="sm"
+                  bg="red.100"
+                  color="red.800"
+                  _hover={{ bg: "red.200" }}
+                  _dark={{
+                    bg: "red.900",
+                    color: "red.200",
+                    _hover: { bg: "red.800" }
+                  }}
+                  onClick={() => {
+                    auth.signOut();
+                    router.push("/auth/login");
+                  }}
+                >
+                  Logout
+                </Button>
+              </HStack>
+            </Box>
+          </Flex>
+
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Flex direction={{ base: "column", sm: "row" }} gap={4} mb={4}>
+              <FormControl>
+                <FormLabel fontSize="sm" fontWeight="medium" color="gray.700" _dark={{ color: "gray.300" }}>
+                  Phone Number
+                </FormLabel>
+                <Input
+                  type="tel"
+                  placeholder="Your phone number"
+                  {...register("phone")}
+                  bg="white"
+                  color="gray.900"
+                  _dark={{
+                    bg: "gray.700",
+                    color: "gray.100"
+                  }}
+                />
+              </FormControl>
+
+              <FormControl>
+                <FormLabel fontSize="sm" fontWeight="medium" color="gray.700" _dark={{ color: "gray.300" }}>
+                  Address
+                </FormLabel>
+                <Input
+                  type="text"
+                  placeholder="Your address"
+                  {...register("address")}
+                  bg="white"
+                  color="gray.900"
+                  _dark={{
+                    bg: "gray.700",
+                    color: "gray.100"
+                  }}
+                />
+              </FormControl>
             </Flex>
 
-            <VStack spacing={4} align="stretch">
-              {/* Display Name */}
-              <FormControl isInvalid={errors.displayName}>
-                <FormLabel>Display Name</FormLabel>
-                {isEditing ? (
-                  <>
-                    <Input
-                      {...register("displayName", {
-                        required: "Name is required"
-                      })}
-                    />
-                    <FormErrorMessage>
-                      {errors.displayName && errors.displayName.message}
-                    </FormErrorMessage>
-                  </>
-                ) : (
-                  <Box p={2} bg="gray.50" borderRadius="md">
-                    {localStorage.getItem("mockUser")
-                      ? JSON.parse(localStorage.getItem("mockUser")).name
-                      : authUser?.displayName || "Not set"}
-                  </Box>
-                )}
-              </FormControl>
-
-              {/* Email */}
-              <FormControl>
-                <FormLabel>Email Address</FormLabel>
-                <Box p={2} bg="gray.50" borderRadius="md">
-                  {localStorage.getItem("mockUser")
-                    ? JSON.parse(localStorage.getItem("mockUser")).email
-                    : authUser?.email || "Not available"}
-                </Box>
-                <Text fontSize="xs" color="gray.500" mt={1}>
-                  Email cannot be changed
-                </Text>
-              </FormControl>
-
-              {/* Phone Number */}
-              <FormControl isInvalid={errors.phone}>
-                <FormLabel>Phone Number</FormLabel>
-                {isEditing ? (
-                  <>
-                    <Input
-                      {...register("phone", {
-                        pattern: {
-                          value: /^\+?[0-9]{10,15}$/,
-                          message: "Please enter a valid phone number"
-                        }
-                      })}
-                    />
-                    <FormErrorMessage>
-                      {errors.phone && errors.phone.message}
-                    </FormErrorMessage>
-                  </>
-                ) : (
-                  <Box p={2} bg="gray.50" borderRadius="md">
-                    {localStorage.getItem("mockUser")
-                      ? JSON.parse(localStorage.getItem("mockUser")).phone
-                      : profileSnapshot?.data()?.phone || "Not provided"}
-                  </Box>
-                )}
-              </FormControl>
-
-              {/* Address */}
-              <FormControl>
-                <FormLabel>Address</FormLabel>
-                {isEditing ? (
-                  <Textarea
-                    {...register("address")}
-                    rows={3}
-                  />
-                ) : (
-                  <Box p={2} bg="gray.50" borderRadius="md">
-                    {localStorage.getItem("mockUser")
-                      ? JSON.parse(localStorage.getItem("mockUser")).address
-                      : profileSnapshot?.data()?.address || "Not provided"}
-                  </Box>
-                )}
-              </FormControl>
-
-              {/* Action Buttons */}
-              <HStack justify="end" mt={4}>
-                {isEditing ? (
-                  <>
-                    <HStack spacing={4}>
-                      <Button
-                        variant="outline"
-                        onClick={() => setIsEditing(false)}
-                      >
-                        Cancel
-                      </Button>
-
-                      <Button
-                        colorScheme="blue"
-                        type="submit"
-                        isLoading={isSubmitting || isUploading}
-                      >
-                        Save Changes
-                      </Button>
-                    </HStack>
-                  </>
-                ) : (
-                  <Button
-                    colorScheme="blue"
-                    onClick={() => setIsEditing(true)}
-                  >
-                    Edit Profile
-                  </Button>
-                )}
-              </HStack>
-            </VStack>
+            <Button
+              type="submit"
+              w="full"
+              bg="blue.600"
+              _hover={{ bg: "blue.700" }}
+              color="white"
+              _dark={{
+                bg: "blue.700",
+                _hover: { bg: "blue.800" }
+              }}
+              isLoading={isSubmitting}
+              loadingText="Saving..."
+            >
+              Save Profile
+            </Button>
           </form>
 
           <Divider my={6} />

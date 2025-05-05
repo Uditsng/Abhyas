@@ -45,13 +45,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-20 bg-white p-6 rounded shadow">
-      <h2 className="text-xl font-semibold mb-4">Login</h2>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+      <div className="max-w-md w-full bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md transition-colors duration-200">
+        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Login</h2>
 
       <form onSubmit={handleLogin}>
         <input
           type="email"
-          className="w-full border px-3 py-2 mb-3"
+          className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700
+                     text-gray-900 dark:text-gray-100 px-3 py-2 mb-3 rounded-md transition-colors duration-200"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -59,62 +61,30 @@ export default function LoginPage() {
         />
         <input
           type="password"
-          className="w-full border px-3 py-2 mb-4"
+          className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700
+                     text-gray-900 dark:text-gray-100 px-3 py-2 mb-4 rounded-md transition-colors duration-200"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
         />
         <button
-            type="submit"
-            className={`w-full bg-blue-600 text-white py-2 rounded-2xl p-3 hover:bg-blue-700 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Logging in...' : 'Login'}
-          </button>
-
-          <button
-            type="button"
-            onClick={async () => {
-              try {
-                setIsLoading(true);
-                await signIn();
-                router.push('/dashboard');
-              } catch (err) {
-                setError('Google sign-in failed. Please try again.');
-              } finally {
-                setIsLoading(false);
-              }
-            }}
-            className={`w-full bg-blue-600 text-white my-2 py-2 rounded-2xl p-3 hover:bg-blue-700 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-            disabled={isLoading}
-          >
-            {isLoading ? 'Signing in...' : 'Sign in with Google'}
-          </button>
-
-          <div className="text-center mt-4">
-            <p>Don't have an account? <Link href="/auth/register" className="text-blue-600 hover:underline">Register here</Link></p>
-          </div>
-
-          <button
-            type="button"
-            onClick={() => {
-              // Create a mock user for testing
-              localStorage.setItem('mockUser', JSON.stringify({
-                name: 'Test User',
-                email: 'test@example.com',
-                phone: '1234567890',
-                address: '123 Test Street, Test City',
-                photoURL: null
-              }));
-              router.push('/profile');
-            }}
-            className="w-full bg-green-600 text-white mt-4 py-2 rounded-2xl p-3 hover:bg-green-700"
-          >
-            Create Test User & Go to Profile
-          </button>
-
+          type="submit"
+          className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800
+                     text-white py-2 rounded-md transition-colors duration-200"
+          disabled={isLoading}
+        >
+          {isLoading ? 'Logging in...' : 'Login'}
+        </button>
       </form>
+
+      <div className="mt-4 text-center text-gray-600 dark:text-gray-400">
+        Don't have an account?{' '}
+        <Link href="/auth/register" className="text-blue-600 dark:text-blue-400 hover:underline">
+          Register
+        </Link>
+      </div>
+      </div>
     </div>
   );
 }

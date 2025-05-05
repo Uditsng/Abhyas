@@ -8,7 +8,7 @@ import { useAuth } from '@/components/AuthContext'; // Ensure this is correctly 
 import { auth } from '@/lib/firebase';
 
 export default function RegisterPage() {
-  
+
   const router = useRouter();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -23,7 +23,7 @@ export default function RegisterPage() {
     setIsLoading(true);
     setError('');
 
-    
+
 
     if (!name || !email || !password) {
       setError('All fields are required');
@@ -37,18 +37,18 @@ export default function RegisterPage() {
 
       // Save name temporarily in local Storage for greeting
       localStorage.setItem('mockUser', JSON.stringify({ name, email }));
-      
+
       // Show success message
       setSuccess(true);
-      
+
       // Redirect after a short delay to let user see success message
       setTimeout(() => {
         router.push('/dashboard');
       }, 2000);
-      
+
     } catch (err) {
       let errorMessage = 'Registration failed. Please try again.';
-      
+
       // Extract specific Firebase error messages
       if (err.code === 'auth/email-already-in-use') {
         errorMessage = 'Email already in use. Please use a different email.';
@@ -57,7 +57,7 @@ export default function RegisterPage() {
       } else if (err.code === 'auth/invalid-email') {
         errorMessage = 'Invalid email address.';
       }
-      
+
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -65,12 +65,12 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded shadow-md w-full max-w-md">
-        <h1 className="text-2xl text-center font-bold mb-6">Register</h1>
-        
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+      <div className="bg-white dark:bg-gray-800 p-8 rounded shadow-md w-full max-w-md transition-colors duration-200">
+        <h1 className="text-2xl text-center font-bold mb-6 text-gray-900 dark:text-gray-100">Register</h1>
+
         {success ? (
-          <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded mb-4">
+          <div className="bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-3 rounded mb-4">
             <p>Registration successful! Redirecting to dashboard ...</p>
           </div>
         ) : (
@@ -78,7 +78,7 @@ export default function RegisterPage() {
             <input
               type="text"
               placeholder="Full Name"
-              className="w-full border border-gray-400 rounded-2xl mb-4 p-3"
+              className="w-full border border-gray-300 dark:border-gray-700 rounded-2xl mb-4 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
@@ -86,7 +86,7 @@ export default function RegisterPage() {
             <input
               type="email"
               placeholder="Email"
-              className="w-full border border-gray-400 rounded-2xl mb-4 p-3"
+              className="w-full border border-gray-300 dark:border-gray-700 rounded-2xl mb-4 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
@@ -94,18 +94,18 @@ export default function RegisterPage() {
             <input
               type="password"
               placeholder="Password"
-              className="w-full border border-gray-400 rounded-2xl mb-4 p-3"
+              className="w-full border border-gray-300 dark:border-gray-700 rounded-2xl mb-4 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
             />
-            
+
             {error && (
-              <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+              <div className="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded mb-4">
                 <p>{error}</p>
               </div>
             )}
-            
+
             <button
               type="submit"
               className={`w-full bg-green-600 text-white py-2 rounded-2xl p-3 hover:bg-green-700 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
@@ -132,11 +132,11 @@ export default function RegisterPage() {
             >
               {isLoading ? 'Signing in...' : 'Sign in with Google'}
             </button>
-            
+
 
 
             <div className="text-center mt-4">
-              <p>Already have an account? <Link href="/auth/login" className="text-blue-600 hover:underline">Login here</Link></p>
+              <p className="text-gray-700 dark:text-gray-300">Already have an account? <Link href="/auth/login" className="text-blue-600 dark:text-blue-400 hover:underline">Login here</Link></p>
             </div>
           </form>
         )}

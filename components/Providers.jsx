@@ -4,11 +4,26 @@
 
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import { AuthProvider } from '@/components/AuthContext';
+import { ThemeProvider } from '@/components/ThemeContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
-// Define a custom theme if needed
+// Define a custom theme for Chakra UI
 const theme = extendTheme({
+  config: {
+    // Disable Chakra's auto color mode detection - we'll handle this ourselves
+    initialColorMode: 'light',
+    useSystemColorMode: false,
+  },
+  styles: {
+    global: () => ({
+      // Ensure Chakra's global styles don't override Tailwind's dark mode
+      body: {
+        bg: 'transparent', // Use transparent to let Tailwind handle background
+        color: 'inherit', // Use inherit to let Tailwind handle text color
+      },
+    }),
+  },
   colors: {
     brand: {
       50: '#e6f1ff',
@@ -23,16 +38,46 @@ const theme = extendTheme({
       900: '#001021',
     },
   },
+  // Customize components to work better with Tailwind dark mode
+  components: {
+    Button: {
+      baseStyle: (props) => ({
+        _hover: {
+          bg: props.colorMode === 'dark' ? 'whiteAlpha.200' : 'blackAlpha.100',
+        },
+      }),
+    },
+    Menu: {
+      baseStyle: (props) => ({
+        list: {
+          bg: props.colorMode === 'dark' ? 'gray.800' : 'white',
+          borderColor: props.colorMode === 'dark' ? 'gray.700' : 'gray.200',
+        },
+        item: {
+          bg: 'transparent',
+          _hover: {
+            bg: props.colorMode === 'dark' ? 'gray.700' : 'gray.100',
+          },
+          _focus: {
+            bg: props.colorMode === 'dark' ? 'gray.700' : 'gray.100',
+          },
+        },
+      }),
+    },
+  },
 });
 
 export default function Providers({ children }) {
   return (
-    <ChakraProvider theme={theme}>
-      <AuthProvider>
-        <Navbar />
-        {children}
-        <Footer />
-      </AuthProvider>
-    </ChakraProvider>
+    <ThemeProvider>
+      <ChakraProvider theme={theme} resetCSS={false}>
+        <AuthProvider>
+          <Navbar />
+          {children}
+          <Footer />
+        </AuthProvider>
+      </ChakraProvider>
+    </ThemeProvider>
   );
 }
+
