@@ -35,11 +35,6 @@ export default function ProfilePage() {
   const toast = useToast();
   const [authUser, authLoading] = useAuthState(auth);
   const [isEditing, setIsEditing] = useState(false);
-
-  // Debug isEditing state changes
-  useEffect(() => {
-    console.log("isEditing state changed:", isEditing);
-  }, [isEditing]);
   const [profileImage, setProfileImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -138,7 +133,6 @@ export default function ProfilePage() {
 
   // handle form submission
   const onSubmit = async (data) => {
-    console.log("Form submitted with data:", data);
     try {
       if (!authUser && !localStorage.getItem("mockUser")) {
         toast({
@@ -229,10 +223,7 @@ export default function ProfilePage() {
         </Box>
 
         <Box p={6}>
-          <form onSubmit={(e) => {
-            console.log("Form submit event triggered");
-            handleSubmit(onSubmit)(e);
-          }}>
+          <form onSubmit={handleSubmit(onSubmit)}>
             {/* Profile Picture */}
             <Flex direction="column" align="center" mb={6}>
               <Avatar
@@ -352,25 +343,13 @@ export default function ProfilePage() {
               <HStack justify="end" mt={4}>
                 {isEditing ? (
                   <>
-                    <div className="flex space-x-2">
+                    <HStack spacing={4}>
                       <Button
                         variant="outline"
                         onClick={() => setIsEditing(false)}
                       >
                         Cancel
                       </Button>
-
-                      {/* Fallback regular button for Cancel */}
-                      <button
-                        type="button"
-                        className="border border-gray-300 px-4 py-2 rounded"
-                        onClick={() => {
-                          console.log("Regular Cancel button clicked");
-                          setIsEditing(false);
-                        }}
-                      >
-                        Cancel (HTML)
-                      </button>
 
                       <Button
                         colorScheme="blue"
@@ -379,40 +358,15 @@ export default function ProfilePage() {
                       >
                         Save Changes
                       </Button>
-
-                      {/* Fallback regular button for Save */}
-                      <button
-                        type="submit"
-                        className="bg-blue-500 text-white px-4 py-2 rounded"
-                      >
-                        Save Changes (HTML)
-                      </button>
-                    </div>
+                    </HStack>
                   </>
                 ) : (
-                  <div>
-                    <Button
-                      colorScheme="blue"
-                      onClick={() => {
-                        console.log("Edit Profile button clicked");
-                        setIsEditing(true);
-                      }}
-                    >
-                      Edit Profile
-                    </Button>
-
-                    {/* Fallback regular button in case Chakra button doesn't work */}
-                    <button
-                      type="button"
-                      className="ml-2 bg-blue-500 text-white px-4 py-2 rounded"
-                      onClick={() => {
-                        console.log("Regular Edit Profile button clicked");
-                        setIsEditing(true);
-                      }}
-                    >
-                      Edit Profile (HTML)
-                    </button>
-                  </div>
+                  <Button
+                    colorScheme="blue"
+                    onClick={() => setIsEditing(true)}
+                  >
+                    Edit Profile
+                  </Button>
                 )}
               </HStack>
             </VStack>
