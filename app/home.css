@@ -1,0 +1,35 @@
+/* Custom styles for the banner carousel */
+.carousel-container {
+  width: 100%;
+  overflow: hidden;
+}
+
+.banner-slide {
+  width: 100%;
+}
+
+/* Slick carousel styles */
+.slick-slider, 
+.slick-list, 
+.slick-track {
+  width: 100%;
+}
+
+.slick-slide > div {
+  width: 100%;
+}
+
+/* Banner image responsive styling */
+.banner-image {
+  width: 100%;
+  height: auto;
+  max-height: 70vh; /* Limit height on large screens */
+  object-fit: contain;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .banner-image {
+    max-height: 50vh; /* Smaller height on mobile */
+  }
+}

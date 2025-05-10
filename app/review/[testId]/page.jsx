@@ -378,12 +378,6 @@ export default function TestReviewPage() {
           <Button colorScheme="gray">Back to Results</Button>
         </Link>
 
-        <Link href="/bookmarks">
-          <Button colorScheme="yellow" mr={2}>
-            View Bookmarks
-          </Button>
-        </Link>
-
         <Link href="/dashboard">
           <Button colorScheme="blue">Go to Dashboard</Button>
         </Link>

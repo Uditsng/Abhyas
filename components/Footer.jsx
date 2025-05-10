@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import ThemeToggle from '@/components/ThemeToggle';
 
 export default function Footer() {
   // We don't need to destructure anything from useTheme() here anymore
@@ -16,12 +15,7 @@ export default function Footer() {
             <p className="text-gray-600 dark:text-gray-400 mb-4">
               Prepare for competitive exams with our comprehensive mock tests.
             </p>
-            <div className="flex items-center space-x-4">
-              <div className="flex items-center space-x-2">
-                <span className="text-sm text-gray-600 dark:text-gray-400">Theme:</span>
-                <ThemeToggle />
-              </div>
-            </div>
+
           </div>
 
           <div>

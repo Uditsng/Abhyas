@@ -3,7 +3,6 @@
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useAuth } from "./AuthContext"
-import ThemeToggle from '@/components/ThemeToggle'
 
 export default function Navbar() {
 
@@ -112,7 +111,6 @@ export default function Navbar() {
                                 </button>
                             </>
                         )}
-                        <ThemeToggle />
                     </div>
                 </div>
 
@@ -165,10 +163,6 @@ export default function Navbar() {
                                     </button>
                                 </div>
                             )}
-                            <div className="flex items-center justify-between py-2">
-                                <span className="text-gray-700 dark:text-gray-300">Theme</span>
-                                <ThemeToggle />
-                            </div>
                         </div>
                     </div>
                 )}

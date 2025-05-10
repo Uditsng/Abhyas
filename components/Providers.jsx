@@ -7,6 +7,7 @@ import { AuthProvider } from '@/components/AuthContext';
 import { ThemeProvider } from '@/components/ThemeContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import FloatingThemeToggle from '@/components/FloatingThemeToggle';
 
 // Define a custom theme for Chakra UI
 const theme = extendTheme({
@@ -75,6 +76,7 @@ export default function Providers({ children }) {
           <Navbar />
           {children}
           <Footer />
+          <FloatingThemeToggle />
         </AuthProvider>
       </ChakraProvider>
     </ThemeProvider>
