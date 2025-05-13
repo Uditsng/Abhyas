@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut } from 'firebase/auth';
 import {auth} from '@/lib/firebase'
 import { syncBookmarks } from '@/lib/bookmarkService';
 
@@ -12,28 +12,47 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setLoading(true);
-      
-      if (user) {
-        setUser(user);
-        
-        // Sync bookmarks when user logs in
-        await syncBookmarks(user.uid);
-        
-        // Rest of your existing login logic
-        // ...
-      } else {
-        setUser(null);
-        
-        // Clear user-specific data from localStorage on logout
-        // but keep bookmarks for potential sync later
-        // ...
+    // Set loading initially
+    setLoading(true);
+
+    // Check if we have a cached user in localStorage
+    const cachedUser = localStorage.getItem('cachedUser');
+    if (cachedUser) {
+      try {
+        setUser(JSON.parse(cachedUser));
+        setLoading(false);
+      } catch (e) {
+        console.error('Error parsing cached user:', e);
       }
-      
+    }
+
+    // Then listen for auth state changes
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        // Cache user data in localStorage
+        localStorage.setItem('cachedUser', JSON.stringify({
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL
+        }));
+
+        setUser(user);
+
+        // Sync bookmarks in the background
+        setTimeout(() => {
+          syncBookmarks(user.uid).catch(err =>
+            console.error('Background bookmark sync failed:', err)
+          );
+        }, 2000);
+      } else {
+        localStorage.removeItem('cachedUser');
+        setUser(null);
+      }
+
       setLoading(false);
     });
-    
+
     return () => unsubscribe();
   }, []);
 
@@ -47,14 +66,14 @@ export function AuthProvider({ children }) {
     }
   };
 
-  const signOut = async () => {
+  const logout = async () => {
     try {
       // Sync bookmarks before signing out to ensure latest data is saved
       if (user) {
         await syncBookmarks(user.uid);
       }
-      
-      await signOut(auth);
+
+      await firebaseSignOut(auth);
       // Rest of your existing logout logic
       // ...
     } catch (error) {
@@ -63,7 +82,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, signIn, signOut, loading }}>
+    <AuthContext.Provider value={{ user, signIn, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

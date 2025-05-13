@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { Box, Heading, Flex, Button, SimpleGrid, Card, CardBody, Text, Badge } from '@chakra-ui/react';
+import { Box, Heading, Flex, Button, SimpleGrid, Card, CardBody, Text, Badge, IconButton } from '@chakra-ui/react';
+import { ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
 import { courses } from '@/lib/courses';
 import { testSeries } from '@/lib/tests';
 import Slider from 'react-slick';
@@ -27,7 +28,7 @@ export default function ExamCategories() {
       name: test.title,
       category: courseId,
       description: test.description || `${test.totalQuestions} questions | ${test.duration} mins`,
-      image:'/images/banner.jpg',
+      image:'/images/banner2.jpg',
       totalQuestions: test.totalQuestions,
       duration: test.duration
     }));
@@ -36,8 +37,36 @@ export default function ExamCategories() {
   // State for active category
   const [activeCategory, setActiveCategory] = useState(categories[0]?.id || '');
 
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const examsPerPage = 6; // Show 6 exams per page (2 rows of 3 on desktop, 3 rows of 2 on tablet, 6 rows of 1 on mobile)
+
   // Filter exams based on active category
   const filteredExams = allExams.filter(exam => exam.category === activeCategory);
+
+  // Calculate pagination
+  const indexOfLastExam = currentPage * examsPerPage;
+  const indexOfFirstExam = indexOfLastExam - examsPerPage;
+  const currentExams = filteredExams.slice(indexOfFirstExam, indexOfLastExam);
+  const totalPages = Math.ceil(filteredExams.length / examsPerPage);
+
+  // Reset pagination when category changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [activeCategory]);
+
+  // Pagination controls
+  const nextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   // Slider settings for category buttons
   const sliderSettings = {
@@ -49,12 +78,15 @@ export default function ExamCategories() {
     autoplay: true,
     autoplaySpeed: 5000,
     pauseOnHover: true,
+    dots: true,
+    swipeToSlide: true,
     responsive: [
       {
         breakpoint: 1024,
         settings: {
           slidesToShow: 3,
           slidesToScroll: 1,
+          dots: true
         }
       },
       {
@@ -62,13 +94,19 @@ export default function ExamCategories() {
         settings: {
           slidesToShow: 2,
           slidesToScroll: 1,
+          dots: true,
+          arrows: false
         }
       },
       {
         breakpoint: 480,
         settings: {
           slidesToShow: 1,
-          slidesToScroll: 1
+          slidesToScroll: 1,
+          dots: true,
+          arrows: false,
+          centerMode: true,
+          centerPadding: '40px'
         }
       }
     ]
@@ -96,11 +134,13 @@ export default function ExamCategories() {
                 colorScheme="blue"
                 variant={activeCategory === category.id ? "solid" : "outline"}
                 onClick={() => setActiveCategory(category.id)}
-                size="md"
+                size={{ base: "sm", md: "md" }}
                 borderRadius="full"
-                px={4}
-                minW="100px"
+                px={{ base: 3, md: 4 }}
+                minW={{ base: "80px", md: "100px" }}
                 transition="all 0.2s"
+                fontWeight={activeCategory === category.id ? "bold" : "normal"}
+                _hover={{ transform: "scale(1.05)" }}
               >
                 {category.name}
               </Button>
@@ -111,7 +151,7 @@ export default function ExamCategories() {
 
       {/* Exams Grid */}
       <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6} mx={4}>
-        {filteredExams.map(exam => (
+        {currentExams.map(exam => (
           <Link key={exam.id} href={`/tests/${exam.category}/${exam.id}`}>
             <Card
               overflow="hidden"
@@ -126,6 +166,13 @@ export default function ExamCategories() {
                   alt={exam.name}
                   fill
                   style={{ objectFit: 'cover' }}
+                  loading="lazy"
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  placeholder="blur"
+                  blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjJmMmYyIi8+PC9zdmc+"
+                  onError={(e) => {
+                    e.target.src = '/images/banner.jpg';
+                  }}
                 />
               </Box>
               <CardBody>
@@ -135,7 +182,7 @@ export default function ExamCategories() {
                     {exam.totalQuestions} Qs
                   </Badge>
                 </Flex>
-                <Text color="gray.600" fontSize="sm">
+                <Text color="gray.600" _dark={{ color: "gray.400" }} fontSize="sm">
                   {exam.description}
                 </Text>
                 <Flex justify="space-between" align="center" mt={4}>
@@ -155,9 +202,32 @@ export default function ExamCategories() {
         ))}
       </SimpleGrid>
 
+      {/* Pagination Controls */}
+      {filteredExams.length > examsPerPage && (
+        <Flex justify="center" mt={6} align="center">
+          <IconButton
+            icon={<ChevronLeftIcon />}
+            onClick={prevPage}
+            isDisabled={currentPage === 1}
+            mr={4}
+            aria-label="Previous page"
+          />
+          <Text>
+            Page {currentPage} of {totalPages}
+          </Text>
+          <IconButton
+            icon={<ChevronRightIcon />}
+            onClick={nextPage}
+            isDisabled={currentPage === totalPages}
+            ml={4}
+            aria-label="Next page"
+          />
+        </Flex>
+      )}
+
       {filteredExams.length === 0 && (
         <Box textAlign="center" p={8}>
-          <Text>No exams found in this category.</Text>
+          <Text color="gray.600" _dark={{ color: "gray.400" }}>No exams found in this category.</Text>
         </Box>
       )}
     </Box>

@@ -2,21 +2,40 @@
 .carousel-container {
   width: 100%;
   overflow: hidden;
+  margin-bottom: 2rem;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .banner-slide {
   width: 100%;
+  position: relative;
 }
 
 /* Slick carousel styles */
-.slick-slider, 
-.slick-list, 
+.slick-slider,
+.slick-list,
 .slick-track {
   width: 100%;
 }
 
 .slick-slide > div {
   width: 100%;
+}
+
+.slick-dots {
+  bottom: 16px;
+}
+
+.slick-dots li button:before {
+  color: white;
+  opacity: 0.7;
+  font-size: 10px;
+}
+
+.slick-dots li.slick-active button:before {
+  color: white;
+  opacity: 1;
 }
 
 /* Banner image responsive styling */
@@ -28,8 +47,37 @@
 }
 
 /* Responsive adjustments */
+@media (max-width: 1024px) {
+  .banner-image {
+    max-height: 60vh;
+  }
+
+  .carousel-container {
+    margin-bottom: 1.5rem;
+  }
+}
+
 @media (max-width: 768px) {
   .banner-image {
     max-height: 50vh; /* Smaller height on mobile */
+  }
+
+  .carousel-container {
+    margin-bottom: 1rem;
+    border-radius: 0.375rem;
+  }
+
+  .slick-dots {
+    bottom: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .banner-image {
+    max-height: 40vh;
+  }
+
+  .slick-dots li {
+    margin: 0 2px;
   }
 }

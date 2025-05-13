@@ -8,6 +8,8 @@ import { ThemeProvider } from '@/components/ThemeContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FloatingThemeToggle from '@/components/FloatingThemeToggle';
+import PerformanceOptimizer from '@/components/PerformanceOptimizer';
+import { memo } from 'react';
 
 // Define a custom theme for Chakra UI
 const theme = extendTheme({
@@ -68,11 +70,13 @@ const theme = extendTheme({
   },
 });
 
-export default function Providers({ children }) {
+// Memoize the Providers component to prevent unnecessary re-renders
+function Providers({ children }) {
   return (
     <ThemeProvider>
       <ChakraProvider theme={theme} resetCSS={false}>
         <AuthProvider>
+          <PerformanceOptimizer />
           <Navbar />
           {children}
           <Footer />
@@ -82,4 +86,6 @@ export default function Providers({ children }) {
     </ThemeProvider>
   );
 }
+
+export default memo(Providers);
 

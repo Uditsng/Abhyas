@@ -14,7 +14,7 @@ import ExploreSuperCoaching from '@/components/ExploreSuperCoaching';
 export default function HomePage() {
   // Carousel settings
   const sliderSettings = {
-    dots: false,
+    dots: true,
     infinite: true,
     speed: 500,
     slidesToShow: 1,
@@ -23,39 +23,58 @@ export default function HomePage() {
     autoplaySpeed: 5000,
     arrows: false,
     fade: true,
-    pauseOnHover: false
+    pauseOnHover: false,
+    responsive: [
+      {
+        breakpoint: 768,
+        settings: {
+          dots: true,
+          fade: false,
+          speed: 300
+        }
+      }
+    ]
   };
 
   return (
-    <div className=" container mx-auto px-24 w-full">
+    <div className="container mx-auto px-4 md:px-8 lg:px-12 xl:px-24 w-full">
       {/* Navbar would be here or is included via layout */}
-      
+
       {/* Banner Carousel */}
       <div className="w-full carousel-container">
         <Slider {...sliderSettings}>
-          <div className="relative w-full banner-slide">
+          <div className="relative w-full banner-slide bg-red-500">
             <Image
               src="/images/textbook result banner.webp"
               alt="Textbook Result Banner"
-              width={1920}
-              height={600}
-              className="banner-image"
+              width={1620}
+              height={500}
+              className=" banner-image"
               priority
+              sizes="100vw"
+              quality={85}
+              onError={(e) => {
+                e.target.src = '/images/banner.jpg';
+              }}
             />
           </div>
-          <div className="relative w-full banner-slide">
+          <div className="relative w-full banner-slide bg-cyan-200">
             <Image
               src="/images/textbook selection banner.webp"
               alt="Textbook Selection Banner"
-              width={1920}
-              height={600}
-              className="banner-image"
-              priority
+              width={1620}
+              height={500}
+              className="  banner-image"
+              sizes="100vw"
+              quality={85}
+              onError={(e) => {
+                e.target.src = '/images/banner.jpg';
+              }}
             />
           </div>
         </Slider>
       </div>
-      
+
       {/* Exam Categories */}
       <ExamCategories />
 

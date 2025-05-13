@@ -3,6 +3,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import theme integration styles */
+@import url('../styles/theme-integration.css');
+
 /* Base styles */
 body {
   @apply bg-gray-100 text-gray-900 transition-colors duration-200;
@@ -18,20 +21,33 @@ body {
   .card {
     @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors duration-200;
   }
-  
+
   .btn-primary {
     @apply bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors duration-200;
   }
-  
+
   .btn-secondary {
-    @apply bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 
+    @apply bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600
            text-gray-800 dark:text-gray-200 px-4 py-2 rounded-md transition-colors duration-200;
   }
-  
+
+  .btn-accent {
+    @apply bg-cyan-500 hover:bg-cyan-600 text-white px-4 py-2 rounded-md transition-colors duration-200;
+  }
+
   .input-field {
-    @apply bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 
-           text-gray-900 dark:text-gray-100 rounded-md px-3 py-2 
+    @apply bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700
+           text-gray-900 dark:text-gray-100 rounded-md px-3 py-2
            focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200;
+  }
+
+  /* Image optimization classes */
+  .optimized-image {
+    @apply object-cover w-full h-full;
+  }
+
+  .image-placeholder {
+    @apply bg-gray-200 dark:bg-gray-700 animate-pulse;
   }
 }
 
@@ -39,5 +55,13 @@ body {
 @media (max-width: 640px) {
   .container {
     @apply px-4;
+  }
+
+  .mobile-padding {
+    @apply px-2 py-1;
+  }
+
+  .mobile-text {
+    @apply text-sm;
   }
 }

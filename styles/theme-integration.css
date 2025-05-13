@@ -1,0 +1,134 @@
+/* 
+  Theme Integration CSS
+  This file helps standardize styling between Tailwind CSS and Chakra UI
+*/
+
+/* Standardize colors between Tailwind and Chakra */
+:root {
+  --color-primary: var(--chakra-colors-blue-500);
+  --color-primary-hover: var(--chakra-colors-blue-600);
+  --color-secondary: var(--chakra-colors-teal-500);
+  --color-secondary-hover: var(--chakra-colors-teal-600);
+  --color-accent: var(--chakra-colors-cyan-500);
+  --color-accent-hover: var(--chakra-colors-cyan-600);
+  --color-success: var(--chakra-colors-green-500);
+  --color-error: var(--chakra-colors-red-500);
+  --color-warning: var(--chakra-colors-yellow-500);
+  --color-info: var(--chakra-colors-blue-400);
+}
+
+/* Standardize spacing */
+.chakra-space-standard {
+  margin: var(--chakra-space-4);
+  padding: var(--chakra-space-4);
+}
+
+/* Standardize transitions */
+.standard-transition {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-duration: 200ms;
+}
+
+/* Standardize shadows */
+.standard-shadow {
+  box-shadow: var(--chakra-shadows-md);
+}
+
+/* Standardize border radius */
+.standard-radius {
+  border-radius: var(--chakra-radii-md);
+}
+
+/* Standardize focus styles */
+.standard-focus:focus {
+  outline: 2px solid var(--chakra-colors-blue-500);
+  outline-offset: 2px;
+}
+
+/* Dark mode compatibility helpers */
+.dark-mode-text {
+  @apply text-gray-900 dark:text-gray-100;
+}
+
+.dark-mode-bg {
+  @apply bg-white dark:bg-gray-800;
+}
+
+.dark-mode-border {
+  @apply border-gray-200 dark:border-gray-700;
+}
+
+/* Responsive helpers that work with both systems */
+.responsive-padding {
+  @apply px-4 py-2 md:px-6 md:py-3 lg:px-8 lg:py-4;
+}
+
+.responsive-margin {
+  @apply m-2 md:m-4 lg:m-6;
+}
+
+/* Button styles that work with both systems */
+.standard-button {
+  @apply px-4 py-2 rounded-md transition-colors duration-200;
+}
+
+.primary-button {
+  @apply standard-button bg-blue-500 hover:bg-blue-600 text-white;
+}
+
+.secondary-button {
+  @apply standard-button bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200;
+}
+
+.accent-button {
+  @apply standard-button bg-cyan-500 hover:bg-cyan-600 text-white;
+}
+
+/* Card styles that work with both systems */
+.standard-card {
+  @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-6 transition-colors duration-200;
+}
+
+/* Text styles that work with both systems */
+.heading-text {
+  @apply text-gray-900 dark:text-gray-100 font-bold;
+}
+
+.body-text {
+  @apply text-gray-700 dark:text-gray-300;
+}
+
+.muted-text {
+  @apply text-gray-500 dark:text-gray-400 text-sm;
+}
+
+/* Form element styles */
+.standard-input {
+  @apply bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200;
+}
+
+/* Image container styles */
+.image-container {
+  @apply relative overflow-hidden rounded-md;
+}
+
+/* Badge styles */
+.standard-badge {
+  @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
+}
+
+.primary-badge {
+  @apply standard-badge bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300;
+}
+
+.success-badge {
+  @apply standard-badge bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300;
+}
+
+.warning-badge {
+  @apply standard-badge bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300;
+}
+
+.error-badge {
+  @apply standard-badge bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300;
+}
