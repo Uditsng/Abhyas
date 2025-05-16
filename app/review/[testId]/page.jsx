@@ -1,5 +1,7 @@
 'use client';
 
+//test/[testId]page.jsx and review-page.jsx are for taking and reviewing tests.
+
 import { useState, useEffect } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';

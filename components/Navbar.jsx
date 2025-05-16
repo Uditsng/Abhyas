@@ -9,7 +9,6 @@ export default function Navbar() {
     const router = useRouter()
     const [username, setUsername] = useState('')
     const { user, logout } = useAuth()
-    // We don't need to destructure darkMode here as we're using Tailwind's dark mode classes
     const [menuOpen, setMenuOpen] = useState(false)
 
     useEffect(() => {

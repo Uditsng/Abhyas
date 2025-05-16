@@ -11,20 +11,6 @@ import { testSeries } from '@/lib/tests';
 import {useRouter} from 'next/navigation';
 import { useAuth } from '@/components/AuthContext';
 
-// Preload common images
-const preloadedImages = {};
-function preloadImage(src) {
-  if (typeof window !== 'undefined' && !preloadedImages[src]) {
-    preloadedImages[src] = new window.Image();
-    preloadedImages[src].src = src;
-  }
-  return src;
-}
-
-// Preload the banner image only on client side
-if (typeof window !== 'undefined') {
-  preloadImage('/images/banner.jpg');
-}
 
 export default function LiveTestsSection() {
 

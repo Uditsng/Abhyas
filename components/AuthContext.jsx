@@ -1,3 +1,5 @@
+//Authentication: Handled via Login-page.jsx and register-page.jsx, with logic and state managed in AuthContext.jsx.
+
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';

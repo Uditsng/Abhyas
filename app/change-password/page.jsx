@@ -1,5 +1,8 @@
 "use client";
 
+//Profile & Settings: profile-page.jsx and change-password-page.jsx handle user profile and password changes.
+
+
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import {

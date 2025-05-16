@@ -1,5 +1,7 @@
 'use client';
 
+//page.jsx displays test results.
+
 import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { testSeries } from '@/lib/tests';

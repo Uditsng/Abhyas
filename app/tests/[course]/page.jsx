@@ -1,6 +1,6 @@
 'use client';
 
-// app/tests/[course]/page.jsx
+// app/tests/[course]/page.jsx  handle test listings and individual test pages.
 
 import { testSeries } from '../../../lib/tests';
 import { notFound, useParams } from 'next/navigation';

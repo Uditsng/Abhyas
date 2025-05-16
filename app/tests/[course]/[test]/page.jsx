@@ -1,5 +1,8 @@
 "use client";
 
+// app/tests/[course]/[test]/page.jsx  handle test listings and individual test pages.
+
+
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useToast } from "@chakra-ui/react";
@@ -186,14 +189,14 @@ export default function TakeTestPage() {
     }
   };
 
-  // Add navigation prevention - simplified to avoid history API conflicts
+  // Add navigation prevention 
   useEffect(() => {
+
     // Skip navigation prevention if already submitting
     if (isSubmitting) return;
 
-    // Only add beforeunload event to warn about leaving the page
+    //beforeunload event to warn about leaving the page
     const blockNavigation = (e) => {
-      // Standard way to show a confirmation dialog when leaving the page
       const message = "You have unsaved test progress. Are you sure you want to leave?";
       e.preventDefault();
       e.returnValue = message;

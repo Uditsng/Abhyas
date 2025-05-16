@@ -1,3 +1,5 @@
+// lists all courses.
+
 'use client';
 
 import { useState } from 'react';

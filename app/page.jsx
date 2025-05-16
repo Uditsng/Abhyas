@@ -1,3 +1,4 @@
+//Entry Point: The app starts at page.jsx (HomePage). If a user is authenticated, they are redirected to /dashboard.
 
 'use client';
 

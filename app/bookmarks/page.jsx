@@ -1,5 +1,7 @@
 'use client';
 
+// Bookmarks: page.jsx allows users to view saved questions or tests.
+
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';

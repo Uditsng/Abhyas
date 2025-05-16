@@ -1,5 +1,7 @@
 'use client';
 
+//Admin Panel: page.jsx and subfolders for managing users and tests.
+
 import { Box, Heading, SimpleGrid, Card, CardBody, Text, Stat, StatLabel, StatNumber, StatHelpText } from '@chakra-ui/react';
 
 export default function AdminDashboard() {

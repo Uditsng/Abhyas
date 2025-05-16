@@ -28,7 +28,6 @@ export default function TestCard({ id, title, duration, category, isPaid, imageU
           height={48}
           className="h-12 w-12 object-contain"
           onError={(e) => {
-            // Next/Image handles errors differently
             e.target.src = '/images/placeholder.png';
           }}
       />
