@@ -39,9 +39,12 @@ export default function TestReviewPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { testId } = params;
+  const testId = params.testId;
   const questionParam = searchParams.get('q');
   const toast = useToast();
+
+  console.log("Review page params:", params);
+  console.log("Test ID from params:", testId);
 
   // State variables
   const [testData, setTestData] = useState(null);
@@ -56,6 +59,8 @@ export default function TestReviewPage() {
 
   // Load test data and user answers
   useEffect(() => {
+    console.log("Loading review for test ID:", testId);
+
     // Find the test data
     let foundTest = null;
     let foundCourseId = null;
@@ -64,32 +69,81 @@ export default function TestReviewPage() {
     Object.entries(testSeries).forEach(([courseId, series]) => {
       const found = series.find(test => test.id === testId);
       if (found) {
-        foundTest = found;
+        foundTest = {...found};
         foundCourseId = courseId;
       }
     });
 
     if (!foundTest) {
       // Test not found, redirect to dashboard
+      console.error(`Test not found: ${testId}`);
+      toast({
+        title: "Test not found",
+        description: `Could not find test: ${testId}`,
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
       router.push('/dashboard');
       return;
     }
 
+    console.log("Found test:", foundTest.title, "in course:", foundCourseId);
     setTestData({...foundTest, courseId: foundCourseId});
 
-    // Get user answers from localStorage
-    const results = JSON.parse(localStorage.getItem('testResults') || '[]');
-    const testResult = results.find(result => result.testId === testId);
+    // Only access localStorage on the client side
+    if (typeof window !== 'undefined') {
+      try {
+        // Get user answers from localStorage
+        const results = JSON.parse(localStorage.getItem('testResults') || '[]');
+        console.log("All test results:", results);
 
-    if (testResult) {
-      setUserAnswers(testResult.answers || {});
-      setScore(testResult.score || 0);
+        // Find the specific test result by matching both testId and courseId if available
+        const testResult = results.find(result => {
+          // First try to match both testId and courseId
+          if (result.courseId && foundCourseId) {
+            return result.testId === testId && result.courseId === foundCourseId;
+          }
+          // Fall back to just matching testId
+          return result.testId === testId;
+        });
+
+        if (testResult) {
+          console.log("Found test result:", testResult);
+          setUserAnswers(testResult.answers || {});
+          setScore(testResult.score || 0);
+        } else {
+          console.warn("No test results found for test ID:", testId);
+          toast({
+            title: "No results found",
+            description: "We couldn't find your results for this test",
+            status: "warning",
+            duration: 3000,
+            isClosable: true,
+          });
+        }
+      } catch (error) {
+        console.error("Error loading test results:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load test results",
+          status: "error",
+          duration: 3000,
+          isClosable: true,
+        });
+      }
     }
 
-    // Load bookmarked questions from localStorage
-    const storedBookmarks = localStorage.getItem('bookmarkedQuestions');
-    if (storedBookmarks) {
-      setBookmarkedQuestions(JSON.parse(storedBookmarks));
+    // Load bookmarked questions from localStorage - only on client side
+    if (typeof window !== 'undefined') {
+      try {
+        const storedBookmarks = localStorage.getItem('bookmarkedQuestions');
+        if (storedBookmarks) {
+          setBookmarkedQuestions(JSON.parse(storedBookmarks));
+        }
+      } catch (error) {
+        console.error("Error loading bookmarks:", error);
+      }
     }
 
     // If a specific question is requested via URL, jump to it
@@ -101,7 +155,7 @@ export default function TestReviewPage() {
     }
 
     setLoading(false);
-  }, [testId, questionParam, router]);
+  }, [testId, questionParam, router, toast]);
 
   // Handle navigation between questions
   const goToNextQuestion = () => {
@@ -269,6 +323,7 @@ export default function TestReviewPage() {
         </Button>
       </Flex>
 
+
       {/* Question card */}
       <Card mb={6}>
         <CardBody>
@@ -385,5 +440,8 @@ export default function TestReviewPage() {
     </Box>
   );
 }
+
+
+
 
 

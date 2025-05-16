@@ -11,8 +11,22 @@ import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import '@/styles/carousel.css';
+import {useRouter} from 'next/navigation';
+import {useAuth} from '@/components/AuthContext';
 
 export default function ExamCategories() {
+
+  const router = useRouter()
+  const {user} = useAuth()
+
+  // Handle test click - redirect to login if not authenticated
+  const handleTestClick = (e) => {
+    if (!user) {
+      e.preventDefault();
+      router.push('/auth/login');
+    }
+  }
+
   // Create categories from the courses data
   const categories = [
     ...courses.map(course => ({
@@ -152,7 +166,10 @@ export default function ExamCategories() {
       {/* Exams Grid */}
       <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6} mx={4}>
         {currentExams.map(exam => (
-          <Link key={exam.id} href={`/tests/${exam.category}/${exam.id}`}>
+          <Link key={exam.id}
+          href={`/tests/${exam.category}/${exam.id}`}
+          onClick={handleTestClick}
+          >
             <Card
               overflow="hidden"
               variant="outline"

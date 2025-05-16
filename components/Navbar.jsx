@@ -13,16 +13,23 @@ export default function Navbar() {
     const [menuOpen, setMenuOpen] = useState(false)
 
     useEffect(() => {
-        // Fetch username from local storage
-        const storedUser = localStorage.getItem('mockUser') ?
-            JSON.parse(localStorage.getItem('mockUser')) : null;
+        // Only run on client-side to prevent hydration mismatch
+        if (typeof window === 'undefined') return;
 
-        if (storedUser && storedUser.name) {
-            setUsername(storedUser.name);
-        } else if (user && user.displayName) {
-            setUsername(user.displayName);
-        } else if (user && user.email) {
-            setUsername(user.email.split('@')[0]);
+        try {
+            // Fetch username from local storage
+            const storedUser = localStorage.getItem('mockUser') ?
+                JSON.parse(localStorage.getItem('mockUser')) : null;
+
+            if (storedUser && storedUser.name) {
+                setUsername(storedUser.name);
+            } else if (user && user.displayName) {
+                setUsername(user.displayName);
+            } else if (user && user.email) {
+                setUsername(user.email.split('@')[0]);
+            }
+        } catch (error) {
+            console.error("Error loading user data:", error);
         }
     }, [user]);
 

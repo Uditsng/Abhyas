@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState } from 'react';
-import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut } from 'firebase/auth';
+import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, signInWithEmailAndPassword } from 'firebase/auth';
 import {auth} from '@/lib/firebase'
 import { syncBookmarks } from '@/lib/bookmarkService';
 
@@ -56,10 +56,14 @@ export function AuthProvider({ children }) {
     return () => unsubscribe();
   }, []);
 
-  const signIn = async () => {
-    const provider = new GoogleAuthProvider();
+  const signIn = async (email, password) => {
     try {
-      return await signInWithPopup(auth, provider);
+      if (email && password) {
+        return await signInWithEmailAndPassword(auth, email, password);
+      } else {
+        const provider = new GoogleAuthProvider();
+        return await signInWithPopup(auth, provider);
+      }
     } catch (error) {
       console.error('Error during sign-in:', error);
       throw error;

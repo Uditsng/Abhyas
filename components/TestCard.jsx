@@ -2,13 +2,19 @@
 
 import { useRouter } from "next/navigation";
 import Image from 'next/image';
+import {useAuth} from '@/components/AuthContext';
 
 export default function TestCard({ id, title, duration, category, isPaid, imageUrl }) {
 
   const router = useRouter();
+  const {user} = useAuth()
 
   const handleClick = () => {   // on click it changes page to - /test/mock1
-    router.push(`/test/${id}`)
+    if (user) {
+      router.push(`/test/${id}`);
+    } else {
+      router.push('/auth/login');
+    }
   }
 
   return (

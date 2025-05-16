@@ -1,0 +1,54 @@
+/* Custom styles for the test page */
+
+/* Button styles */
+.btn-primary {
+  @apply bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 text-white px-4 py-2 rounded-md transition-colors duration-200;
+}
+
+.btn-secondary {
+  @apply bg-gray-200 hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200 px-4 py-2 rounded-md transition-colors duration-200;
+}
+
+/* Question status colors */
+.question-answered {
+  @apply bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 border border-green-300 dark:border-green-700;
+}
+
+.question-not-visited {
+  @apply bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600;
+}
+
+.question-marked {
+  @apply bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200 border border-yellow-300 dark:border-yellow-700;
+}
+
+.question-answered-marked {
+  @apply bg-purple-100 dark:bg-purple-900 text-purple-800 dark:text-purple-200 border border-purple-300 dark:border-purple-700;
+}
+
+/* Sidebar styles */
+.test-sidebar {
+  @apply bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md transition-colors duration-200;
+}
+
+/* Progress indicator styles */
+.progress-indicator {
+  @apply flex items-center justify-between mb-2;
+}
+
+.progress-label {
+  @apply text-sm text-gray-700 dark:text-gray-300;
+}
+
+/* Legend item */
+.legend-item {
+  @apply flex items-center;
+}
+
+.legend-color {
+  @apply w-3 h-3 rounded-sm mr-1;
+}
+
+.legend-text {
+  @apply text-xs text-gray-600 dark:text-gray-400;
+}

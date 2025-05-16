@@ -8,6 +8,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { courses } from '@/lib/courses';
 import { testSeries } from '@/lib/tests';
+import {useRouter} from 'next/navigation';
+import { useAuth } from '@/components/AuthContext';
 
 // Preload common images
 const preloadedImages = {};
@@ -25,8 +27,20 @@ if (typeof window !== 'undefined') {
 }
 
 export default function LiveTestsSection() {
+
+  const router =  useRouter();
+  const { user } = useAuth();
+
   // State for active category
   const [activeCategory, setActiveCategory] = useState('ssc-cgl');
+
+  // Handle test click - redirect to login if not authenticated
+  const handleTestClick = (e) => {
+    if (!user) {
+      e.preventDefault();
+      router.push('/auth/login');
+    }
+  };
 
   // Categories for the buttons - using our existing course data
   const categories = courses.map(course => ({
@@ -133,7 +147,11 @@ export default function LiveTestsSection() {
                   </p>
 
                   <div className="flex gap-2">
-                    <Link href={`/tests/${activeCategory}/${test.id}`} className="bg-cyan-500 hover:bg-cyan-600 text-white text-xs px-4 py-2 rounded-md flex-1 text-center">
+                    <Link
+                      href={`/tests/${activeCategory}/${test.id}`}
+                      onClick={(e) => handleTestClick(e)}
+                      className="bg-cyan-500 hover:bg-cyan-600 text-white text-xs px-4 py-2 rounded-md flex-1 text-center"
+                    >
                       Take Test
                     </Link>
                     <button className="border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-xs px-4 py-2 rounded-md transition-colors duration-200">

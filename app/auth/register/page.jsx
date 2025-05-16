@@ -2,10 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import Link from 'next/link';
-import { useAuth } from '@/components/AuthContext'; // Ensure this is correctly implemented and provides signIn
 import { auth } from '@/lib/firebase';
+import { useAuth } from '@/components/AuthContext';
+import { saveUserProfile, getUserProfile } from '@/lib/userService';
 
 export default function RegisterPage() {
 
@@ -32,18 +33,45 @@ export default function RegisterPage() {
     }
 
     try {
+      // 1. Create the user in Firebase Auth
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCred.user;
 
-      // Save name temporarily in local Storage for greeting
-      localStorage.setItem('mockUser', JSON.stringify({ name, email }));
+      // 2. Update the user's display name
+      await updateProfile(user, { displayName: name });
 
-      // Show success message
+      // 3. Create a document in the users collection
+      const userData = {
+        name: name,
+        email: email,
+        displayName: name,
+        role: "user", // Default role (may be changed to superAdmin if first user)
+        createdAt: new Date(),
+      };
+
+      const profileSaved = await saveUserProfile(user.uid, userData);
+
+      if (!profileSaved) {
+        console.error("Failed to save user profile to Firestore");
+      }
+
+      // 4. Check if user was made a superAdmin (first user in system)
+      const userProfile = await getUserProfile(user.uid);
+      const isSuperAdmin = userProfile && userProfile.role === 'superAdmin';
+
+      // 5. Save name temporarily in local Storage for greeting
+      localStorage.setItem('mockUser', JSON.stringify({
+        name,
+        email,
+        isSuperAdmin
+      }));
+
+      // 6. Show success message
       setSuccess(true);
 
-      // Redirect after a short delay to let user see success message
+      // 7. Redirect after a short delay
       setTimeout(() => {
-        router.push('/dashboard');
+        router.push(isSuperAdmin ? '/admin' : '/dashboard');
       }, 2000);
 
     } catch (err) {
@@ -59,6 +87,7 @@ export default function RegisterPage() {
       }
 
       setError(errorMessage);
+      console.error("Registration error:", err);
     } finally {
       setIsLoading(false);
     }
@@ -71,7 +100,15 @@ export default function RegisterPage() {
 
         {success ? (
           <div className="bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-3 rounded mb-4">
-            <p>Registration successful! Redirecting to dashboard ...</p>
+            {JSON.parse(localStorage.getItem('mockUser') || '{}').isSuperAdmin ? (
+              <>
+                <p className="font-bold">Registration successful!</p>
+                <p>You are the first user, so you've been made a SuperAdmin.</p>
+                <p>Redirecting to admin panel...</p>
+              </>
+            ) : (
+              <p>Registration successful! Redirecting to dashboard...</p>
+            )}
           </div>
         ) : (
           <form onSubmit={handleRegister}>

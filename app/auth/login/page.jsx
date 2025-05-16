@@ -1,10 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import {auth} from '@/lib/firebase'
-import { useAuth } from '@/components/AuthContext';
+import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
+import { auth } from '@/lib/firebase'
 import Link from 'next/link';
 
 export default function LoginPage() {
@@ -12,34 +11,36 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const {signIn } = useAuth()
 
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    if (email && password) {
+    if (!email || !password) {
       setIsLoading(false);
       return;
     }
 
-    try{
-      const userCred = signInWithEmailAndPassword(auth, email, password)
-      const user = userCred.user;
+    try {
+      // Use await to properly handle the Promise
+      await signInWithEmailAndPassword(auth, email, password);
 
-      const storedUser = JSON.parse(localStorage.getItem('mockUser'))
-      if (storedUser && storedUser.email === email){
-
-        localStorage.setItem('mockUser', JSON.stringify
-          ({
-            name: storedUser.name,
-             email: email
-      }))
+      // Store user info in localStorage
+      const storedUser = JSON.parse(localStorage.getItem('mockUser') || '{}');
+      if (storedUser && storedUser.email === email) {
+        localStorage.setItem('mockUser', JSON.stringify({
+          name: storedUser.name,
+          email: email
+        }));
       }
 
-      router.push('/dashboard')
-    } finally{
+      // Redirect to dashboard
+      router.push('/dashboard');
+    } catch (error) {
+      console.error('Login error:', error);
+      alert('Login failed: ' + (error.message || 'Please check your credentials'));
+    } finally {
       setIsLoading(false);
     }
   };
@@ -74,9 +75,32 @@ export default function LoginPage() {
                      text-white py-2 rounded-md transition-colors duration-200"
           disabled={isLoading}
         >
-          {isLoading ? 'Logging in...' : 'Login'}
+          {isLoading ? 'Logging in...' : 'Login with Email'}
         </button>
       </form>
+
+      <div className="mt-4">
+        <button
+          onClick={async () => {
+            try {
+              setIsLoading(true);
+              const provider = new GoogleAuthProvider();
+              await signInWithPopup(auth, provider);
+              router.push('/dashboard');
+            } catch (error) {
+              console.error('Google sign-in error:', error);
+              alert('Google sign-in failed: ' + (error.message || 'Please try again'));
+            } finally {
+              setIsLoading(false);
+            }
+          }}
+          className="w-full bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800
+                     text-white py-2 rounded-md transition-colors duration-200"
+          disabled={isLoading}
+        >
+          {isLoading ? 'Signing in...' : 'Sign in with Google'}
+        </button>
+      </div>
 
       <div className="mt-4 text-center text-gray-600 dark:text-gray-400">
         Don't have an account?{' '}

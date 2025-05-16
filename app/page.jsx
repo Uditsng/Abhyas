@@ -10,8 +10,22 @@ import ExamCategories from '@/components/ExamCategories';
 import LiveTestsSection from '@/components/LiveTestsSection';
 import LottieSection from '@/components/LottieSection';
 import ExploreSuperCoaching from '@/components/ExploreSuperCoaching';
+import {useAuth} from '@/components/AuthContext';
+import {useRouter} from 'next/navigation';
+import {useEffect} from 'react';
 
 export default function HomePage() {
+
+  const {user, loading} = useAuth();
+  const router = useRouter();
+  // Redirect authenticated users to dashboard
+  useEffect(() => {
+    if (!loading && user) {
+      router.push('/dashboard');
+    }
+  }, [user, loading, router]);
+
+
   // Carousel settings
   const sliderSettings = {
     dots: true,
