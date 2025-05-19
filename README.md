@@ -2,6 +2,35 @@ This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-
 
 ## Getting Started
 
+### Environment Variables (REQUIRED)
+
+This project uses Firebase for authentication and database. You **MUST** set up environment variables for Firebase configuration to run the application. The app will not work without these variables.
+
+1. Create a `.env.local` file in the root directory of the project
+2. Add the following environment variables with your Firebase project values:
+
+```
+NEXT_PUBLIC_FIREBASE_API_KEY=your_api_key
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_auth_domain
+NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project_id
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
+NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID=your_measurement_id
+```
+
+3. Replace the placeholder values with your actual Firebase configuration from your Firebase project settings
+
+> **IMPORTANT**: Never commit your `.env.local` file to version control. It contains sensitive API keys that should be kept private. The `.env.local` file is already added to `.gitignore`.
+
+#### How to get Firebase configuration values:
+
+1. Go to the [Firebase Console](https://console.firebase.google.com/)
+2. Select your project (or create a new one)
+3. Click on the gear icon (⚙️) next to "Project Overview" and select "Project settings"
+4. Scroll down to the "Your apps" section and select your web app (or create one)
+5. Copy the configuration values from the Firebase SDK snippet
+
 First, run the development server:
 
 ```bash

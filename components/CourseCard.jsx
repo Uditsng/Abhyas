@@ -22,9 +22,8 @@ export default function CourseCard({ id, title, description, image }) {
             width={80}
             height={80}
             className="w-full h-full object-cover"
-            onError={(e) => {
-              e.target.src = '/images/placeholder.png';
-            }}
+            placeholder="blur"
+            blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYyMCIgaGVpZ2h0PSI1MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2YyZjJmMiIvPjwvc3ZnPg=="
           />
         ) : (
           <span className="text-blue-600 dark:text-blue-400 text-2xl font-bold">{title.charAt(0)}</span>

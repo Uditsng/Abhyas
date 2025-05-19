@@ -74,6 +74,7 @@ const theme = extendTheme({
 function Providers({ children }) {
   return (
     <ThemeProvider>
+      {/* ThemeProvider will only render its children after client-side hydration */}
       <ChakraProvider theme={theme} resetCSS={false}>
         <AuthProvider>
           <PerformanceOptimizer />

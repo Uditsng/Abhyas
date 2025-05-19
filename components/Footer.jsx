@@ -1,10 +1,14 @@
 'use client';
 
 import Link from 'next/link';
+import { useTheme } from './ThemeContext';
 
 export default function Footer() {
-  // We don't need to destructure anything from useTheme() here anymore
-  // since we're using the ThemeToggle component
+  // Get mounted state from ThemeContext to prevent hydration mismatch
+  const { mounted } = useTheme();
+
+  // Don't render until client-side hydration is complete
+  if (!mounted) return null;
 
   return (
     <footer className="bg-white dark:bg-gray-800 border-t border-gray-200 dark:border-gray-700 py-8 transition-colors duration-200">

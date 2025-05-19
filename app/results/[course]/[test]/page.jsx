@@ -12,8 +12,11 @@ export default function ResultPage() {
   const router = useRouter();
 
   // Extract course and test IDs from params
-  const courseId = Array.isArray(params.course) ? params.course[0] : params.course;
-  const testId = Array.isArray(params.test) ? params.test[0] : params.test;
+  // const courseId = Array.isArray(params.course) ? params.course[0] : params.course;
+  // const testId = Array.isArray(params.test) ? params.test[0] : params.test;
+  const courseId = params.course;
+  const testId = params.test;
+
 
   // State
   const [result, setResult] = useState(null);

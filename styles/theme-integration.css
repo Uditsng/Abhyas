@@ -1,4 +1,4 @@
-/* 
+/*
   Theme Integration CSS
   This file helps standardize styling between Tailwind CSS and Chakra UI
 */
@@ -17,111 +17,60 @@
   --color-info: var(--chakra-colors-blue-400);
 }
 
-/* Standardize spacing */
-.chakra-space-standard {
-  margin: var(--chakra-space-4);
-  padding: var(--chakra-space-4);
-}
+/* Standardize spacing - removed */
 
-/* Standardize transitions */
-.standard-transition {
-  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
-  transition-duration: 200ms;
-}
+/* Standardize transitions - removed */
 
-/* Standardize shadows */
-.standard-shadow {
-  box-shadow: var(--chakra-shadows-md);
-}
+/* Standardize shadows - removed */
 
-/* Standardize border radius */
-.standard-radius {
-  border-radius: var(--chakra-radii-md);
-}
+/* Standardize border radius - removed */
 
-/* Standardize focus styles */
-.standard-focus:focus {
-  outline: 2px solid var(--chakra-colors-blue-500);
-  outline-offset: 2px;
-}
+/* Standardize focus styles - removed */
 
 /* Dark mode compatibility helpers */
 .dark-mode-text {
-  @apply text-gray-900 dark:text-gray-100;
+  color: #1a202c;
+}
+.dark .dark-mode-text {
+  color: #f7fafc;
 }
 
 .dark-mode-bg {
-  @apply bg-white dark:bg-gray-800;
+  background-color: #ffffff;
+}
+.dark .dark-mode-bg {
+  background-color: #1a365d;
 }
 
 .dark-mode-border {
-  @apply border-gray-200 dark:border-gray-700;
+  border-color: #e2e8f0;
+}
+.dark .dark-mode-border {
+  border-color: #2d3748;
 }
 
-/* Responsive helpers that work with both systems */
-.responsive-padding {
-  @apply px-4 py-2 md:px-6 md:py-3 lg:px-8 lg:py-4;
-}
+/* Responsive helpers that work with both systems - removed */
 
-.responsive-margin {
-  @apply m-2 md:m-4 lg:m-6;
-}
+/* Button styles that work with both systems - removed */
 
-/* Button styles that work with both systems */
-.standard-button {
-  @apply px-4 py-2 rounded-md transition-colors duration-200;
-}
+/* Card styles that work with both systems - removed */
 
-.primary-button {
-  @apply standard-button bg-blue-500 hover:bg-blue-600 text-white;
-}
+/* Text styles that work with both systems - removed */
 
-.secondary-button {
-  @apply standard-button bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-800 dark:text-gray-200;
-}
+/* Form element styles - removed */
 
-.accent-button {
-  @apply standard-button bg-cyan-500 hover:bg-cyan-600 text-white;
-}
-
-/* Card styles that work with both systems */
-.standard-card {
-  @apply bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 md:p-6 transition-colors duration-200;
-}
-
-/* Text styles that work with both systems */
-.heading-text {
-  @apply text-gray-900 dark:text-gray-100 font-bold;
-}
-
-.body-text {
-  @apply text-gray-700 dark:text-gray-300;
-}
-
-.muted-text {
-  @apply text-gray-500 dark:text-gray-400 text-sm;
-}
-
-/* Form element styles */
-.standard-input {
-  @apply bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-md px-3 py-2 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200;
-}
-
-/* Image container styles */
-.image-container {
-  @apply relative overflow-hidden rounded-md;
-}
+/* Image container styles - removed */
 
 /* Badge styles */
-.standard-badge {
+/* .standard-badge {
   @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
-}
+} */
 
-.primary-badge {
+/* .primary-badge {
   @apply standard-badge bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300;
-}
+} */
 
-.success-badge {
+/* .success-badge {
   @apply standard-badge bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300;
 }
 
@@ -131,4 +80,4 @@
 
 .error-badge {
   @apply standard-badge bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300;
-}
+} */

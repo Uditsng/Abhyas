@@ -5,13 +5,15 @@ import { createContext, useContext, useEffect, useState } from 'react';
 const ThemeContext = createContext();
 
 export function ThemeProvider({ children }) {
-  // Initialize with a default value that won't cause hydration mismatch
-  const [darkMode, setDarkMode] = useState(false);
+  // Initialize with undefined to avoid hydration mismatch
+  const [darkMode, setDarkMode] = useState(undefined);
   const [mounted, setMounted] = useState(false);
   const [isSystemPreference, setIsSystemPreference] = useState(false);
 
-  // Apply theme to document
+  // Apply theme to document - only run on client
   const applyTheme = (isDark) => {
+    if (typeof document === 'undefined') return;
+
     if (isDark) {
       document.documentElement.classList.add('dark');
     } else {
@@ -93,7 +95,8 @@ export function ThemeProvider({ children }) {
       mounted,
       isSystemPreference
     }}>
-      {children}
+      {/* Only render children once mounted to prevent hydration mismatch */}
+      {mounted ? children : null}
     </ThemeContext.Provider>
   );
 }

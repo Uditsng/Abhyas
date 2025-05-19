@@ -27,9 +27,8 @@ export default function TestCard({ id, title, duration, category, isPaid, imageU
           width={48}
           height={48}
           className="h-12 w-12 object-contain"
-          onError={(e) => {
-            e.target.src = '/images/placeholder.png';
-          }}
+          placeholder="blur"
+          blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYyMCIgaGVpZ2h0PSI1MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2YyZjJmMiIvPjwvc3ZnPg=="
       />
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold text-gray-800 dark:text-gray-100">{title}</h2>

@@ -2,14 +2,17 @@
 
 //test/[testId]page.jsx and review-page.jsx are for taking and reviewing tests.
 
-
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Box, Flex, Text, Progress, Badge, useToast } from '@chakra-ui/react';
 import { testSeries } from '@/lib/tests';
 import './test-page.css';
+import { useAuthRedirect } from '@/hooks/useAuthRedirect';
 
 export default function TestPage() {
+  // Check if user is authenticated, redirect to login if not
+  const { isAuthenticated, isLoading: authLoading } = useAuthRedirect();
+
   const params = useParams();
   const router = useRouter();
   const toast = useToast();
@@ -23,6 +26,8 @@ export default function TestPage() {
   const [markedForReview, setMarkedForReview] = useState([]);
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [showMobilePalette, setShowMobilePalette] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted, setIsSubmitted] = useState(false);
 
   // Load test data
   useEffect(() => {
@@ -126,6 +131,9 @@ export default function TestPage() {
 
   // Submit test
   const handleSubmitTest = useCallback(() => {
+    // Set submitting state
+    setIsSubmitting(true);
+
     // Calculate score
     let score = 0;
     testData.questions.forEach((question, index) => {
@@ -150,45 +158,69 @@ export default function TestPage() {
       date: new Date().toISOString(),
     };
 
-    // Save result to localStorage
-    const results = JSON.parse(localStorage.getItem('testResults') || '[]');
-    results.push(result);
-    localStorage.setItem('testResults', JSON.stringify(results));
+    try {
+      // Save result to localStorage
+      const results = JSON.parse(localStorage.getItem('testResults') || '[]');
+      results.push(result);
+      localStorage.setItem('testResults', JSON.stringify(results));
 
-    // Show success message
-    toast({
-      title: 'Test submitted',
-      description: `Your score: ${score}/${testData.questions.length}`,
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-    });
+      // Set test as submitted to disable navigation prevention
+      setIsSubmitted(true);
 
-    // Navigate to results page
-    router.push(`/results/${testData.courseId}/${testData.id}`);
+      // Show success message
+      toast({
+        title: 'Test submitted',
+        description: `Your score: ${score}/${testData.questions.length}`,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // Navigate to results page
+      router.push(`/results/${testData.courseId}/${testData.id}`);
+    } catch (error) {
+      console.error('Error submitting test:', error);
+      setIsSubmitting(false);
+
+      toast({
+        title: 'Error',
+        description: 'Failed to submit test. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   }, [testData, selectedOptions, router, toast]);
 
   // Add navigation prevention
   useEffect(() => {
+    // Skip navigation prevention if already submitting or submitted
+    if (isSubmitting || isSubmitted) return;
+
+    // Define warning message
+    const message = "You have unsaved test progress. Are you sure you want to leave?";
+
     // Block navigation using beforeunload (works for tab closing, refreshing)
     const blockNavigation = (e) => {
       e.preventDefault();
-      e.returnValue = '';
-      return '';
+      e.returnValue = message;
+      return message;
     };
 
-     // For App Router, we need to use a simpler approach
     // This will at least warn users when they try to leave
     window.addEventListener('beforeunload', blockNavigation);
 
     return () => {
       window.removeEventListener('beforeunload', blockNavigation);
     };
-  }, []);
+  }, [isSubmitting, isSubmitted]);
 
   //separate effect for handling the back button specifically
   useEffect(() => {
     const handlePopState = (e) => {
+      // If already submitted or submitting, allow navigation
+      if (isSubmitted || isSubmitting) return;
+
       e.preventDefault();
 
       if (window.confirm("You have unsaved test progress. Are you sure you want to leave?")) {
@@ -209,13 +241,27 @@ export default function TestPage() {
     return () => {
       window.removeEventListener('popstate', handlePopState);
     };
-  }, [handleSubmitTest]);
+  }, [handleSubmitTest, isSubmitted, isSubmitting]);
 
-  // If still loading or test not found
-  if (loading || !testData) {
+  // Show loading spinner if either auth is loading or page data is loading
+  if (authLoading || loading) {
     return (
       <Box p={8} maxW="800px" mx="auto">
         <Text>Loading test...</Text>
+      </Box>
+    );
+  }
+
+  // If not authenticated, the useAuthRedirect hook will handle the redirect
+  if (!isAuthenticated) {
+    return null;
+  }
+
+  // If test data not found
+  if (!testData) {
+    return (
+      <Box p={8} maxW="800px" mx="auto">
+        <Text>Test not found. Please check the URL or return to the dashboard.</Text>
       </Box>
     );
   }

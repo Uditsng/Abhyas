@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useAuth } from "./AuthContext"
+import { useTheme } from "./ThemeContext"
 
 export default function Navbar() {
 
@@ -10,6 +11,7 @@ export default function Navbar() {
     const [username, setUsername] = useState('')
     const { user, logout } = useAuth()
     const [menuOpen, setMenuOpen] = useState(false)
+    const { mounted } = useTheme()
 
     useEffect(() => {
         // Only run on client-side to prevent hydration mismatch
@@ -53,6 +55,9 @@ export default function Navbar() {
     const toggleMenu = () => {
         setMenuOpen(!menuOpen);
     }
+
+    // Don't render anything until client-side hydration is complete
+    if (!mounted) return null;
 
     return (
         <nav className="bg-white dark:bg-gray-800 shadow dark:shadow-gray-700 p-4 transition-colors duration-200">

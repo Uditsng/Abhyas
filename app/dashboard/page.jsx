@@ -12,8 +12,12 @@ import CardContainer from '@/components/CardContainer';
 import { courses } from '@/lib/courses';
 import './dashboard.css';
 import ResourceCards from '@/components/ResourceCards';
+import { useAuthRedirect } from '@/hooks/useAuthRedirect';
 
 export default function DashboardPage() {
+  // Check if user is authenticated, redirect to login if not
+  const { isAuthenticated, isLoading: authLoading, user } = useAuthRedirect();
+
   const [username, setUsername] = useState('');
   const [loading, setLoading] = useState(true);
   const [recentTests, setRecentTests] = useState([]);
@@ -22,10 +26,22 @@ export default function DashboardPage() {
 
   // Fetch user data
   useEffect(() => {
-    // Fetch username from local storage
-    const storedUser = JSON.parse(localStorage.getItem('mockUser'));
-    if (storedUser && storedUser.name) {
-      setUsername(storedUser.name);
+    // Set username from authenticated user or localStorage
+    if (user && user.displayName) {
+      setUsername(user.displayName);
+    } else if (user && user.email) {
+      // Use the part before @ in email as username
+      setUsername(user.email.split('@')[0]);
+    } else {
+      // Fallback to localStorage
+      try {
+        const storedUser = JSON.parse(localStorage.getItem('mockUser'));
+        if (storedUser && storedUser.name) {
+          setUsername(storedUser.name);
+        }
+      } catch (error) {
+        console.error('Error parsing user data from localStorage:', error);
+      }
     }
 
     // Load recent test results from localStorage
@@ -71,7 +87,7 @@ export default function DashboardPage() {
     ]);
 
     setLoading(false);
-  }, []);
+  }, [user]);
 
   // Carousel settings
   const sliderSettings = {
@@ -101,12 +117,18 @@ export default function DashboardPage() {
     ]
   };
 
-  if (loading) {
+  // Show loading spinner if either auth is loading or page data is loading
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
       </div>
     );
+  }
+
+  // If not authenticated, the useAuthRedirect hook will handle the redirect
+  if (!isAuthenticated) {
+    return null;
   }
 
   return (

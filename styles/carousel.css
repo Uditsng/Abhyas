@@ -28,7 +28,7 @@
 
 .category-carousel .slick-prev:before,
 .category-carousel .slick-next:before {
-  color: #227fd5 !important; 
+  color: #227fd5 !important;
   font-size: 24px;
 }
 
@@ -38,7 +38,7 @@
 
 .category-carousel .slick-dots li button:before {
   font-size: 10px;
-  color: #3182ce; 
+  color: #3182ce;
 }
 
 .category-carousel .slick-dots li.slick-active button:before {
@@ -54,44 +54,44 @@
 }
 
 /* Custom styles for the exam grid carousel */
-.exam-carousel .slick-track {
+/* .exam-carousel .slick-track {
   display: flex;
   margin: 0 auto;
-  
+
 }
 
 .exam-carousel .slick-slide {
   padding: 10px;
   box-sizing: border-box;
   height: auto;
-}
+} */
 
 /* Hide default dots */
-.exam-carousel .slick-dots {
+/* .exam-carousel .slick-dots {
   display: none !important;
-}
+} */
 
 /* Custom progress bar navigation */
-.progress-bar-container {
+/* .progress-bar-container {
   width: 100%;
   height: 6px;
   background-color: #E2E8F0; /* Chakra gray.200 */
-  border-radius: 3px;
+  /* border-radius: 3px;
   margin-top: 20px;
   position: relative;
   overflow: hidden;
   cursor: pointer;
-}
+} */
 
-.progress-bar {
+/* .progress-bar {
   height: 100%;
-  background-color: #3182CE; /* Chakra blue.500 */
+  background-color: #3182CE;
   border-radius: 3px;
   transition: width 0.3s ease-in-out;
-}
+} */
 
 /* Grid layout for exams within each slide */
-.exam-grid {
+/* .exam-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(2, 1fr);
@@ -118,4 +118,4 @@
     grid-template-columns: repeat(1, 1fr);
     grid-template-rows: repeat(1, 1fr);
   }
-}
+} */

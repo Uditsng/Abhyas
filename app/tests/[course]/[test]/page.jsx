@@ -2,27 +2,32 @@
 
 // app/tests/[course]/[test]/page.jsx  handle test listings and individual test pages.
 
-
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useToast } from "@chakra-ui/react";
 import { testSeries } from "@/lib/tests";
 import { saveTestResult } from "@/lib/testResultService";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebase";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 
 export default function TakeTestPage() {
+  // Check if user is authenticated, redirect to login if not
+  const { isAuthenticated, isLoading: authLoading } = useAuthRedirect();
+
   const params = useParams();
-  const router = useRouter();
   const toast = useToast();
-  // Get user authentication state
+  // Get user authentication state for Firebase operations
   const [user] = useAuthState(auth);
 
   // Extract course and test IDs from params
-  const courseId = Array.isArray(params.course)
-    ? params.course[0]
-    : params.course;
-  const testId = Array.isArray(params.test) ? params.test[0] : params.test;
+  // const courseId = Array.isArray(params.course)
+  //   ? params.course[0]
+  //   : params.course;
+  // const testId = Array.isArray(params.test) ? params.test[0] : params.test;
+
+  const courseId = params.course;
+  const testId = params.test;
 
   // Get test data
   const courseTests = testSeries[courseId] || [];
@@ -31,6 +36,7 @@ export default function TakeTestPage() {
   // State for answers and submission
   const [answers, setAnswers] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSubmitted , setIsSubmitted] = useState(false);
 
   // Timer state
   const [timeRemaining, setTimeRemaining] = useState(0);
@@ -42,6 +48,9 @@ export default function TakeTestPage() {
   // Marked for review state
   const [markedForReview, setMarkedForReview] = useState({});
 
+  // Mobile palette visibility
+  const [showMobilePalette, setShowMobilePalette] = useState(false);
+
   // Initialize timer when component mounts
   useEffect(() => {
     if (testData) {
@@ -50,6 +59,82 @@ export default function TakeTestPage() {
       setTimerStarted(true);
     }
   }, [testData]);
+
+  // Define handleSubmit function
+  const handleSubmit = async () => {
+    const confirmed = window.confirm("Are you sure you want to submit this test?")
+    if(!confirmed) return
+    if (isSubmitting) return;
+
+    setIsSubmitting(true);
+
+    try {
+      // Calculate score
+      let score = 0;
+      testData.questions.forEach((question) => {
+        if (answers[question.id] === question.answer) {
+          score++;
+        }
+      });
+
+      // Create result object
+      const result = {
+        courseId,
+        testId,
+        answers,
+        score,
+        totalQuestions: testData.questions.length,
+        date: new Date().toISOString(),
+      };
+
+      // Store in Firebase if logged in
+      if (user) {
+        await saveTestResult(user.uid, result);
+      } else {
+        // Fallback to localStorage for non-logged in users
+        const results = JSON.parse(localStorage.getItem("testResults") || "[]");
+
+        // Remove any existing result for this test to avoid duplicates
+        const filteredResults = results.filter(
+          (r) => !(r.testId === testId && r.courseId === courseId)
+        );
+
+        filteredResults.push(result);
+        localStorage.setItem("testResults", JSON.stringify(filteredResults));
+      }
+
+      // Set test as submitted to disable navigation prevention
+      setIsSubmitted(true);
+
+      toast({
+        title: "Test submitted",
+        description: "Your answers have been recorded",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+
+      // Navigate to review page
+      console.log("Test submitted successfully, redirecting to review page...");
+
+      // Use a simple approach for navigation to avoid history API conflicts
+      // Wait a short time to ensure the toast is visible and data is saved
+      setTimeout(() => {
+        // Use window.location for a full page navigation which avoids React hydration issues
+        window.location.href = `/review/${testId}`;
+      }, 1000);
+    } catch (error) {
+      console.error("Error submitting test:", error);
+      toast({
+        title: "Error",
+        description: "Failed to submit test. Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      setIsSubmitting(false);
+    }
+  };
 
   // Timer countdown effect
   useEffect(() => {
@@ -68,7 +153,7 @@ export default function TakeTestPage() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timerStarted, timeRemaining]);
+  }, [timerStarted, timeRemaining, handleSubmit]);
 
 
 
@@ -115,85 +200,10 @@ export default function TakeTestPage() {
     }));
   };
 
-
-
-  const handleSubmit = async () => {
-    const confirmed = window.confirm("Are you sure you want to submit this test?")
-    if(!confirmed) return
-    if (isSubmitting) return;
-
-    setIsSubmitting(true);
-
-    try {
-      // Calculate score
-      let score = 0;
-      testData.questions.forEach((question) => {
-        if (answers[question.id] === question.answer) {
-          score++;
-        }
-      });
-
-      // Create result object
-      const result = {
-        courseId,
-        testId,
-        answers,
-        score,
-        totalQuestions: testData.questions.length,
-        date: new Date().toISOString(),
-      };
-
-      // Store in Firebase if logged in
-      if (user) {
-        await saveTestResult(user.uid, result);
-      } else {
-        // Fallback to localStorage for non-logged in users
-        const results = JSON.parse(localStorage.getItem("testResults") || "[]");
-
-        // Remove any existing result for this test to avoid duplicates
-        const filteredResults = results.filter(
-          (r) => !(r.testId === testId && r.courseId === courseId)
-        );
-
-        filteredResults.push(result);
-        localStorage.setItem("testResults", JSON.stringify(filteredResults));
-      }
-
-      toast({
-        title: "Test submitted",
-        description: "Your answers have been recorded",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-
-      // Navigate to review page
-      console.log("Test submitted successfully, redirecting to review page...");
-
-      // Use a simple approach for navigation to avoid history API conflicts
-      // Wait a short time to ensure the toast is visible and data is saved
-      setTimeout(() => {
-        // Use window.location for a full page navigation which avoids React hydration issues
-        window.location.href = `/review/${testId}`;
-      }, 1000);
-    } catch (error) {
-      console.error("Error submitting test:", error);
-      toast({
-        title: "Error",
-        description: "Failed to submit test. Please try again.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      setIsSubmitting(false);
-    }
-  };
-
-  // Add navigation prevention 
+  // Add navigation prevention
   useEffect(() => {
-
-    // Skip navigation prevention if already submitting
-    if (isSubmitting) return;
+    // Skip navigation prevention if already submitting or submitted
+    if (isSubmitting || isSubmitted) return;
 
     //beforeunload event to warn about leaving the page
     const blockNavigation = (e) => {
@@ -210,7 +220,21 @@ export default function TakeTestPage() {
     return () => {
       window.removeEventListener('beforeunload', blockNavigation);
     };
-  }, [isSubmitting]);
+  }, [isSubmitting, isSubmitted]);
+
+  // Show loading spinner if auth is loading
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  // If not authenticated, the useAuthRedirect hook will handle the redirect
+  if (!isAuthenticated) {
+    return null;
+  }
 
   // If test not found
   if (!testData) {
@@ -220,9 +244,6 @@ export default function TakeTestPage() {
   // Get current question
   const currentQuestion = testData.questions[currentQuestionIndex];
   const isFirstQuestion = currentQuestionIndex === 0;
-
-  // mobile palette visibility
-  const [showMobilePalette, setShowMobilePalette] = useState(false);
 
   // Get class for question status in palette
   const getQuestionStatusClass = (question) => {

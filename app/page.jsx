@@ -68,11 +68,10 @@ export default function HomePage() {
               priority
               sizes="100vw"
               quality={85}
-              onError={(e) => {
-                e.target.src = '/images/banner.jpg';
-              }}
-            />
-          </div>
+              placeholder="blur"
+             blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYyMCIgaGVpZ2h0PSI1MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2YyZjJmMiIvPjwvc3ZnPg=="
+          />
+             </div>
           <div className="relative w-full banner-slide bg-cyan-200">
             <Image
               src="/images/textbook selection banner.webp"
@@ -82,9 +81,8 @@ export default function HomePage() {
               className="  banner-image"
               sizes="100vw"
               quality={85}
-              onError={(e) => {
-                e.target.src = '/images/banner.jpg';
-              }}
+              placeholder="blur"
+              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYyMCIgaGVpZ2h0PSI1MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2YyZjJmMiIvPjwvc3ZnPg=="
             />
           </div>
         </Slider>

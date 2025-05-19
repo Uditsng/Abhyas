@@ -7,6 +7,8 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
+import AdminSidebar from '@/components/admin/Sidebar';
+
 
 export default function AdminLayout({ children }) {
   const pathname = usePathname();
@@ -15,13 +17,6 @@ export default function AdminLayout({ children }) {
   const [user, authLoading] = useAuthState(auth);
   const [isAdmin, setIsAdmin] = useState(false);
   const [loading, setLoading] = useState(true);
-
-  // Simple navigation items
-  const navItems = [
-    { name: 'Dashboard', path: '/admin' },
-    { name: 'Tests', path: '/admin/tests' },
-    { name: 'Users', path: '/admin/users' },
-  ];
 
   useEffect(() => {
     async function checkAdminRole() {
@@ -35,7 +30,7 @@ export default function AdminLayout({ children }) {
 
         // Check if user has admin or superAdmin role
         if (userDoc.exists() && (userDoc.data().role === "admin" || userDoc.data().role === "superAdmin")) {
-          setIsAdmin(true);
+          setIsAdmin(true); 
         } else {
           // Not an admin, redirect to dashboard
           toast({
@@ -86,38 +81,15 @@ export default function AdminLayout({ children }) {
 
   return (
     <Flex minH="100vh">
-      {/* Simple sidebar */}
-      <Box
-        as="nav"
-        w="240px"
-        bg="blue.700"
-        color="white"
-        p={4}
-        display={{ base: 'none', md: 'block' }}
-      >
-        <Text fontSize="xl" fontWeight="bold" mb={6}>
-          Admin Panel
-        </Text>
-
-        <VStack align="stretch" spacing={1}>
-          {navItems.map((item) => (
-            <Link href={item.path} key={item.name} passHref>
-              <ChakraLink
-                p={2}
-                borderRadius="md"
-                bg={pathname === item.path ? 'blue.800' : 'transparent'}
-                _hover={{ bg: 'blue.800' }}
-                textDecoration="none"
-              >
-                {item.name}
-              </ChakraLink>
-            </Link>
-          ))}
-        </VStack>
-      </Box>
+      <AdminSidebar />
 
       {/* Main content */}
-      <Box flex={1} p={6} ml={{ base: 0, md: '240px' }}>
+      <Box 
+      flex={1} 
+      p={6} 
+      ml={{ base: '60px', md: '240px' }}
+      transition='margin-left 0.3s ease'
+      >
         {children}
       </Box>
     </Flex>
