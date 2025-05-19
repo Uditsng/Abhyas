@@ -2,11 +2,9 @@
 
 //Admin Panel: page.jsx and subfolders for managing users and tests.
 
-import { Box, Heading, SimpleGrid, Flex, Icon } from '@chakra-ui/react';
-import { Card as TremorCard, Title, AreaChart } from '@tremor/react';
-import { FiUsers, FiFileText, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
-import StatCard from '@/components/admin/StatCard';
-import BarChart from '@/components/admin/BarChart';
+import { Box, Heading, SimpleGrid, Icon } from '@chakra-ui/react';
+import { Card as TremorCard, Title, AreaChart, BarChart, DonutChart } from '@tremor/react';
+import StatCard, { adminStats } from '@/components/admin/StatCard';
 
 // Sample data for our charts
 const chartdata = [
@@ -66,45 +64,51 @@ const testPerformanceData = [
   },
 ];
 
+//DonutChart data
+const earningChartData = [
+  {
+    'name': 'SSC-CGL',
+    'amount earned': 200000 
+  },
+  {
+    'name':'Banking',
+    'amount earned': 150000
+  },
+  {
+    'name':'Railways',
+    'amount earned': 300000
+  },
+  {
+    'name':'UPSC Prelims',
+    'amount earned': 100000
+  },
+  {
+    'name':'State PSC',
+    'amount earned': 250000
+  }
+]
+
+
 export default function AdminDashboard() {
   return (
     <Box>
       <Heading mb={6}>Admin Dashboard</Heading>
       
-      {/* Enhanced stats cards with trends */}
+      {/* stats cards with trends */}
       <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6} mb={8}>
-        <StatCard 
-          title="Total Users" 
-          value="1,024" 
-          trend={12} 
-          timeframe="vs last month"
-          icon={<Icon as={FiUsers} boxSize={6} />}
-        />
-        
-        <StatCard 
-          title="Active Tests" 
-          value="42" 
-          trend={8} 
-          timeframe="vs last month"
-          icon={<Icon as={FiFileText} boxSize={6} />}
-        />
-        
-        <StatCard 
-          title="Questions" 
-          value="2,580" 
-          trend={15} 
-          timeframe="vs last month"
-          icon={<Icon as={FiCheckCircle} boxSize={6} />}
-        />
-        
-        <StatCard 
-          title="Error Rate" 
-          value="0.8%" 
-          trend={-2} 
-          timeframe="vs last month"
-          inverted={true}
-          icon={<Icon as={FiAlertCircle} boxSize={6} />}
-        />
+
+        {adminStats.map((stat, index) => (
+          <StatCard 
+            key={index}
+            title={stat.title} 
+            value={stat.value} 
+            trend={stat.trend} 
+            timeframe={stat.timeframe}
+            inverted={stat.inverted}
+            icon={<Icon as={stat.icon} boxSize={6} />}
+          />
+        ))}
+
       </SimpleGrid>
       
       {/* Charts section */}
@@ -122,17 +126,36 @@ export default function AdminDashboard() {
           />
         </TremorCard>
         
+        <TremorCard>
+          <Title>Test Performance by Category</Title>
         {/* Bar chart */}
         <BarChart
-          title="Test Performance by Category"
-          subtitle="Average scores and pass rates"
           data={testPerformanceData}
           index="test"
           categories={['Avg Score', 'Pass Rate']}
-          colors={['purple', 'cyan']}
-          showTooltip={false} // Hides the hover tooltip
+          // colors={['purple','cyan']}
+          showTooltip={false}
+          className="h-72 mt-4"
         />
+        </TremorCard>
+      </SimpleGrid>
+
+      {/* //{DonutChart} */}
+      <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6} mb={8}>
+        <TremorCard>
+          <Title>Revenue by Exam Category</Title>
+        <DonutChart
+            data={earningChartData}
+            category="name"
+            value="amount earned"
+            valueFormatter={(value) => `₹${value}`}
+            colors={["blue", "cyan", "indigo", "violet", "purple"]}
+            className="h-72 mt-4" 
+          />
+        </TremorCard>
       </SimpleGrid>
     </Box>
   );
 }
+
+

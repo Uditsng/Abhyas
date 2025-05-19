@@ -1,19 +1,42 @@
 'use client';
 
 import { Box, Flex, Text, Heading, useColorModeValue } from '@chakra-ui/react';
+import { FiUsers, FiFileText, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
 import TrendIndicator from './TrendIndicator';
 
-/**
- * StatCard component for displaying a metric with optional trend indicator
- * 
- * @param {Object} props
- * @param {string} props.title - The title of the stat
- * @param {string|number} props.value - The main value to display
- * @param {number} props.trend - The trend percentage (optional)
- * @param {string} props.timeframe - Timeframe for the trend (optional)
- * @param {boolean} props.inverted - Whether negative trends are good (optional)
- * @param {React.ReactNode} props.icon - Icon to display (optional)
- */
+// Define all stat cards data here
+export const adminStats = [
+  {
+    title: "Total Users",
+    value: "1,024",
+    trend: 12,
+    timeframe: "vs last month",
+    icon: FiUsers
+  },
+  {
+    title: "Active Tests",
+    value: "42",
+    trend: 8,
+    timeframe: "vs last month",
+    icon: FiFileText
+  },
+  {
+    title: "Questions",
+    value: "2,580",
+    trend: 15,
+    timeframe: "vs last month",
+    icon: FiCheckCircle
+  },
+  {
+    title: "Error Rate",
+    value: "0.8%",
+    trend: -2,
+    timeframe: "vs last month",
+    inverted: true,
+    icon: FiAlertCircle
+  }
+];
+
 export default function StatCard({ 
   title, 
   value, 

@@ -17,16 +17,6 @@
   --color-info: var(--chakra-colors-blue-400);
 }
 
-/* Standardize spacing - removed */
-
-/* Standardize transitions - removed */
-
-/* Standardize shadows - removed */
-
-/* Standardize border radius - removed */
-
-/* Standardize focus styles - removed */
-
 /* Dark mode compatibility helpers */
 .dark-mode-text {
   color: #1a202c;
@@ -49,35 +39,3 @@
   border-color: #2d3748;
 }
 
-/* Responsive helpers that work with both systems - removed */
-
-/* Button styles that work with both systems - removed */
-
-/* Card styles that work with both systems - removed */
-
-/* Text styles that work with both systems - removed */
-
-/* Form element styles - removed */
-
-/* Image container styles - removed */
-
-/* Badge styles */
-/* .standard-badge {
-  @apply inline-flex items-center px-2 py-1 rounded-full text-xs font-medium;
-} */
-
-/* .primary-badge {
-  @apply standard-badge bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300;
-} */
-
-/* .success-badge {
-  @apply standard-badge bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300;
-}
-
-.warning-badge {
-  @apply standard-badge bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300;
-}
-
-.error-badge {
-  @apply standard-badge bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300;
-} */
