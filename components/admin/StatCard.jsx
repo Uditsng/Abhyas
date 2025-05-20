@@ -1,10 +1,10 @@
 'use client';
 
 import { Box, Flex, Text, Heading, useColorModeValue } from '@chakra-ui/react';
-import { FiUsers, FiFileText, FiCheckCircle, FiAlertCircle } from 'react-icons/fi';
+import { FiUsers, FiFileText, FiCheckCircle, FiDollarSign } from 'react-icons/fi';
 import TrendIndicator from './TrendIndicator';
 
-// Define all stat cards data here
+// all stat cards data here
 export const adminStats = [
   {
     title: "Total Users",
@@ -28,12 +28,12 @@ export const adminStats = [
     icon: FiCheckCircle
   },
   {
-    title: "Error Rate",
-    value: "0.8%",
+    title: "Earnings",
+    value: "3500",
     trend: -2,
     timeframe: "vs last month",
     inverted: true,
-    icon: FiAlertCircle
+    icon: FiDollarSign
   }
 ];
 
@@ -68,7 +68,7 @@ export default function StatCard({
             {value}
           </Heading>
           
-          {/* Only show trend if provided */}
+         
           {trend !== undefined && (
             <TrendIndicator 
               value={trend} 
@@ -78,7 +78,7 @@ export default function StatCard({
           )}
         </Box>
         
-        {/* Only show icon if provided */}
+        
         {icon && (
           <Box 
             p={2} 

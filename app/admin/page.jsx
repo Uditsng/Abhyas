@@ -68,23 +68,23 @@ const testPerformanceData = [
 const earningChartData = [
   {
     'name': 'SSC-CGL',
-    'amount earned': 200000 
+    'amount-earned': 200000 
   },
   {
     'name':'Banking',
-    'amount earned': 150000
+    'amount-earned': 150000
   },
   {
     'name':'Railways',
-    'amount earned': 300000
+    'amount-earned': 300000
   },
   {
     'name':'UPSC Prelims',
-    'amount earned': 100000
+    'amount-earned': 100000
   },
   {
     'name':'State PSC',
-    'amount earned': 250000
+    'amount-earned': 250000
   }
 ]
 
@@ -147,10 +147,14 @@ export default function AdminDashboard() {
         <DonutChart
             data={earningChartData}
             category="name"
-            value="amount earned"
-            valueFormatter={(value) => `₹${value}`}
+            value="amount-earned"
+            
+            // valueFormatter={(value) => `₹${value}`}
             colors={["blue", "cyan", "indigo", "violet", "purple"]}
             className="h-72 mt-4" 
+            valueFormatter={(value) =>
+          `$${Intl.NumberFormat("us").format(value).toString()}`
+            }
           />
         </TremorCard>
       </SimpleGrid>
