@@ -7,7 +7,7 @@ import {
   Box, Flex, IconButton, Text, useColorModeValue, VStack, Icon
 } from '@chakra-ui/react';
 import { 
-  FiHome, FiFileText, FiUsers, FiChevronLeft, FiChevronRight 
+  FiHome, FiFileText, FiUsers, FiChevronLeft, FiChevronRight, FiAlertTriangle, FiDollarSign, FiList
 } from 'react-icons/fi';
 
 export default function AdminSidebar() {
@@ -24,13 +24,16 @@ export default function AdminSidebar() {
   const navItems = [
     { name: 'Dashboard', path: '/admin', icon: FiHome },
     { name: 'Tests', path: '/admin/tests', icon: FiFileText },
-    { name: 'Users', path: '/admin/users', icon: FiUsers }
+    { name: 'Users', path: '/admin/users', icon: FiUsers },
+    { name: 'Subscriptions', path: '/admin/subscriptions', icon: FiList },
+    { name: 'Announcements', path: '/admin/announcements', icon: FiAlertTriangle },
+    { name: 'Sales Revenue', path: '/admin/sales-revenue', icon: FiDollarSign }
   ];
 
   return (
     <Box
       as='nav'
-      h='100vh'
+      h='calc(100vh - 64px)'
       bg={bgColor}
       borderRight='1px'
       borderColor={borderColor}
@@ -39,7 +42,10 @@ export default function AdminSidebar() {
       transition='width 0.3s ease'
       position='fixed'
       left={0}
-      top={0}
+      top='64px'
+      bottom="0"
+      zIndex={10}
+      pb='96px'
     >
       {/* Header with toggle button */}
       <Flex 

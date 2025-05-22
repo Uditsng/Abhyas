@@ -60,10 +60,10 @@ export default {
   safelist: [
     {
       pattern: /^(bg|text|border|ring)-tremor-/,
-    },
-    {
-      pattern: /^tremor-/,
-    },
+    }// },
+    // {
+    //   pattern: /^tr-/,
+    // },
   ],
   plugins: [
     require('@tailwindcss/forms'),

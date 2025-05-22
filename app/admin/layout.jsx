@@ -80,7 +80,7 @@ export default function AdminLayout({ children }) {
   }
 
   return (
-    <Flex minH="100vh">
+    <Box position="relative" minH="100vh" pt="64px">
       <AdminSidebar />
 
       {/* Main content */}
@@ -92,7 +92,7 @@ export default function AdminLayout({ children }) {
       >
         {children}
       </Box>
-    </Flex>
+    </Box>
   );
 }
 
