@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Box, Flex, VStack, Text, Link as ChakraLink, Spinner, Center, useToast } from '@chakra-ui/react';
-import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { Box, Spinner, Center, useToast } from '@chakra-ui/react';
+import { useRouter } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
@@ -11,7 +10,6 @@ import AdminSidebar from '@/components/admin/Sidebar';
 
 
 export default function AdminLayout({ children }) {
-  const pathname = usePathname();
   const router = useRouter();
   const toast = useToast();
   const [user, authLoading] = useAuthState(auth);

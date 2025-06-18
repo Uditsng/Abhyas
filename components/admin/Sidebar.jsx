@@ -25,7 +25,6 @@ export default function AdminSidebar() {
     { name: 'Dashboard', path: '/admin', icon: FiHome },
     { name: 'Tests', path: '/admin/tests', icon: FiFileText },
     { name: 'Users', path: '/admin/users', icon: FiUsers },
-    { name: 'Subscriptions', path: '/admin/subscriptions', icon: FiList },
     { name: 'Announcements', path: '/admin/announcements', icon: FiAlertTriangle },
     { name: 'Sales Revenue', path: '/admin/sales-revenue', icon: FiDollarSign }
   ];

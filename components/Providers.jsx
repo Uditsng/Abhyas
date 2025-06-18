@@ -5,11 +5,12 @@
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import { AuthProvider } from '@/components/AuthContext';
 import { ThemeProvider } from '@/components/ThemeContext';
+import { SubscriptionProvider } from '@/components/SubscriptionContext';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import FloatingThemeToggle from '@/components/FloatingThemeToggle';
 import PerformanceOptimizer from '@/components/PerformanceOptimizer';
-import { memo } from 'react';
+import { memo, useEffect, useState } from 'react';
 
 // Define a custom theme for Chakra UI
 const theme = extendTheme({
@@ -72,16 +73,28 @@ const theme = extendTheme({
 
 // Memoize the Providers component to prevent unnecessary re-renders
 function Providers({ children }) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
   return (
     <ThemeProvider>
       {/* ThemeProvider will only render its children after client-side hydration */}
       <ChakraProvider theme={theme} resetCSS={false}>
         <AuthProvider>
-          <PerformanceOptimizer />
-          <Navbar />
-          {children}
-          <Footer />
-          <FloatingThemeToggle />
+          <SubscriptionProvider>
+            <PerformanceOptimizer />
+            <Navbar />
+            {children}
+            <Footer />
+            <FloatingThemeToggle />
+          </SubscriptionProvider>
         </AuthProvider>
       </ChakraProvider>
     </ThemeProvider>

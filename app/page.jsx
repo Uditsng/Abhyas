@@ -4,21 +4,22 @@
 
 import './home.css';
 import Slider from 'react-slick';
-import Image from 'next/image';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import ExamCategories from '@/components/ExamCategories';
 import LiveTestsSection from '@/components/LiveTestsSection';
 import LottieSection from '@/components/LottieSection';
 import ExploreSuperCoaching from '@/components/ExploreSuperCoaching';
-import {useAuth} from '@/components/AuthContext';
-import {useRouter} from 'next/navigation';
-import {useEffect} from 'react';
+import { useAuth } from '@/components/AuthContext';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import { bannerCarouselSettings } from '@/app/config/carouselSettings';
+import OptimizedImage from '@/components/OptimizedImage';
 
 export default function HomePage() {
-
-  const {user, loading} = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
+
   // Redirect authenticated users to dashboard
   useEffect(() => {
     if (!loading && user) {
@@ -26,63 +27,30 @@ export default function HomePage() {
     }
   }, [user, loading, router]);
 
-
-  // Carousel settings
-  const sliderSettings = {
-    dots: true,
-    infinite: true,
-    speed: 500,
-    slidesToShow: 1,
-    slidesToScroll: 1,
-    autoplay: true,
-    autoplaySpeed: 5000,
-    arrows: false,
-    fade: true,
-    pauseOnHover: false,
-    responsive: [
-      {
-        breakpoint: 768,
-        settings: {
-          dots: true,
-          fade: false,
-          speed: 300
-        }
-      }
-    ]
-  };
-
   return (
     <div className="container mx-auto px-4 md:px-8 lg:px-12 xl:px-24 w-full">
       {/* Navbar would be here or is included via layout */}
 
       {/* Banner Carousel */}
-      <div className="w-full carousel-container">
-        <Slider {...sliderSettings}>
-          <div className="relative w-full banner-slide bg-red-500">
-            <Image
+      <div className="w-full max-w-[1900px] mx-auto px-4 sm:px-6 lg:px-8 carousel-container">
+        <Slider {...bannerCarouselSettings}>
+          <div className="relative w-full aspect-[19/6] rounded-lg overflow-hidden">
+            <OptimizedImage
               src="/images/textbook result banner.webp"
               alt="Textbook Result Banner"
-              width={1620}
-              height={500}
-              className=" banner-image"
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, (max-width: 1024px) 80vw, 1900px"
+              className="object-cover"
               priority
-              sizes="100vw"
-              quality={85}
-              placeholder="blur"
-             blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYyMCIgaGVpZ2h0PSI1MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2YyZjJmMiIvPjwvc3ZnPg=="
-          />
-             </div>
-          <div className="relative w-full banner-slide bg-cyan-200">
-            <Image
+            />
+          </div>
+          <div className="relative w-full aspect-[19/6] rounded-lg overflow-hidden">
+            <OptimizedImage
               src="/images/textbook selection banner.webp"
               alt="Textbook Selection Banner"
-              width={1620}
-              height={500}
-              className="  banner-image"
-              sizes="100vw"
-              quality={85}
-              placeholder="blur"
-              blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYyMCIgaGVpZ2h0PSI1MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2YyZjJmMiIvPjwvc3ZnPg=="
+              fill
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, (max-width: 1024px) 80vw, 1900px"
+              className="object-cover"
             />
           </div>
         </Slider>

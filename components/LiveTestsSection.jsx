@@ -1,24 +1,20 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import Slider from 'react-slick';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import Image from 'next/image';
 import Link from 'next/link';
 import { courses } from '@/lib/courses';
 import { testSeries } from '@/lib/tests';
-import {useRouter} from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthContext';
-
+import { liveTestsCarouselSettings } from '@/app/config/carouselSettings';
+import OptimizedImage from '@/components/OptimizedImage';
 
 export default function LiveTestsSection() {
-
-  const router =  useRouter();
+  const router = useRouter();
   const { user } = useAuth();
-
-  // State for active category
-  const [activeCategory, setActiveCategory] = useState('ssc-cgl');
 
   // Handle test click - redirect to login if not authenticated
   const handleTestClick = (e) => {
@@ -36,33 +32,8 @@ export default function LiveTestsSection() {
 
   // Get tests for the active category - memoize to prevent recalculation
   const availableTests = useMemo(() => {
-    return testSeries[activeCategory] || [];
-  }, [activeCategory]);
-
-  // Carousel settings for tests - memoize to prevent recreation on every render
-  const sliderSettings = useMemo(() => ({
-    dots: false,
-    infinite: false,
-    speed: 500,
-    slidesToShow: 3,
-    slidesToScroll: 1,
-    lazyLoad: 'ondemand',
-    swipeToSlide: true,
-    responsive: [
-      {
-        breakpoint: 1024,
-        settings: {
-          slidesToShow: 2,
-        }
-      },
-      {
-        breakpoint: 640,
-        settings: {
-          slidesToShow: 1,
-        }
-      }
-    ]
-  }), []);
+    return testSeries['ssc-cgl'] || [];
+  }, []);
 
   return (
     <div className="py-8 px-4 mb-10">
@@ -78,9 +49,8 @@ export default function LiveTestsSection() {
           {categories.slice(0, 5).map((category) => (
             <button
               key={category.id}
-              onClick={() => setActiveCategory(category.id)}
               className={`px-4 py-2 rounded-full text-sm ${
-                activeCategory === category.id
+                category.id === 'ssc-cgl'
                   ? 'bg-cyan-500 text-white'
                   : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
               }`}
@@ -93,8 +63,8 @@ export default function LiveTestsSection() {
 
       {/* Live tests carousel */}
       <div className="relative">
-        <Slider {...sliderSettings} className="live-tests-slider">
-          {availableTests.map((test) => (
+        <Slider {...liveTestsCarouselSettings} className="live-tests-slider">
+          {availableTests.map((test, index) => (
             <div key={test.id} className="px-2">
               <div className="bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow transition-colors duration-200">
                 <div className="relative">
@@ -102,16 +72,14 @@ export default function LiveTestsSection() {
                   <span className="absolute top-2 left-2 bg-green-500 text-white text-xs font-semibold px-2 py-1 rounded">FREE</span>
 
                   {/* Test image */}
-                  <div className="h-48 bg-gray-100 dark:bg-gray-700 relative">
-                    <Image
-                      src={`/images/banner2.jpg`}
+                  <div className="relative w-full h-48 overflow-hidden rounded-lg">
+                    <OptimizedImage
+                      src={test.image}
                       alt={test.title}
                       fill
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                       className="object-cover"
-                      loading="lazy"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                      placeholder="blur"
-                      blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjI1MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjJmMmYyIi8+PC9zdmc+"
+                      priority={index < 4}
                     />
                   </div>
 
@@ -131,8 +99,8 @@ export default function LiveTestsSection() {
 
                   <div className="flex gap-2">
                     <Link
-                      href={`/tests/${activeCategory}/${test.id}`}
-                      onClick={(e) => handleTestClick(e)}
+                      href={`/tests/ssc-cgl/${test.id}`}
+                      onClick={handleTestClick}
                       className="bg-cyan-500 hover:bg-cyan-600 text-white text-xs px-4 py-2 rounded-md flex-1 text-center"
                     >
                       Take Test
@@ -146,18 +114,6 @@ export default function LiveTestsSection() {
             </div>
           ))}
         </Slider>
-
-        {/* Navigation arrows */}
-        <button className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-4 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full shadow-md p-2 z-10 transition-colors duration-200">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
-          </svg>
-        </button>
-        <button className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-4 bg-white dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-full shadow-md p-2 z-10 transition-colors duration-200">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
-          </svg>
-        </button>
       </div>
     </div>
   );

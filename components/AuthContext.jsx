@@ -4,8 +4,9 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, signInWithEmailAndPassword } from 'firebase/auth';
-import {auth} from '@/lib/firebase'
+import { auth, db } from '@/lib/firebase';
 import { syncBookmarks } from '@/lib/bookmarkService';
+import { doc, getDoc } from 'firebase/firestore';
 
 const AuthContext = createContext(null);
 
@@ -14,48 +15,77 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set loading initially
-    setLoading(true);
+    let unsubscribe;
 
-    // Check if we have a cached user in localStorage
-    const cachedUser = localStorage.getItem('cachedUser');
-    if (cachedUser) {
+    const initializeAuth = async () => {
       try {
-        setUser(JSON.parse(cachedUser));
+        // Set loading initially
+        setLoading(true);
+
+        // Check if we have a cached user in localStorage
+        const cachedUser = localStorage.getItem('cachedUser');
+        if (cachedUser) {
+          try {
+            const parsedUser = JSON.parse(cachedUser);
+            setUser(parsedUser);
+          } catch (e) {
+            console.error('Error parsing cached user:', e);
+            localStorage.removeItem('cachedUser');
+          }
+        }
+
+        // Listen for auth state changes
+        unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+          if (firebaseUser) {
+            try {
+              // Get user data from Firestore
+              const userDoc = await getDoc(doc(db, 'users', firebaseUser.uid));
+              const userData = userDoc.data();
+              
+              const userWithRole = {
+                uid: firebaseUser.uid,
+                email: firebaseUser.email,
+                displayName: firebaseUser.displayName,
+                photoURL: firebaseUser.photoURL,
+                isAdmin: userData?.isAdmin || false
+              };
+
+              console.log('User data from Firestore:', userData);
+              console.log('User with role:', userWithRole);
+
+              // Cache user data in localStorage
+              localStorage.setItem('cachedUser', JSON.stringify(userWithRole));
+              setUser(userWithRole);
+
+              // Sync bookmarks in the background
+              setTimeout(() => {
+                syncBookmarks(firebaseUser.uid).catch(err =>
+                  console.error('Background bookmark sync failed:', err)
+                );
+              }, 2000);
+            } catch (error) {
+              console.error('Error fetching user data:', error);
+              setUser(null);
+            }
+          } else {
+            localStorage.removeItem('cachedUser');
+            setUser(null);
+          }
+          setLoading(false);
+        });
+      } catch (error) {
+        console.error('Error initializing auth:', error);
         setLoading(false);
-      } catch (e) {
-        console.error('Error parsing cached user:', e);
       }
-    }
+    };
 
-    // Then listen for auth state changes
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        // Cache user data in localStorage
-        localStorage.setItem('cachedUser', JSON.stringify({
-          uid: user.uid,
-          email: user.email,
-          displayName: user.displayName,
-          photoURL: user.photoURL
-        }));
+    initializeAuth();
 
-        setUser(user);
-
-        // Sync bookmarks in the background
-        setTimeout(() => {
-          syncBookmarks(user.uid).catch(err =>
-            console.error('Background bookmark sync failed:', err)
-          );
-        }, 2000);
-      } else {
-        localStorage.removeItem('cachedUser');
-        setUser(null);
+    return () => {
+      if (unsubscribe) {
+        unsubscribe();
       }
-
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
+    };
   }, []);
 
   const signIn = async (email, password) => {
@@ -74,14 +104,10 @@ export function AuthProvider({ children }) {
 
   const logout = async () => {
     try {
-      // Sync bookmarks before signing out to ensure latest data is saved
       if (user) {
         await syncBookmarks(user.uid);
       }
-
       await firebaseSignOut(auth);
-      // Rest of your existing logout logic
-      // ...
     } catch (error) {
       console.error('Error signing out:', error);
     }
@@ -95,5 +121,9 @@ export function AuthProvider({ children }) {
 }
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
 }
