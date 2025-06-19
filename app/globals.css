@@ -3,6 +3,7 @@
 @tailwind components;
 @tailwind utilities;
 
+
 /* Import theme integration styles */
 @import url('../styles/theme-integration.css');
 
