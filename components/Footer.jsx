@@ -7,6 +7,7 @@ export default function Footer() {
   // Get mounted state from ThemeContext to prevent hydration mismatch
   const { mounted } = useTheme();
 
+
   // Don't render until client-side hydration is complete
   if (!mounted) return null;
 

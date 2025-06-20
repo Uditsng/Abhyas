@@ -8,9 +8,6 @@ import { auth, db } from '@/lib/firebase';
 import { doc, getDoc } from 'firebase/firestore';
 import AdminSidebar from '@/components/admin/Sidebar';
 
-
-
-
 export default function AdminLayout({ children }) {
   const router = useRouter();
   const toast = useToast();

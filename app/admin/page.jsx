@@ -350,11 +350,11 @@ export default function AdminDashboard() {
       </SimpleGrid>
 
       {/* //{DonutChart} */}
-      <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6} mb={12} pb={4}>
+      {/* <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6} mb={12} pb={4}>
         <Box height="400px" width="100%">
           <DonutChart data={donutChartData} options={{ ...donutChartOptions, maintainAspectRatio: false }} />
         </Box>
-      </SimpleGrid>
+      </SimpleGrid> */}
 
       {/* charts for user engagement and monthly earnings */}
       <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6} pb={4}>
@@ -381,10 +381,10 @@ export default function AdminDashboard() {
             <Text fontSize="sm" color="gray.500">Active Subscriptions</Text>
             <Text fontSize="2xl" fontWeight="bold">{subscriptionStats.activeSubscriptions}</Text>
           </Box>
-          <Box p={4} bg="white" _dark={{ bg: "gray.800" }} rounded="lg" shadow="md">
+          {/* <Box p={4} bg="white" _dark={{ bg: "gray.800" }} rounded="lg" shadow="md">
             <Text fontSize="sm" color="gray.500">Trial Users</Text>
             <Text fontSize="2xl" fontWeight="bold">{subscriptionStats.trialUsers}</Text>
-          </Box>
+          </Box> */}
           <Box p={4} bg="white" _dark={{ bg: "gray.800" }} rounded="lg" shadow="md">
             <Text fontSize="sm" color="gray.500">Total Revenue</Text>
             <Text fontSize="2xl" fontWeight="bold">${subscriptionStats.revenue}</Text>

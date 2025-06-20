@@ -7,7 +7,6 @@ import { AuthProvider } from '@/components/AuthContext';
 import { ThemeProvider } from '@/components/ThemeContext';
 import { SubscriptionProvider } from '@/components/SubscriptionContext';
 import Navbar from '@/components/Navbar';
-import Footer from '@/components/Footer';
 import FloatingThemeToggle from '@/components/FloatingThemeToggle';
 import PerformanceOptimizer from '@/components/PerformanceOptimizer';
 import { memo, useEffect, useState } from 'react';
@@ -91,8 +90,7 @@ function Providers({ children }) {
           <SubscriptionProvider>
             <PerformanceOptimizer />
             <Navbar />
-            {children}
-            <Footer />
+            {children}           
             <FloatingThemeToggle />
           </SubscriptionProvider>
         </AuthProvider>

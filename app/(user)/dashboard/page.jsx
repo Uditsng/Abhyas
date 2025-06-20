@@ -1,22 +1,22 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import Link from 'next/link';
-import Slider from 'react-slick';
-import { StarIcon, TimeIcon } from '@chakra-ui/icons';
-import CourseCard from '@/components/CourseCard';
-import StatCard from '@/components/StatCard';
-import ProgressBar from '@/components/ProgressBar';
-import SectionHeader from '@/components/SectionHeader';
-import CardContainer from '@/components/CardContainer';
-import { courses } from '@/lib/courses';
-import './dashboard.css';
-import ResourceCards from '@/components/ResourceCards';
-import { useAuthRedirect } from '@/hooks/useAuthRedirect';
-import { useRouter } from 'next/navigation';
-import { useAuth } from '@/components/AuthContext';
-import { Box, Heading, SimpleGrid, Text, Button, HStack } from '@chakra-ui/react';
-import { FiArrowLeft } from 'react-icons/fi';
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Slider from "react-slick";
+import { StarIcon, TimeIcon } from "@chakra-ui/icons";
+import CourseCard from "@/components/CourseCard";
+import StatCard from "@/components/StatCard";
+import ProgressBar from "@/components/ProgressBar";
+import SectionHeader from "@/components/SectionHeader";
+import CardContainer from "@/components/CardContainer";
+import { courses } from "@/lib/courses";
+import "./dashboard.css";
+import ResourceCards from "@/components/ResourceCards";
+import { useAuthRedirect } from "@/hooks/useAuthRedirect";
+import { useRouter } from "next/navigation";
+import { useAuth } from "@/components/AuthContext";
+import { Box,  Heading,  Button, HStack } from "@chakra-ui/react";
+import { FiArrowLeft } from "react-icons/fi";
 
 // Define slider settings
 const sliderSettings = {
@@ -31,16 +31,16 @@ const sliderSettings = {
       settings: {
         slidesToShow: 2,
         slidesToScroll: 1,
-      }
+      },
     },
     {
       breakpoint: 600,
       settings: {
         slidesToShow: 1,
-        slidesToScroll: 1
-      }
-    }
-  ]
+        slidesToScroll: 1,
+      },
+    },
+  ],
 };
 
 export default function DashboardPage() {
@@ -48,19 +48,12 @@ export default function DashboardPage() {
   const { user } = useAuth();
   const { isAuthenticated, isLoading: authLoading } = useAuthRedirect();
 
-  const [username, setUsername] = useState('');
+  const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(true);
   const [recentTests, setRecentTests] = useState([]);
   const [upcomingTests, setUpcomingTests] = useState([]);
   const [courseProgress, setCourseProgress] = useState([]);
   const [error, setError] = useState(null);
-
-  // Add debugging for user object
-  useEffect(() => {
-    if (user) {
-      console.log('Current user in dashboard:', user);
-    }
-  }, [user]);
 
   // Fetch user data
   useEffect(() => {
@@ -71,18 +64,18 @@ export default function DashboardPage() {
         if (user?.displayName) {
           setUsername(user.displayName);
         } else if (user?.email) {
-          setUsername(user.email.split('@')[0]);
+          setUsername(user.email.split("@")[0]);
         }
 
         // Load recent test results from localStorage
-        const storedResults = localStorage.getItem('testResults');
+        const storedResults = localStorage.getItem("testResults");
         let results = [];
 
         if (storedResults) {
           try {
             results = JSON.parse(storedResults);
           } catch (error) {
-            console.error('Error parsing test results:', error);
+            console.error("Error parsing test results:", error);
           }
         }
 
@@ -93,30 +86,42 @@ export default function DashboardPage() {
         // Mock data for upcoming tests
         setUpcomingTests([
           {
-            id: 'ssc-cgl-mock1',
-            title: 'SSC CGL Full Mock Test',
-            course: 'ssc-cgl',
-            date: '2023-11-15',
-            duration: 60
+            id: "ssc-cgl-mock1",
+            title: "SSC CGL Full Mock Test",
+            course: "ssc-cgl",
+            date: "2023-11-15",
+            duration: 60,
           },
           {
-            id: 'jee-mock1',
-            title: 'JEE Mathematics Quiz',
-            course: 'jee',
-            date: '2023-11-18',
-            duration: 45
-          }
+            id: "jee-mock1",
+            title: "JEE Mathematics Quiz",
+            course: "jee",
+            date: "2023-11-18",
+            duration: 45,
+          },
         ]);
 
         // Mock data for course progress
         setCourseProgress([
-          { id: 'course1', title: 'SSC CGL Complete Course', progress: 65, totalModules: 12, completedModules: 8 },
-          { id: 'course2', title: 'Banking Exam Preparation', progress: 30, totalModules: 10, completedModules: 3 },
+          {
+            id: "course1",
+            title: "SSC CGL Complete Course",
+            progress: 65,
+            totalModules: 12,
+            completedModules: 8,
+          },
+          {
+            id: "course2",
+            title: "Banking Exam Preparation",
+            progress: 30,
+            totalModules: 10,
+            completedModules: 3,
+          },
         ]);
 
         setLoading(false);
       } catch (error) {
-        console.error('Error fetching user data:', error);
+        console.error("Error fetching user data:", error);
         setError(error.message);
         setLoading(false);
       }
@@ -143,10 +148,12 @@ export default function DashboardPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-red-600 mb-2">Error Loading Dashboard</h2>
+          <h2 className="text-xl font-semibold text-red-600 mb-2">
+            Error Loading Dashboard
+          </h2>
           <p className="text-gray-600">{error}</p>
-          <button 
-            onClick={() => window.location.reload()} 
+          <button
+            onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
             Retry
@@ -170,7 +177,7 @@ export default function DashboardPage() {
             leftIcon={<FiArrowLeft />}
             colorScheme="blue"
             variant="outline"
-            onClick={() => router.push('/admin')}
+            onClick={() => router.push("/admin")}
           >
             Back to Admin
           </Button>
@@ -181,7 +188,9 @@ export default function DashboardPage() {
         {/* Welcome banner */}
         <div className="text-center bg-gradient-to-r from-blue-600 to-indigo-700 dark:from-blue-800 dark:to-indigo-900 text-white py-6">
           <div className="container mx-auto px-4">
-            <h1 className="text-2xl sm:text-3xl font-bold">Welcome back, {username || 'Student'}!</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold">
+              Welcome back, {username || "Student"}!
+            </h1>
             <p className="font-light mt-2">Continue your preparation journey</p>
           </div>
         </div>
@@ -204,37 +213,63 @@ export default function DashboardPage() {
             </Slider>
           </div>
 
-          <ResourceCards/>
+          <ResourceCards />
 
           {/* Stats cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 pt-8">
             <StatCard title="Tests Taken" value="12" />
-            <StatCard title="Avg. Score" value="72%" borderColor="border-green-500" />
-            <StatCard title="Study Hours" value="45h" borderColor="border-purple-500" />
-            <StatCard title="Rank" value="#222" borderColor="border-yellow-500" />
+            <StatCard
+              title="Avg. Score"
+              value="72%"
+              borderColor="border-green-500"
+            />
+            <StatCard
+              title="Study Hours"
+              value="45h"
+              borderColor="border-purple-500"
+            />
+            <StatCard
+              title="Rank"
+              value="#222"
+              borderColor="border-yellow-500"
+            />
           </div>
 
           {/* Recent Test Performance */}
           <div className="mb-8">
-            <SectionHeader title="Recent Test Performance" viewAllLink="/results" />
+            <SectionHeader
+              title="Recent Test Performance"
+              viewAllLink="/results"
+            />
 
             <CardContainer>
               {recentTests?.length > 0 ? (
                 <div className="divide-y divide-gray-200 dark:divide-gray-700">
                   {recentTests.map((test, index) => {
-                    const scorePercentage = Math.round((test.score / test.totalQuestions) * 100);
+                    const scorePercentage = Math.round(
+                      (test.score / test.totalQuestions) * 100
+                    );
 
                     return (
-                      <div key={index} className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
+                      <div
+                        key={index}
+                        className="p-4 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                      >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center">
                             <div className="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-4">
-                              <span className="text-blue-600 dark:text-blue-300 text-lg font-bold">{scorePercentage}%</span>
+                              <span className="text-blue-600 dark:text-blue-300 text-lg font-bold">
+                                {scorePercentage}%
+                              </span>
                             </div>
                             <div>
-                              <h3 className="font-medium text-gray-800 dark:text-gray-200">{test.title || `${test.courseId?.toUpperCase()} Test`}</h3>
+                              <h3 className="font-medium text-gray-800 dark:text-gray-200">
+                                {test.title ||
+                                  `${test.courseId?.toUpperCase()} Test`}
+                              </h3>
                               <p className="text-sm text-gray-500 dark:text-gray-400">
-                                {new Date(test.date).toLocaleDateString()} • {test.score}/{test.totalQuestions} correct
+                                {new Date(test.date).toLocaleDateString()} •{" "}
+                                {test.score}/{test.totalQuestions} correct
                               </p>
                             </div>
                           </div>
@@ -258,8 +293,12 @@ export default function DashboardPage() {
                   <div className="w-16 h-16 mx-auto bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mb-4">
                     <TimeIcon boxSize={6} color="blue.500" />
                   </div>
-                  <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">No Tests Completed Yet</h3>
-                  <p className="text-gray-500 dark:text-gray-400 mb-4">Take your first test to see your performance here.</p>
+                  <h3 className="text-lg font-medium text-gray-800 dark:text-gray-200 mb-2">
+                    No Tests Completed Yet
+                  </h3>
+                  <p className="text-gray-500 dark:text-gray-400 mb-4">
+                    Take your first test to see your performance here.
+                  </p>
                   <Link href="/tests">
                     <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors">
                       Browse Tests
@@ -278,8 +317,13 @@ export default function DashboardPage() {
               {/* Upcoming Tests Card */}
               <CardContainer>
                 <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
-                  <h3 className="font-medium text-gray-800 dark:text-gray-200">Upcoming Tests</h3>
-                  <Link href="/tests" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                  <h3 className="font-medium text-gray-800 dark:text-gray-200">
+                    Upcoming Tests
+                  </h3>
+                  <Link
+                    href="/tests"
+                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                  >
                     View All
                   </Link>
                 </div>
@@ -288,21 +332,32 @@ export default function DashboardPage() {
                   {upcomingTests?.length > 0 ? (
                     <div className="space-y-3">
                       {upcomingTests.slice(0, 3).map((test) => (
-                        <div key={test.id} className="flex items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors">
+                        <div
+                          key={test.id}
+                          className="flex items-center p-2 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
+                        >
                           <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-900 flex items-center justify-center mr-3">
-                            <span className="text-blue-600 dark:text-blue-300 text-xs font-medium">{test.duration}m</span>
+                            <span className="text-blue-600 dark:text-blue-300 text-xs font-medium">
+                              {test.duration}m
+                            </span>
                           </div>
 
                           <div className="flex-1 min-w-0">
-                            <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{test.title}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{new Date(test.date).toLocaleDateString()}</p>
+                            <p className="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">
+                              {test.title}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {new Date(test.date).toLocaleDateString()}
+                            </p>
                           </div>
                         </div>
                       ))}
                     </div>
                   ) : (
                     <div className="text-center py-4">
-                      <p className="text-gray-500 dark:text-gray-400">No upcoming tests scheduled</p>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        No upcoming tests scheduled
+                      </p>
                     </div>
                   )}
                 </div>
@@ -311,8 +366,13 @@ export default function DashboardPage() {
               {/* Course Progress Card */}
               <CardContainer>
                 <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
-                  <h3 className="font-medium text-gray-800 dark:text-gray-200">Course Progress</h3>
-                  <Link href="/courses" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                  <h3 className="font-medium text-gray-800 dark:text-gray-200">
+                    Course Progress
+                  </h3>
+                  <Link
+                    href="/courses"
+                    className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
+                  >
                     View All
                   </Link>
                 </div>
@@ -323,8 +383,13 @@ export default function DashboardPage() {
                       {courseProgress.map((course) => (
                         <div key={course.id}>
                           <div className="flex justify-between items-center mb-1">
-                            <p className="text-sm font-medium text-gray-800 dark:text-gray-200">{course.title}</p>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{course.completedModules}/{course.totalModules} modules</p>
+                            <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                              {course.title}
+                            </p>
+                            <p className="text-xs text-gray-500 dark:text-gray-400">
+                              {course.completedModules}/{course.totalModules}{" "}
+                              modules
+                            </p>
                           </div>
                           <ProgressBar percentage={course.progress} />
                         </div>
@@ -332,7 +397,9 @@ export default function DashboardPage() {
                     </div>
                   ) : (
                     <div className="text-center py-4">
-                      <p className="text-gray-500 dark:text-gray-400">No courses in progress</p>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        No courses in progress
+                      </p>
                     </div>
                   )}
                 </div>

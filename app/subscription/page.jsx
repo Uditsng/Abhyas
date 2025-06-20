@@ -2,7 +2,6 @@
 
 import { subscriptionPlans, SUBSCRIPTION_STATUS } from '@/lib/subscriptions';
 import { Box, Heading, Text, VStack, Button, SimpleGrid, Badge, useToast } from '@chakra-ui/react';
-import { useState } from 'react';
 import { useSubscription } from '@/components/SubscriptionContext';
 import { useAuth } from '@/components/AuthContext';
 import { doc, setDoc } from 'firebase/firestore';
@@ -108,7 +107,7 @@ export default function SubscriptionPage() {
                   ))}
                 </VStack>
               </Box>
-
+{/* 
               <Box w="full">
                 <Text fontSize="sm" color="gray.500">
                   Max Tests: {plan.maxTestsPerMonth}
@@ -116,7 +115,7 @@ export default function SubscriptionPage() {
                 <Text fontSize="sm" color="gray.500">
                   Trial Period: {plan.trialPeriod} days
                 </Text>
-              </Box>
+              </Box> */}
 
               <Button
                 w="full"

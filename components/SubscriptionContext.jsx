@@ -2,11 +2,7 @@
 
 import { createContext, useContext, useState, useEffect } from 'react';
 import { useAuth } from './AuthContext';
-import { 
-  getSubscriptionDetails, 
-  SUBSCRIPTION_STATUS,
-  subscriptionPlans 
-} from '@/lib/subscriptions';
+import {  getSubscriptionDetails,  SUBSCRIPTION_STATUS } from '@/lib/subscriptions';
 
 const SubscriptionContext = createContext();
 
@@ -44,7 +40,7 @@ export function SubscriptionProvider({ children }) {
     loading,
     error,
     isSubscribed: subscription?.status === SUBSCRIPTION_STATUS.ACTIVE,
-    isTrial: subscription?.status === SUBSCRIPTION_STATUS.TRIAL,
+    // isTrial: subscription?.status === SUBSCRIPTION_STATUS.TRIAL,
     daysRemaining: subscription?.daysRemaining || 0,
     plan: subscription?.plan,
     refreshSubscription: async () => {

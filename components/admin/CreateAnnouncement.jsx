@@ -6,6 +6,9 @@ import DatePicker from 'react-datepicker';
 import 'react-datepicker/dist/react-datepicker.css';
 import 'quill/dist/quill.snow.css';
 import Quill from 'quill';
+import {storage, db} from '@/lib/firebase';
+import {ref, uploadBytes, getDownloadURL} from 'firebase/storage';
+import {collection, addDoc, getDoc, doc} from 'firebase/firestore';
 
 export default function CreateAnnouncement() {
   const { register, handleSubmit } = useForm();
@@ -13,36 +16,62 @@ export default function CreateAnnouncement() {
   const [startDate, setStartDate] = useState(new Date());
   const quillRef = useRef(null);
 
-    useEffect(() => {
-    // Initialize Quill editor
-    if (quillRef.current) {
-      const quill = new Quill(quillRef.current, {
-        theme: 'snow',
-        placeholder: 'Write your announcement content here...',
-         modules: {
-          toolbar: [
-      ['bold', 'italic', 'underline'], // Basic formatting
-      [{ list: 'ordered' }, { list: 'bullet' }], // Lists
-      ['link', 'image'], // Embeds
-    ],
-  },
-      });
+  useEffect(() => {
+    if (!quillRef.current || quillRef.current.__quill) return; // Prevent multiple initializations
 
-      // Listen for text changes
-      quill.on('text-change', () => {
-        setContent(quill.root.innerHTML); // Get the HTML content
-      });
-    }
+    const quill = new Quill(quillRef.current, {
+      theme: 'snow',
+      placeholder: 'Write your announcement content here...',
+      modules: {
+        toolbar: [
+          ['bold', 'italic', 'underline',{ list: 'ordered' }, { list: 'bullet' }]           
+        ]
+      }
+    });
+
+    // Listen for text changes
+    quillRef.current._quill = false;
+    quill.on('text-change', () => {
+      setContent(quill.root.innerHTML); // Get the HTML content
+    });
   }, []);
 
-  const onSubmit = (data) => {
-    const announcementData = {
-      ...data,
-      content,
-      startDate,
-    };
-    console.log(announcementData);
-    alert('Announcement created!');
+  const onSubmit = async (data) => {
+    try {
+      let attachmentUrl = null;
+
+      // Upload file if attached
+      if (data.attachment && data.attachment[0]) {
+        const file = data.attachment[0];
+        const storageRef = ref(storage, `attachments/${file.name}`);
+        const snapshot = await uploadBytes(storageRef, file);
+        attachmentUrl = await getDownloadURL(snapshot.ref);
+      }
+
+      // Fetch admin details from Firestore
+      const userDoc = await getDoc(doc(db, 'users', 'currentUserId')); // Replace 'currentUserId' with actual user ID
+      const adminName = userDoc.data()?.name || 'Unknown';
+      const adminId = userDoc.id || 'Unknown';
+
+      // Announcement data
+      const announcementData = {
+        title: data.title,
+        content,
+        startDate: startDate.toISOString(),
+        attachmentUrl,
+        adminName,
+        adminId,
+      };
+
+      // Save announcement to Firestore
+      const announcementsCollection = collection(db, 'announcements');
+      const docRef = await addDoc(announcementsCollection, announcementData);
+      console.log('Announcement created with ID:', docRef.id); // Debug log
+      alert('Announcement created!');
+    } catch (error) {
+      console.error('Error creating announcement:', error);
+      alert(`Failed to create announcement: ${error.message}`);
+    }
   };
 
   return (
@@ -68,14 +97,14 @@ export default function CreateAnnouncement() {
         </div>
 
         {/* Attachment */}
-        <div>
+        {/* <div>
           <label className="block font-medium mb-2">Attachment</label>
           <input
             type="file"
             {...register('attachment')}
             className="w-full border rounded px-3 py-2"
           />
-        </div>
+        </div> */}
 
         {/* Date Picker */}
         <div>

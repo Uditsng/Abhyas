@@ -67,6 +67,12 @@ service cloud.firestore {
       allow write: if isAdmin();
     }
 
+    // Add rules for announcements collection
+    match /announcements/{announcementId} {
+      // Allow admins and superAdmins to create, read, update, and delete announcements
+      allow read, write: if isAdmin() || isSuperAdmin();
+    }
+
     // Default deny
     match /{document=**} {
       allow read, write: if false;

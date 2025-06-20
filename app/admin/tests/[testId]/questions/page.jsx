@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Box,
   Heading,
@@ -43,6 +43,8 @@ import { AddIcon, EditIcon, DeleteIcon, ArrowBackIcon } from '@chakra-ui/icons';
 import { useRouter, useParams } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebase';
+import Quill from 'quill';
+
 
 export default function QuestionsPage() {
   const [questions, setQuestions] = useState([]);
@@ -53,6 +55,10 @@ export default function QuestionsPage() {
   const testId = params.testId;
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
+  
+  
+  
+
 
   const [newQuestion, setNewQuestion] = useState({
     question: '',
@@ -301,7 +307,7 @@ export default function QuestionsPage() {
       )}
 
       {/* Add Question Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="xl">
+      <Modal isOpen={isOpen} onClose={onClose} size="xl" className="ModelSizeForTest">
         <ModalOverlay />
         <ModalContent>
           <ModalHeader>Add New Question</ModalHeader>
@@ -309,6 +315,7 @@ export default function QuestionsPage() {
           <ModalBody pb={6}>
             <FormControl mb={4} isRequired>
               <FormLabel>Question</FormLabel>
+          
               <Textarea
                 name="question"
                 value={newQuestion.question}
@@ -340,13 +347,13 @@ export default function QuestionsPage() {
                 value={newQuestion.correctAnswer}
                 onChange={(value) => setNewQuestion({...newQuestion, correctAnswer: value})}
               >
-                <Stack direction="column">
+                <HStack direction="column">
                   {newQuestion.options.map((option, index) => (
                     <Radio key={index} value={index.toString()}>
-                      Option {index + 1}: {option || `Option ${index + 1}`}
+                      Option {index + 1}
                     </Radio>
                   ))}
-                </Stack>
+                </HStack>
               </RadioGroup>
             </FormControl>
 
