@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation'; // Removed useSearchParams
 import { Box, Heading, Text, Button, Flex, Stat, StatLabel, StatNumber, StatHelpText, StatArrow, SimpleGrid, Card, CardBody, Stack, StackDivider, useToast, Spinner, Center, Badge } from '@chakra-ui/react';
-import { CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
+import { CheckCircleIcon} from '@chakra-ui/icons';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthContext';
 import { getTestResult } from '@/lib/testResultService';
@@ -12,8 +12,8 @@ import { getTestDetails } from '@/lib/tests';
 export default function ResultsPage() {
   const params = useParams();
   const router = useRouter();
-  const testId = params.test; 
-  const courseId = params.course;
+  const testId = Array.isArray(params.test)? params.test[0]: params.test; 
+  const courseId = Array.isArray(params.course)? params.course[0]:params.course;
   const toast = useToast();
   const { user, loading: authLoading } = useAuth();
 
@@ -40,13 +40,18 @@ export default function ResultsPage() {
 
       try {
         let fetchedResult = null;
-        if (user) {
+        if (user && user.uid) {
           fetchedResult = await getTestResult(user.uid, testId, courseId);
         } else {
-          const existingResults = JSON.parse(localStorage.getItem('testResults') || '[]');
-          fetchedResult = existingResults.find(res => res.testId === testId && res.courseId === courseId);
-          // Try fallback: if not found, check if testId matches result.id (for legacy/localStorage data)
-          fetchedResult = existingResults.find(res => (res.testId === testId || res.id === testId) && (res.courseId === courseId || res.course === courseId));
+          // Try to get from localStorage
+          let existingResults = [];
+          try {
+            existingResults = JSON.parse(localStorage.getItem('testResults') || '[]');
+          } catch (e) {}
+          fetchedResult = existingResults.find(res => (
+            (res.testId === testId || res.id === testId) &&
+            (res.courseId === courseId || res.course === courseId)
+          ));
         }
 
         if (fetchedResult) {
@@ -88,6 +93,10 @@ export default function ResultsPage() {
         <Text ml={4}>Loading results...</Text>
       </Center>
     );
+  }
+
+  if (!result || !testDetails){
+    return null
   }
 
   const totalQuestions = testDetails.questions.length;

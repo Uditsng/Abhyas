@@ -61,12 +61,13 @@ export default function TakeTestPage() {
   }, [testData]);
 
   // Define handleSubmit function
- 
 
   const handleSubmit = useCallback(async () => {
     const confirmed = window.confirm("Are you sure you want to submit this test?")
     if(!confirmed) return
     if (isSubmitting) return;
+
+    //router.push(`/results/${courseId}/${testId}`); 
 
     setIsSubmitting(true);
 
@@ -121,7 +122,7 @@ export default function TakeTestPage() {
 
       setTimeout(() => {
         // Use window.location for a full page navigation which avoids React hydration issues
-        window.location.href = `/results/${testId}`;
+        window.location.href = `/results/${courseId}/${testId}`;
       }, 1000);
     } catch (error) {
       console.error("Error submitting test:", error);
