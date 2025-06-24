@@ -4,7 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import Link from 'next/link';
-import { auth } from '@/lib/firebase';
+import { auth } from '@/lib/firebaseConfig';
 import { useAuth } from '@/components/AuthContext';
 import { saveUserProfile, getUserProfile } from '@/lib/userService';
 

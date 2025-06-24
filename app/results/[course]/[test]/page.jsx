@@ -1,158 +1,183 @@
 'use client';
 
-//page.jsx displays test results.
-
-import { useParams, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
-import { testSeries } from '@/lib/tests';
+import { useParams, useRouter } from 'next/navigation'; // Removed useSearchParams
+import { Box, Heading, Text, Button, Flex, Stat, StatLabel, StatNumber, StatHelpText, StatArrow, SimpleGrid, Card, CardBody, Stack, StackDivider, useToast, Spinner, Center, Badge } from '@chakra-ui/react';
+import { CheckCircleIcon, WarningIcon } from '@chakra-ui/icons';
 import Link from 'next/link';
+import { useAuth } from '@/components/AuthContext';
+import { getTestResult } from '@/lib/testResultService';
+import { getTestDetails } from '@/lib/tests';
 
-export default function ResultPage() {
+export default function ResultsPage() {
   const params = useParams();
   const router = useRouter();
-
-  // Extract course and test IDs from params
-  // const courseId = Array.isArray(params.course) ? params.course[0] : params.course;
-  // const testId = Array.isArray(params.test) ? params.test[0] : params.test;
+  const testId = params.test; 
   const courseId = params.course;
-  const testId = params.test;
+  const toast = useToast();
+  const { user, loading: authLoading } = useAuth();
 
-
-  // State
   const [result, setResult] = useState(null);
+  const [testDetails, setTestDetails] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Get test data
-  const courseTests = testSeries[courseId] || [];
-  const testData = courseTests.find((t) => t.id === testId);
-
-  // Fetch result data
   useEffect(() => {
-    // Get result from localStorage
-    const results = JSON.parse(localStorage.getItem('testResults') || '[]');
-    const userResult = results.find(
-      (r) => r.courseId === courseId && r.testId === testId
-    );
+    const fetchResults = async () => {
+      if (authLoading) return;
 
-    if (userResult) {
-      setResult(userResult);
-    }
+      if (!testId || !courseId) {
+        setLoading(false);
+        toast({
+          title: "Missing Information",
+          description: "Test ID or Course ID is missing to view results.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+        router.push('/dashboard');
+        return;
+      }
 
-    setLoading(false);
-  }, [courseId, testId]);
+      try {
+        let fetchedResult = null;
+        if (user) {
+          fetchedResult = await getTestResult(user.uid, testId, courseId);
+        } else {
+          const existingResults = JSON.parse(localStorage.getItem('testResults') || '[]');
+          fetchedResult = existingResults.find(res => res.testId === testId && res.courseId === courseId);
+          // Try fallback: if not found, check if testId matches result.id (for legacy/localStorage data)
+          fetchedResult = existingResults.find(res => (res.testId === testId || res.id === testId) && (res.courseId === courseId || res.course === courseId));
+        }
 
-  // If test not found
-  if (!testData) {
-    return <div className="p-6 text-red-600">Test not found.</div>;
-  }
+        if (fetchedResult) {
+          setResult(fetchedResult);
+          const details = await getTestDetails(courseId, testId);
+          setTestDetails(details);
+        } else {
+          toast({
+            title: "Result Not Found",
+            description: "Could not find results for this test.",
+            status: "warning",
+            duration: 5000,
+            isClosable: true,
+          });
+          router.push('/dashboard');
+        }
+      } catch (error) {
+        console.error("Error fetching test results:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load test results. Please try again later.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+        router.push('/dashboard');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // If still loading
-  if (loading) {
-    return <div className="p-6">Loading results...</div>;
-  }
+    fetchResults();
+  }, [testId, courseId, user, authLoading, router, toast]);
 
-  // If no result found
-  if (!result) {
+  if (loading || !result || !testDetails) {
     return (
-      <div className="p-6">
-        <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4">
-          <p>No result found for this test. Have you taken it yet?</p>
-        </div>
-        <Link href={`/tests/${courseId}/${testId}`}>
-          <button className="mt-4 bg-blue-600 text-white px-4 py-2 rounded">
-            Take This Test
-          </button>
-        </Link>
-      </div>
+      <Center h="100vh">
+        <Spinner size="xl" />
+        <Text ml={4}>Loading results...</Text>
+      </Center>
     );
   }
 
-  // Calculate score percentage
-  const scorePercentage = Math.round((result.score / result.totalQuestions) * 100);
+  const totalQuestions = testDetails.questions.length;
+  const correctAnswers = result.score;
+  const wrongAnswers = totalQuestions - correctAnswers;
+  const percentage = ((correctAnswers / totalQuestions) * 100).toFixed(2);
+  const timeTakenMinutes = Math.floor(result.durationTaken / 60);
+  const timeTakenSeconds = result.durationTaken % 60;
 
   return (
-    <div className="p-4 sm:p-6 max-w-3xl mx-auto">
-      <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-        {testData.title} - Results
-      </h2>
+    <Box p={4} maxW="900px" mx="auto" className="min-h-screen">
+      <Heading as="h1" size="xl" mb={6} textAlign="center">
+        Results for {testDetails.title}
+      </Heading>
 
-      {/* Score summary */}
-      <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-lg shadow-md mb-6 transition-colors duration-200">
-        <div className="text-center">
-          <p className="text-sm text-gray-500 dark:text-gray-400">Your Score</p>
-          <h3 className="text-3xl sm:text-4xl font-bold text-blue-600 dark:text-blue-400">
-            {result.score} / {result.totalQuestions}
-          </h3>
-          <p className="text-lg font-medium text-gray-800 dark:text-gray-200">{scorePercentage}%</p>
-        </div>
+      <SimpleGrid columns={{ base: 1, md: 2 }} spacing={6} mb={8}>
+        <Card>
+          <CardBody>
+            <Stack divider={<StackDivider />} spacing="4">
+              <Box>
+                <Heading size="xs" textTransform="uppercase">
+                  Overall Performance
+                </Heading>
+                <Text pt="2" fontSize="sm">
+                  You completed the test with a score of{' '}
+                  <Text as="span" fontWeight="bold" color="blue.500">
+                    {correctAnswers} out of {totalQuestions}
+                  </Text>{' '}
+                  questions correct.
+                </Text>
+              </Box>
+              <Box>
+                <Heading size="xs" textTransform="uppercase">
+                  Score Percentage
+                </Heading>
+                <Stat>
+                  <StatNumber fontSize="2xl">{percentage}%</StatNumber>
+                  <StatHelpText>
+                    <StatArrow type={percentage >= 50 ? 'increase' : 'decrease'} />
+                    {percentage >= 50 ? 'Good Job!' : 'Keep Practicing!'}
+                  </StatHelpText>
+                </Stat>
+              </Box>
+            </Stack>
+          </CardBody>
+        </Card>
 
-        {/* Progress bar */}
-        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5 mt-4">
-          <div
-            className="bg-blue-600 dark:bg-blue-500 h-2.5 rounded-full"
-            style={{ width: `${scorePercentage}%` }}
-          ></div>
-        </div>
-      </div>
+        <Card>
+          <CardBody>
+            <Stack divider={<StackDivider />} spacing="4">
+              <Box>
+                <Heading size="xs" textTransform="uppercase">
+                  Detailed Breakdown
+                </Heading>
+                <SimpleGrid columns={2} spacing={4} pt="2">
+                  <Stat>
+                    <StatLabel>Correct</StatLabel>
+                    <StatNumber color="green.500">{correctAnswers}</StatNumber>
+                  </Stat>
+                  <Stat>
+                    <StatLabel>Incorrect</StatLabel>
+                    <StatNumber color="red.500">{wrongAnswers}</StatNumber>
+                  </Stat>
+                  <Stat>
+                    <StatLabel>Attempted</StatLabel>
+                    <StatNumber>{result.totalQuestions}</StatNumber>
+                  </Stat>
+                  <Stat>
+                    <StatLabel>Time Taken</StatLabel>
+                    <StatNumber>{timeTakenMinutes}m {timeTakenSeconds}s</StatNumber>
+                  </Stat>
+                </SimpleGrid>
+              </Box>
+            </Stack>
+          </CardBody>
+        </Card>
+      </SimpleGrid>
 
-      {/* Question analysis */}
-      <h3 className="text-lg sm:text-xl font-bold mb-4 text-gray-900 dark:text-gray-100">
-        Question Analysis
-      </h3>
-
-      <div className="space-y-4">
-        {testData.questions.map((question, index) => {
-          const userAnswer = result.answers[question.id];
-          const isCorrect = userAnswer === question.answer;
-
-          return (
-            <div
-              key={question.id}
-              className={`p-4 border rounded-lg transition-colors duration-200 ${
-                isCorrect 
-                  ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800" 
-                  : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800"
-              }`}
-            >
-              <p className="font-medium text-gray-900 dark:text-gray-100">
-                <span className="font-bold">Q{index + 1}.</span> {question.question}
-              </p>
-
-              <div className="mt-2 text-sm">
-                <p className="text-gray-800 dark:text-gray-200">
-                  <span className="font-semibold">Your answer:</span>{" "}
-                  {userAnswer || "Not answered"}
-                </p>
-
-                {!isCorrect && (
-                  <p className="text-blue-700 dark:text-blue-400">
-                    <span className="font-semibold">Correct answer:</span>{" "}
-                    {question.answer}
-                  </p>
-                )}
-              </div>
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Action buttons */}
-      <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
-        <button
-          onClick={() => router.push(`/review/${testData.id}`)}
-          className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 
-                     text-white px-4 py-2 rounded-md transition-colors duration-200"
-        >
-          Review Test
-        </button>
-        <button
-          onClick={() => router.push('/dashboard')}
-          className="bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 
-                     text-gray-800 dark:text-gray-200 px-4 py-2 rounded-md transition-colors duration-200"
-        >
-          Back to Dashboard
-        </button>
-      </div>
-    </div>
+      <Flex justify="center" gap={4} mt={8}>
+        <Link href={`/review/${testId}?courseId=${courseId}`}>
+          <Button colorScheme="blue" size="lg" leftIcon={<CheckCircleIcon />}>
+            Review Answers
+          </Button>
+        </Link>
+        <Link href="/dashboard">
+          <Button colorScheme="gray" size="lg">
+            Go to Dashboard
+          </Button>
+        </Link>
+      </Flex>
+    </Box>
   );
 }

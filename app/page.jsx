@@ -15,6 +15,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 import { bannerCarouselSettings } from '@/app/config/carouselSettings';
 import OptimizedImage from '@/components/OptimizedImage';
+import Footer from '@/components/Footer'
 
 export default function HomePage() {
   const { user, loading } = useAuth();
@@ -34,7 +35,7 @@ export default function HomePage() {
       {/* Banner Carousel */}
       <div className="w-full max-w-[1900px] mx-auto px-4 sm:px-6 lg:px-8 carousel-container">
         <Slider {...bannerCarouselSettings}>
-          <div className="relative w-full aspect-[19/6] rounded-lg overflow-hidden">
+          <div className="relative w-full aspect-[19/6] rounded-lg overflow-hidden bg-red-400">
             <OptimizedImage
               src="/images/textbook result banner.webp"
               alt="Textbook Result Banner"
@@ -44,7 +45,7 @@ export default function HomePage() {
               priority
             />
           </div>
-          <div className="relative w-full aspect-[19/6] rounded-lg overflow-hidden">
+          <div className="relative w-full aspect-[19/6] rounded-lg overflow-hidden bg-blue-300">
             <OptimizedImage
               src="/images/textbook selection banner.webp"
               alt="Textbook Selection Banner"
@@ -67,6 +68,8 @@ export default function HomePage() {
 
        {/* Lottie Section */}
        <LottieSection />
+
+       <Footer/>
 
     </div>
   );

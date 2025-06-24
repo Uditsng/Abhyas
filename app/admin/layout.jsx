@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { Box, Spinner, Center, useToast } from '@chakra-ui/react';
 import { useRouter } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth, db } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
 import AdminSidebar from '@/components/admin/Sidebar';
 

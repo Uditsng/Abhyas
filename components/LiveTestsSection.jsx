@@ -1,12 +1,11 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import Slider from 'react-slick';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Link from 'next/link';
-import { courses } from '@/lib/courses';
-import { testSeries } from '@/lib/tests';
+import { getTestsForCourse } from '@/lib/tests';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthContext';
 import { liveTestsCarouselSettings } from '@/app/config/carouselSettings';
@@ -15,6 +14,7 @@ import OptimizedImage from '@/components/OptimizedImage';
 export default function LiveTestsSection() {
   const router = useRouter();
   const { user } = useAuth();
+  const [coursesState, setCoursesState] = useState([])
 
   // Handle test click - redirect to login if not authenticated
   const handleTestClick = (e) => {
@@ -25,15 +25,20 @@ export default function LiveTestsSection() {
   };
 
   // Categories for the buttons - using our existing course data
-  const categories = courses.map(course => ({
+  const categories = coursesState.map(course => ({
     id: course.id,
     title: course.title
   }));
 
-  // Get tests for the active category - memoize to prevent recalculation
-  const availableTests = useMemo(() => {
-    return testSeries['ssc-cgl'] || [];
-  }, []);
+
+  const [availableTests, setAvailableTests] = useState([])
+  useEffect(()=>{
+    async function fetchTests() {
+      const tests = await getTestsForCourse('ssc-cgl')
+      setAvailableTests(tests)          
+    }
+   fetchTests();
+  },[]);
 
   return (
     <div className="py-8 px-4 mb-10">
@@ -74,7 +79,7 @@ export default function LiveTestsSection() {
                   {/* Test image */}
                   <div className="relative w-full h-48 overflow-hidden rounded-lg">
                     <OptimizedImage
-                      src={test.image}
+                      src="/images/banner.jpg"
                       alt={test.title}
                       fill
                       sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"

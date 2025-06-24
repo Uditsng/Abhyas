@@ -2,25 +2,34 @@
 
 // app/tests/[course]/page.jsx  handle test listings and individual test pages.
 
-import { testSeries } from '../../../lib/tests';
-import { notFound, useParams } from 'next/navigation';
+import {useEffect, useState} from 'react'
+import { getTestsForCourse} from '@/lib/tests'
+import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
 export default function CourseTestsPage() {
   const params = useParams();
   const courseId = params.course;
+  const[tests, setTests] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const courseTests = testSeries[courseId]; // Gets the list of tests for that course
+  useEffect(() => {
+    async function fetchTests() {
+      const fetchedTests = await getTestsForCourse(courseId);
+      setTests(fetchedTests);
+      setLoading(false);
+    }
+    fetchTests();
+  }, [courseId]);
 
-  if (!courseTests) {
-    return <div className="p-6 text-red-600">Course not found.</div>;
-  }
+  if (loading) return <div>Loading...</div>;
+  if (!tests.length) return <div className="p-6 text-red-600">Course not found.</div>;
 
   return (
     <div className="p-6 min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <h2 className="text-2xl font-bold mb-4 text-gray-900 dark:text-gray-100">Tests for {courseId.toUpperCase()}</h2>
       <div className="space-y-4">
-        {courseTests.map((test) => ( // Loops through each test and shows a card for it
+        {tests.map((test) => ( // Loops through each test and shows a card for it
           <div
             key={test.id}
             className="border dark:border-gray-700 p-4 rounded-lg bg-white dark:bg-gray-800 shadow-sm hover:shadow-md transition-all duration-200"

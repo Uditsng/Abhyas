@@ -5,7 +5,7 @@ import { Box, Heading, Text, VStack, Button, SimpleGrid, Badge, useToast } from 
 import { useSubscription } from '@/components/SubscriptionContext';
 import { useAuth } from '@/components/AuthContext';
 import { doc, setDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/firebaseConfig';
 
 export default function SubscriptionPage() {
   const { user } = useAuth();

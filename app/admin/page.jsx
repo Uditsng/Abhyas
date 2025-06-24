@@ -6,10 +6,9 @@ import { Box, Heading, SimpleGrid, Icon, Text, Button, HStack } from '@chakra-ui
 import StatCard, { adminStats } from '@/components/admin/StatCard';
 import AreaChart from '@/components/admin/AreaChart';
 import BarChart from '@/components/admin/BarChart';
-import DonutChart from '@/components/admin/DonutChart';
 import { subscriptionPlans, SUBSCRIPTION_STATUS } from '@/lib/subscriptions';
 import { collection, getDocs, query, where } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/firebaseConfig';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { FiUser } from 'react-icons/fi';

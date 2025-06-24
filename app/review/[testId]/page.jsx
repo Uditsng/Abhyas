@@ -1,54 +1,24 @@
 'use client';
 
-//test/[testId]page.jsx and review-page.jsx are for taking and reviewing tests.
-
 import { useState, useEffect } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation'; // Import useSearchParams
 import Link from 'next/link';
-import {
-  Box,
-  Heading,
-  Text,
-  Badge,
-  Button,
-  Flex,
-  Progress,
-  Card,
-  CardBody,
-  Stack,
-  StackDivider,
-  Radio,
-  RadioGroup,
-  Tooltip,
-  IconButton,
-  useToast
-} from '@chakra-ui/react';
-import {
-  CheckCircleIcon,
-  WarningIcon,
-  InfoIcon,
-  StarIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon
-} from '@chakra-ui/icons';
-import { testSeries } from '@/lib/tests';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '@/lib/firebase';
+import {Box,Heading,Text,Badge,Button,Flex,Progress,Card,CardBody,Stack,StackDivider,Radio,RadioGroup,Tooltip,IconButton,useToast,Spinner,Center} from '@chakra-ui/react';
+import { CheckCircleIcon, WarningIcon, InfoIcon, StarIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
+import { getTestDetails } from '@/lib/tests';
+import { useAuth } from '@/components/AuthContext';
 import { saveBookmark, removeBookmark } from '@/lib/bookmarkService';
 
 export default function TestReviewPage() {
-  // Get the testId from the URL and any query params
   const params = useParams();
   const router = useRouter();
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams(); // Initialize useSearchParams
   const testId = params.testId;
+  const courseId = searchParams.get('courseId'); // Get courseId from query params
   const questionParam = searchParams.get('q');
   const toast = useToast();
+  const { user } = useAuth();
 
-  console.log("Review page params:", params);
-  console.log("Test ID from params:", testId);
-
-  // State variables
   const [testData, setTestData] = useState(null);
   const [userAnswers, setUserAnswers] = useState({});
   const [loading, setLoading] = useState(true);
@@ -56,108 +26,94 @@ export default function TestReviewPage() {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [bookmarkedQuestions, setBookmarkedQuestions] = useState({});
 
-  // Add user state
-  const [user, authLoading] = useAuthState(auth);
-
   // Load test data and user answers
   useEffect(() => {
-    console.log("Loading review for test ID:", testId);
-
-    // Find the test data
-    let foundTest = null;
-    let foundCourseId = null;
-
-    // Search through all test series to find the matching test
-    Object.entries(testSeries).forEach(([courseId, series]) => {
-      const found = series.find(test => test.id === testId);
-      if (found) {
-        foundTest = {...found};
-        foundCourseId = courseId;
-      }
-    });
-
-    if (!foundTest) {
-      // Test not found, redirect to dashboard
-      console.error(`Test not found: ${testId}`);
-      toast({
-        title: "Test not found",
-        description: `Could not find test: ${testId}`,
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      router.push('/dashboard');
-      return;
-    }
-
-    console.log("Found test:", foundTest.title, "in course:", foundCourseId);
-    setTestData({...foundTest, courseId: foundCourseId});
-
-    // Only access localStorage on the client side
-    if (typeof window !== 'undefined') {
-      try {
-        // Get user answers from localStorage
-        const results = JSON.parse(localStorage.getItem('testResults') || '[]');
-        console.log("All test results:", results);
-
-        // Find the specific test result by matching both testId and courseId if available
-        const testResult = results.find(result => {
-          // First try to match both testId and courseId
-          if (result.courseId && foundCourseId) {
-            return result.testId === testId && result.courseId === foundCourseId;
-          }
-          // Fall back to just matching testId
-          return result.testId === testId;
-        });
-
-        if (testResult) {
-          console.log("Found test result:", testResult);
-          setUserAnswers(testResult.answers || {});
-          setScore(testResult.score || 0);
-        } else {
-          console.warn("No test results found for test ID:", testId);
+    const fetchAndLoadData = async () => {
+      setLoading(true);
+      if (!testId || !courseId) { // Ensure courseId is available
+        setLoading(false);
+        if (!courseId) {
           toast({
-            title: "No results found",
-            description: "We couldn't find your results for this test",
-            status: "warning",
+            title: "Missing Course ID",
+            description: "Course ID is required to review this test.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+          router.push('/dashboard'); // Redirect if courseId is missing
+        }
+        return;
+      }
+
+      try {
+        const fetchedData = await getTestDetails(courseId, testId); // Use courseId here
+
+        if (fetchedData) {
+          setTestData(fetchedData);
+
+          // Only access localStorage on the client side
+          if (typeof window !== 'undefined') {
+            try {
+              const results = JSON.parse(localStorage.getItem('testResults') || '[]');
+              // Filter results by both testId and courseId
+              const testResult = results.find(result => result.testId === testId && result.courseId === courseId);
+
+              if (testResult) {
+                setUserAnswers(testResult.answers || {});
+                setScore(testResult.score || 0);
+              } else {
+                toast({
+                  title: "No results found",
+                  description: "We couldn't find your results for this test",
+                  status: "warning",
+                  duration: 3000,
+                  isClosable: true,
+                });
+              }
+
+              const storedBookmarks = localStorage.getItem('bookmarkedQuestions');
+              if (storedBookmarks) {
+                setBookmarkedQuestions(JSON.parse(storedBookmarks));
+              }
+            } catch (error) {
+              console.error("Error loading local data:", error);
+            }
+          }
+
+          // If a specific question is requested via URL, jump to it
+          if (questionParam) {
+            const questionIndex = fetchedData.questions.findIndex(q => q.id === questionParam);
+            if (questionIndex !== -1) {
+              setCurrentQuestionIndex(questionIndex);
+            }
+          }
+        } else {
+          toast({
+            title: "Test not found",
+            description: `Could not find test: ${testId} in course ${courseId}`,
+            status: "error",
             duration: 3000,
             isClosable: true,
           });
+          router.push('/dashboard');
         }
       } catch (error) {
-        console.error("Error loading test results:", error);
+        console.error("Error fetching test data for review:", error);
         toast({
           title: "Error",
-          description: "Failed to load test results",
+          description: "Failed to load test data for review",
           status: "error",
           duration: 3000,
           isClosable: true,
         });
+        router.push('/dashboard');
+      } finally {
+        setLoading(false);
       }
-    }
+    };
 
-    // Load bookmarked questions from localStorage - only on client side
-    if (typeof window !== 'undefined') {
-      try {
-        const storedBookmarks = localStorage.getItem('bookmarkedQuestions');
-        if (storedBookmarks) {
-          setBookmarkedQuestions(JSON.parse(storedBookmarks));
-        }
-      } catch (error) {
-        console.error("Error loading bookmarks:", error);
-      }
-    }
-
-    // If a specific question is requested via URL, jump to it
-    if (questionParam && foundTest) {
-      const questionIndex = foundTest.questions.findIndex(q => q.id === questionParam);
-      if (questionIndex !== -1) {
-        setCurrentQuestionIndex(questionIndex);
-      }
-    }
-
-    setLoading(false);
-  }, [testId, questionParam, router, toast]);
+    fetchAndLoadData();
+  }, [testId, courseId, questionParam, router, toast]); // Add courseId to dependency array
 
   // Handle navigation between questions
   const goToNextQuestion = () => {
@@ -174,7 +130,7 @@ export default function TestReviewPage() {
 
   // Handle bookmarking questions
   const toggleBookmark = async (questionId) => {
-    const bookmarkKey = `${testId}_${questionId}`;
+    const bookmarkKey = `${testData.id}_${questionId}`;
     const newBookmarks = { ...bookmarkedQuestions };
 
     try {
@@ -202,11 +158,11 @@ export default function TestReviewPage() {
       } else {
         // If not bookmarked, add it with test info
         const bookmarkData = {
-          testId: testId,
+          testId: testData.id,
           courseId: testData.courseId,
           testTitle: testData.title,
           questionId: questionId,
-          question: currentQuestion.question,
+          question: testData.questions[currentQuestionIndex].question,
           date: new Date().toISOString(),
         };
 
@@ -245,9 +201,10 @@ export default function TestReviewPage() {
   // If still loading or test not found
   if (loading || !testData) {
     return (
-      <Box p={8} maxW="800px" mx="auto">
-        <Text>Loading test review...</Text>
-      </Box>
+      <Center h="100vh">
+        <Spinner size="xl" />
+        <Text ml={4}>Loading test review...</Text>
+      </Center>
     );
   }
 
@@ -258,7 +215,7 @@ export default function TestReviewPage() {
   const isCorrect = userAnswer === currentQuestion.answer;
 
   // Check if current question is bookmarked
-  const bookmarkKey = `${testId}_${currentQuestion.id}`;
+  const bookmarkKey = `${testData.id}_${currentQuestion.id}`;
   const isBookmarked = bookmarkedQuestions[bookmarkKey] !== undefined;
 
   return (
@@ -431,7 +388,7 @@ export default function TestReviewPage() {
 
       {/* Action buttons */}
       <Flex justify="space-between" mt={6}>
-        <Link href={`/results/${testId}`}>
+        <Link href={`/results/${testData.id}`}>
           <Button colorScheme="gray">Back to Results</Button>
         </Link>
 
@@ -442,8 +399,3 @@ export default function TestReviewPage() {
     </Box>
   );
 }
-
-
-
-
-

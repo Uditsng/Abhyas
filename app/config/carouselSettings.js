@@ -84,8 +84,8 @@ export const examCategoriesCarouselSettings = {
 };
 
 export const liveTestsCarouselSettings = {
-  dots: false,
-  infinite: false,
+  dots: true,
+  infinite: true,
   speed: 500,
   slidesToShow: 3,
   slidesToScroll: 1,

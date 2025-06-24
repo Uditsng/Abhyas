@@ -1,50 +1,13 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import {
-  Box,
-  Heading,
-  Table,
-  Thead,
-  Tbody,
-  Tr,
-  Th,
-  Td,
-  Button,
-  HStack,
-  Badge,
-  Spinner,
-  Center,
-  IconButton,
-  useDisclosure,
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalFooter,
-  ModalCloseButton,
-  FormControl,
-  FormLabel,
-  Input,
-  Textarea,
-  Select,
-  Card,
-  CardBody,
-  Text,
-  Flex,
-  VStack,
-  RadioGroup,
-  Radio,
-  Stack,
-  useToast
-} from '@chakra-ui/react';
+import { useState, useEffect } from 'react';
+import { Box, Heading, Table, Thead, Tbody, Tr, Th, Td, Button, HStack, Badge, Spinner, Center, IconButton, useDisclosure, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton, FormControl, FormLabel, Input, Textarea, Card, CardBody, Text, Flex, VStack, RadioGroup, Radio, useToast } from '@chakra-ui/react';
 import { AddIcon, EditIcon, DeleteIcon, ArrowBackIcon } from '@chakra-ui/icons';
-import { useRouter, useParams } from 'next/navigation';
+import { useRouter, useParams, useSearchParams } from 'next/navigation'; // Import useSearchParams
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '@/lib/firebase';
-import Quill from 'quill';
-
+import { auth, db } from '@/lib/firebaseConfig';
+import { getTestDetails } from '@/lib/tests';
+import { collection, doc, setDoc, deleteDoc, addDoc, getDocs } from 'firebase/firestore';
 
 export default function QuestionsPage() {
   const [questions, setQuestions] = useState([]);
@@ -52,13 +15,11 @@ export default function QuestionsPage() {
   const [user, authLoading] = useAuthState(auth);
   const router = useRouter();
   const params = useParams();
+  const searchParams = useSearchParams(); // Initialize useSearchParams
   const testId = params.testId;
+  const courseId = searchParams.get('courseId'); // Get courseId from query params
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
-  
-  
-  
-
 
   const [newQuestion, setNewQuestion] = useState({
     question: '',
@@ -68,48 +29,67 @@ export default function QuestionsPage() {
     marks: 1
   });
 
-  // Mock test data
   const [testInfo, setTestInfo] = useState(null);
 
   useEffect(() => {
-    // Check if user is authenticated and redirect if not
     if (!authLoading && !user) {
       router.push('/auth/login');
       return;
     }
 
-    // Load mock test info
-    const mockTestInfo = {
-      '1': { title: 'General Knowledge Test', category: 'General' },
-      '2': { title: 'Mathematics Fundamentals', category: 'Mathematics' },
-      '3': { title: 'Science Quiz', category: 'Science' }
+    const fetchQuestions = async () => {
+      if (!testId || !courseId) {
+        setLoading(false);
+        if (!courseId) {
+          toast({
+            title: "Missing Course ID",
+            description: "Course ID is required to manage questions for this test.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+          router.push('/admin/tests'); // Redirect if courseId is missing
+        }
+        return;
+      }
+
+      try {
+        const fetchedTestData = await getTestDetails(courseId, testId); // Use courseId here
+
+        if (fetchedTestData) {
+          setTestInfo({
+            title: fetchedTestData.title,
+            category: fetchedTestData.courseId.toUpperCase().replace(/-/g, ' ')
+          });
+          setQuestions(fetchedTestData.questions || []);
+        } else {
+          toast({
+            title: "Test not found",
+            description: `Could not find test with ID: ${testId} in course ${courseId}`,
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+          router.push('/admin/tests');
+        }
+      } catch (error) {
+        console.error("Error fetching questions:", error);
+        toast({
+          title: "Error loading questions",
+          description: "Failed to load questions. Please try again later.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      } finally {
+        setLoading(false);
+      }
     };
 
-    setTestInfo(mockTestInfo[testId] || { title: 'Unknown Test', category: 'General' });
-
-    // Load mock questions for this test
-    const mockQuestions = [
-      {
-        id: '1',
-        question: 'What is the capital of India?',
-        options: ['Mumbai', 'Delhi', 'Kolkata', 'Chennai'],
-        correctAnswer: 1,
-        explanation: 'Delhi is the capital city of India.',
-        marks: 1
-      },
-      {
-        id: '2',
-        question: 'What is 2 + 2?',
-        options: ['3', '4', '5', '6'],
-        correctAnswer: 1,
-        explanation: '2 + 2 equals 4.',
-        marks: 1
-      }
-    ];
-
-    setQuestions(mockQuestions);
-    setLoading(false);
-  }, [user, authLoading, router, testId]);
+    if (user) {
+      fetchQuestions();
+    }
+  }, [user, authLoading, router, testId, courseId, toast]); // Add courseId to dependency array
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -129,8 +109,7 @@ export default function QuestionsPage() {
     }
   };
 
-  const handleCreateQuestion = () => {
-    // Validate question
+  const handleCreateQuestion = async () => {
     if (!newQuestion.question.trim()) {
       toast({
         title: 'Error',
@@ -153,46 +132,77 @@ export default function QuestionsPage() {
       return;
     }
 
-    // Add question to the list
-    const newId = (questions.length + 1).toString();
-    const questionData = {
-      id: newId,
-      ...newQuestion,
-      correctAnswer: parseInt(newQuestion.correctAnswer)
-    };
+    setLoading(true);
+    try {
+      const questionsCollectionRef = collection(db, 'courses', courseId, 'tests', testId, 'questions'); // Use courseId here
+      const docRef = await addDoc(questionsCollectionRef, {
+        ...newQuestion,
+        correctAnswer: parseInt(newQuestion.correctAnswer),
+        createdAt: new Date().toISOString(),
+      });
 
-    setQuestions([...questions, questionData]);
-    onClose();
+      setQuestions(prevQuestions => [
+        ...prevQuestions,
+        { id: docRef.id, ...newQuestion, correctAnswer: parseInt(newQuestion.correctAnswer) }
+      ]);
 
-    // Reset form
-    setNewQuestion({
-      question: '',
-      options: ['', '', '', ''],
-      correctAnswer: '0',
-      explanation: '',
-      marks: 1
-    });
+      onClose();
+      setNewQuestion({
+        question: '',
+        options: ['', '', '', ''],
+        correctAnswer: '0',
+        explanation: '',
+        marks: 1
+      });
 
-    toast({
-      title: 'Success',
-      description: 'Question added successfully.',
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-    });
+      toast({
+        title: 'Success',
+        description: 'Question added successfully.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error adding question:", error);
+      toast({
+        title: 'Error',
+        description: 'Failed to add question. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const handleDeleteQuestion = (id) => {
-    const updatedQuestions = questions.filter(question => question.id !== id);
-    setQuestions(updatedQuestions);
+  const handleDeleteQuestion = async (questionId) => {
+    setLoading(true);
+    try {
+      const questionDocRef = doc(db, 'courses', courseId, 'tests', testId, 'questions', questionId); // Use courseId here
+      await deleteDoc(questionDocRef);
 
-    toast({
-      title: 'Success',
-      description: 'Question deleted successfully.',
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-    });
+      setQuestions(prevQuestions => prevQuestions.filter(q => q.id !== questionId));
+
+      toast({
+        title: 'Success',
+        description: 'Question deleted successfully.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error deleting question:", error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete question. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (authLoading || loading) {
@@ -287,6 +297,7 @@ export default function QuestionsPage() {
                             icon={<EditIcon />}
                             size="sm"
                             colorScheme="blue"
+                            // TODO: Implement edit functionality
                           />
                           <IconButton
                             aria-label="Delete question"
@@ -315,7 +326,6 @@ export default function QuestionsPage() {
           <ModalBody pb={6}>
             <FormControl mb={4} isRequired>
               <FormLabel>Question</FormLabel>
-          
               <Textarea
                 name="question"
                 value={newQuestion.question}

@@ -3,19 +3,21 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Slider from "react-slick";
-import { StarIcon, TimeIcon } from "@chakra-ui/icons";
+import { TimeIcon } from "@chakra-ui/icons";
 import CourseCard from "@/components/CourseCard";
 import StatCard from "@/components/StatCard";
 import ProgressBar from "@/components/ProgressBar";
 import SectionHeader from "@/components/SectionHeader";
 import CardContainer from "@/components/CardContainer";
-import { courses } from "@/lib/courses";
-import "./dashboard.css";
+import { getCourses } from "@/lib/tests"; 
+import { getAllTestResults } from "@/lib/testResultService";
+import "slick-carousel/slick/slick.css"; 
+import "slick-carousel/slick/slick-theme.css";
 import ResourceCards from "@/components/ResourceCards";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
-import { Box,  Heading,  Button, HStack } from "@chakra-ui/react";
+import { Box, Heading, Button, HStack, Text, Spinner, useToast } from "@chakra-ui/react"; 
 import { FiArrowLeft } from "react-icons/fi";
 
 // Define slider settings
@@ -45,21 +47,24 @@ const sliderSettings = {
 
 export default function DashboardPage() {
   const router = useRouter();
+  const toast = useToast();
   const { user } = useAuth();
   const { isAuthenticated, isLoading: authLoading } = useAuthRedirect();
 
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(true);
   const [recentTests, setRecentTests] = useState([]);
-  const [upcomingTests, setUpcomingTests] = useState([]);
-  const [courseProgress, setCourseProgress] = useState([]);
+  const [trendingCourses, setTrendingCourses] = useState([]);
+  const [upcomingTests, setUpcomingTests] = useState([]); // Still mock for now
+  const [courseProgress, setCourseProgress] = useState([]); // Still mock for now
   const [error, setError] = useState(null);
 
-  // Fetch user data
+  // Fetch user data and dynamic content
   useEffect(() => {
-    const fetchUserData = async () => {
+    const fetchDashboardData = async () => {
       try {
         setError(null);
+
         // Set username from authenticated user
         if (user?.displayName) {
           setUsername(user.displayName);
@@ -67,23 +72,32 @@ export default function DashboardPage() {
           setUsername(user.email.split("@")[0]);
         }
 
-        // Load recent test results from localStorage
-        const storedResults = localStorage.getItem("testResults");
-        let results = [];
-
-        if (storedResults) {
-          try {
-            results = JSON.parse(storedResults);
-          } catch (error) {
-            console.error("Error parsing test results:", error);
+        // Fetch Recent Test Results from Firestore
+        if (user) {
+          const fetchedResults = await getAllTestResults(user.uid);
+          // Sort by date (newest first) and take top 3
+          fetchedResults.sort((a, b) => new Date(b.date) - new Date(a.date));
+          setRecentTests(fetchedResults.slice(0, 3));
+        } else {
+          // Fallback to localStorage for non-logged-in users
+          const storedResults = localStorage.getItem("testResults");
+          let results = [];
+          if (storedResults) {
+            try {
+              results = JSON.parse(storedResults);
+            } catch (error) {
+              console.error("Error parsing local test results:", error);
+            }
           }
+          results.sort((a, b) => new Date(b.date) - new Date(a.date));
+          setRecentTests(results.slice(0, 3));
         }
 
-        // Sort by date (newest first)
-        results.sort((a, b) => new Date(b.date) - new Date(a.date));
-        setRecentTests(results.slice(0, 3));
+        // Fetch Trending Courses from Firestore
+        const fetchedCourses = await getCourses();
+        setTrendingCourses(fetchedCourses);
 
-        // Mock data for upcoming tests
+        // Mock data for upcoming tests (TO BE MADE DYNAMIC LATER)
         setUpcomingTests([
           {
             id: "ssc-cgl-mock1",
@@ -101,7 +115,7 @@ export default function DashboardPage() {
           },
         ]);
 
-        // Mock data for course progress
+        // Mock data for course progress (TO BE MADE DYNAMIC LATER)
         setCourseProgress([
           {
             id: "course1",
@@ -120,25 +134,31 @@ export default function DashboardPage() {
         ]);
 
         setLoading(false);
-      } catch (error) {
-        console.error("Error fetching user data:", error);
-        setError(error.message);
+      } catch (err) {
+        console.error("Error fetching dashboard data:", err);
+        setError(err.message || "Failed to load dashboard data.");
+        toast({
+          title: "Error loading dashboard",
+          description: err.message || "Please try again later.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
         setLoading(false);
       }
     };
 
-    if (user) {
-      fetchUserData();
-    } else {
-      setLoading(false);
+    if (!authLoading) { // Only fetch data once auth state is determined
+      fetchDashboardData();
     }
-  }, [user]);
+  }, [user, authLoading, toast]);
 
   // Show loading spinner if either auth is loading or page data is loading
   if (authLoading || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <Spinner size="xl" color="blue.500" />
+        <Text ml={4}>Loading dashboard...</Text>
       </div>
     );
   }
@@ -170,7 +190,9 @@ export default function DashboardPage() {
 
   return (
     <Box p={6}>
-      {user?.isAdmin && (
+
+      
+      {/* {user?.isAdmin && (
         <HStack justify="space-between" mb={6}>
           <Heading>User Dashboard</Heading>
           <Button
@@ -182,7 +204,7 @@ export default function DashboardPage() {
             Back to Admin
           </Button>
         </HStack>
-      )}
+      )} */}
 
       <div className="container mx-auto px-4 bg-gray-100 dark:bg-gray-900 min-h-screen pb-12 transition-colors duration-200">
         {/* Welcome banner */}
@@ -200,7 +222,7 @@ export default function DashboardPage() {
           <SectionHeader title="Trending Courses" />
           <div className="slick-container mb-16">
             <Slider {...sliderSettings}>
-              {courses?.map((course) => (
+              {(Array.isArray(trendingCourses) ? trendingCourses : []).map((course) => (
                 <div key={course.id} className="px-2 h-full">
                   <CourseCard
                     id={course.id}
@@ -212,10 +234,11 @@ export default function DashboardPage() {
               ))}
             </Slider>
           </div>
-
+           
+           {/* Resourse component  */}
           <ResourceCards />
 
-          {/* Stats cards */}
+          {/* Stats cards - These are still hardcoded, will need a separate task */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 pt-8">
             <StatCard title="Tests Taken" value="12" />
             <StatCard
@@ -243,11 +266,13 @@ export default function DashboardPage() {
             />
 
             <CardContainer>
-              {recentTests?.length > 0 ? (
+              {(Array.isArray(recentTests) && recentTests.length > 0) ? (
                 <div className="divide-y divide-gray-200 dark:divide-gray-700">
                   {recentTests.map((test, index) => {
+                    // Ensure totalQuestions is available, fallback if not
+                    const totalQuestions = test.totalQuestions || 1;
                     const scorePercentage = Math.round(
-                      (test.score / test.totalQuestions) * 100
+                      (test.score / totalQuestions) * 100
                     );
 
                     return (
@@ -265,15 +290,17 @@ export default function DashboardPage() {
                             <div>
                               <h3 className="font-medium text-gray-800 dark:text-gray-200">
                                 {test.title ||
-                                  `${test.courseId?.toUpperCase()} Test`}
+                                  `${test.courseId?.toUpperCase()} Test`}{" "}
+                                {/* Use test.title from fetched data */}
                               </h3>
                               <p className="text-sm text-gray-500 dark:text-gray-400">
                                 {new Date(test.date).toLocaleDateString()} •{" "}
-                                {test.score}/{test.totalQuestions} correct
+                                {test.score}/{totalQuestions} correct
                               </p>
                             </div>
                           </div>
-                          <Link href={`/results/${test.testId}`}>
+                          {/* Link to results page, passing courseId and testId */}
+                          <Link href={`/results/${test.courseId}/${test.testId}`}>
                             <button className="text-sm bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:hover:bg-blue-800 text-blue-700 dark:text-blue-300 px-3 py-1 rounded-md">
                               Details
                             </button>
@@ -309,12 +336,12 @@ export default function DashboardPage() {
             </CardContainer>
           </div>
 
-          {/* Side-by-side cards for Upcoming Tests and Bookmarked Questions */}
+          {/*cards for Upcoming Tests and Course Progress */}
           <div className="mb-8">
             <SectionHeader title="Quick Access" />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Upcoming Tests Card */}
+              {/* Upcoming Tests Card - Still mock for now */}
               <CardContainer>
                 <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
                   <h3 className="font-medium text-gray-800 dark:text-gray-200">
@@ -329,7 +356,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="p-4">
-                  {upcomingTests?.length > 0 ? (
+                  {(Array.isArray(upcomingTests) && upcomingTests.length > 0) ? (
                     <div className="space-y-3">
                       {upcomingTests.slice(0, 3).map((test) => (
                         <div
@@ -363,7 +390,7 @@ export default function DashboardPage() {
                 </div>
               </CardContainer>
 
-              {/* Course Progress Card */}
+              {/* Course Progress Card - Still mock for now */}
               <CardContainer>
                 <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
                   <h3 className="font-medium text-gray-800 dark:text-gray-200">
@@ -378,7 +405,7 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="p-4">
-                  {courseProgress?.length > 0 ? (
+                  {(Array.isArray(courseProgress) && courseProgress.length > 0) ? (
                     <div className="space-y-4">
                       {courseProgress.map((course) => (
                         <div key={course.id}>

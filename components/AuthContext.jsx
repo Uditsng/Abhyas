@@ -4,7 +4,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, signInWithEmailAndPassword } from 'firebase/auth';
-import { auth, db } from '@/lib/firebase';
+import { auth, db } from '@/lib/firebaseConfig';
 import { syncBookmarks } from '@/lib/bookmarkService';
 import { doc, getDoc } from 'firebase/firestore';
 

@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Box, Heading, Flex, Button, SimpleGrid, Card, CardBody, Text, Badge } from '@chakra-ui/react';
-import { courses } from '@/lib/courses';
-import { testSeries } from '@/lib/tests';
+import { getCourses, getTestsForCourse } from '@/lib/tests';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
@@ -18,13 +17,40 @@ import OptimizedImage from '@/components/OptimizedImage';
 export default function ExamCategories() {
   const router = useRouter();
   const { user } = useAuth();
+  const [coursesState, setCoursesState] = useState([]);
+  const [tests, setTests] = useState([]);
+  
   const { 
     activeCategory, 
     setActiveCategory, 
     currentPage, 
-    setCurrentPage,
-    resetPagination 
-  } = useCategoryState(courses[0]?.id || '');
+  } = useCategoryState(coursesState[0]?.id || '');
+  
+  useEffect(() => {
+    async function fetchData(){
+      const fetchedCourses = await getCourses()
+      setCoursesState(fetchedCourses)
+      if(fetchedCourses.length > 0){
+        setActiveCategory(fetchedCourses[0].id)
+        const fetchedTests = await getTestsForCourse(fetchedCourses[0].id)
+        setTests(fetchedTests)
+      }
+      setLoading(false)
+    }
+    fetchData()
+  }, [])
+
+  useEffect(()=>{
+    async function fetchTests(){
+      if(activeCategory)
+{
+  const fetchedTests = await getTestsForCourse(activeCategory)
+  setTests(fetchedTests)
+}
+    }
+    fetchTests()
+  }, [activeCategory])
+
 
   // Handle test click - redirect to login if not authenticated
   const handleTestClick = (e) => {
@@ -35,38 +61,22 @@ export default function ExamCategories() {
   };
 
   // Create categories from the courses data
-  const categories = courses.map(course => ({
+  const categories = coursesState.map(course => ({
     id: course.id,
     name: course.title
   }));
 
-  // Create a flattened array of all tests with their course info
-  const allExams = Object.entries(testSeries).flatMap(([courseId, tests]) => {
-    return tests.map(test => ({
-      id: test.id,
-      name: test.title,
-      category: courseId,
-      description: test.description || `${test.totalQuestions} questions | ${test.duration} mins`,
-      image: '/images/banner2.jpg',
-      totalQuestions: test.totalQuestions,
-      duration: test.duration
-    }));
-  });
-
-  // Filter exams based on active category
-  const filteredExams = allExams.filter(exam => exam.category === activeCategory);
 
   // Calculate pagination
   const examsPerPage = 6;
   const indexOfLastExam = currentPage * examsPerPage;
   const indexOfFirstExam = indexOfLastExam - examsPerPage;
-  const currentExams = filteredExams.slice(indexOfFirstExam, indexOfLastExam);
-  const totalPages = Math.ceil(filteredExams.length / examsPerPage);
-
+  // Use tests directly, as they are already filtered by activeCategory
+  const currentExams = tests.slice((currentPage - 1) * examsPerPage, currentPage * examsPerPage);
+  
   // Example of using the category state
   const handleCategoryChange = (categoryId) => {
     setActiveCategory(categoryId);
-    // Pagination will automatically reset due to the hook's logic
   };
 
   return (
@@ -122,7 +132,7 @@ export default function ExamCategories() {
             >
               <div className="relative w-full h-48 overflow-hidden rounded-lg">
                 <OptimizedImage
-                  src={exam.image}
+                  src="/images/banner2.jpg"
                   alt={exam.name}
                   fill
                   sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
@@ -158,7 +168,7 @@ export default function ExamCategories() {
       </SimpleGrid>
 
       {/* Example of using pagination */}
-      <div className="pagination">
+      {/* <div className="resetPagination">
         <button 
           onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
           disabled={currentPage === 1}
@@ -171,7 +181,7 @@ export default function ExamCategories() {
         >
           Next
         </button>
-      </div>
+      </div> */}
     </Box>
   );
 }

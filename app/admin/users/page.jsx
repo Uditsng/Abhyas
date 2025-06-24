@@ -21,9 +21,9 @@ import {
 } from '@chakra-ui/react';
 import { EditIcon } from '@chakra-ui/icons';
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { db } from '@/lib/firebaseConfig';
 import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '@/lib/firebase';
+import { auth } from '@/lib/firebaseConfig';
 import { useRouter } from 'next/navigation';
 import ManageRoleModal from './manage-role';
 import { getUserProfile } from '@/lib/userService';

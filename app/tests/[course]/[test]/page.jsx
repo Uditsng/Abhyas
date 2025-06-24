@@ -3,35 +3,22 @@
 // app/tests/[course]/[test]/page.jsx  handle test listings and individual test pages.
 
 import { useParams } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useToast } from "@chakra-ui/react";
-import { testSeries } from "@/lib/tests";
+import { getTestDetails } from "@/lib/tests";
 import { saveTestResult } from "@/lib/testResultService";
 import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/lib/firebase";
+import { auth } from "@/lib/firebaseConfig";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function TakeTestPage() {
-  // Check if user is authenticated, redirect to login if not
   const { isAuthenticated, isLoading: authLoading } = useAuthRedirect();
-
   const params = useParams();
   const toast = useToast();
-  // Get user authentication state for Firebase operations
   const [user] = useAuthState(auth);
-
-  // Extract course and test IDs from params
-  // const courseId = Array.isArray(params.course)
-  //   ? params.course[0]
-  //   : params.course;
-  // const testId = Array.isArray(params.test) ? params.test[0] : params.test;
-
   const courseId = params.course;
   const testId = params.test;
-
-  // Get test data
-  const courseTests = testSeries[courseId] || [];
-  const testData = courseTests.find((t) => t.id === testId);
 
   // State for answers and submission
   const [answers, setAnswers] = useState({});
@@ -51,7 +38,20 @@ export default function TakeTestPage() {
   // Mobile palette visibility
   const [showMobilePalette, setShowMobilePalette] = useState(false);
 
-  // Initialize timer when component mounts
+  // Test data and loading state
+  const [testData, setTestData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchTest() {
+      const data = await getTestDetails(courseId, testId);
+      setTestData(data);
+      setLoading(false);
+    }
+    fetchTest();
+  }, [courseId, testId]);
+
+  // Timer for Tests
   useEffect(() => {
     if (testData) {
       // Convert minutes to seconds
@@ -61,7 +61,9 @@ export default function TakeTestPage() {
   }, [testData]);
 
   // Define handleSubmit function
-  const handleSubmit = async () => {
+ 
+
+  const handleSubmit = useCallback(async () => {
     const confirmed = window.confirm("Are you sure you want to submit this test?")
     if(!confirmed) return
     if (isSubmitting) return;
@@ -117,11 +119,9 @@ export default function TakeTestPage() {
       // Navigate to review page
       console.log("Test submitted successfully, redirecting to review page...");
 
-      // Use a simple approach for navigation to avoid history API conflicts
-      // Wait a short time to ensure the toast is visible and data is saved
       setTimeout(() => {
         // Use window.location for a full page navigation which avoids React hydration issues
-        window.location.href = `/review/${testId}`;
+        window.location.href = `/results/${testId}`;
       }, 1000);
     } catch (error) {
       console.error("Error submitting test:", error);
@@ -134,7 +134,7 @@ export default function TakeTestPage() {
       });
       setIsSubmitting(false);
     }
-  };
+  }, [isSubmitting, testData, answers, courseId, testId, user, toast]);
 
   // Timer countdown effect
   useEffect(() => {
@@ -155,11 +155,87 @@ export default function TakeTestPage() {
     return () => clearInterval(timer);
   }, [timerStarted, timeRemaining, handleSubmit]);
 
+  // Add navigation prevention
+  useEffect(() => {
+
+    //beforeunload event to warn about leaving the page
+    const handleBeforeUnload = (e) => {
+
+      // Skip navigation prevention if already submitting or submitted
+      if (isSubmitting || isSubmitted) return;
+      //Prevent user from leaving
+      e.preventDefault();
+      //ToDo: add styling
+      e.returnValue = "You have unsaved test progress. Are you sure you want to leave?";
+      //Auto-submit in background
+      handleSubmit()
+      return e.returnValue;
+    };
+
+    // Add event listener
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    // Clean up
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+    };
+  }, [isSubmitting, isSubmitted, handleSubmit]);
+
+  // Prevent back button navigation
+useEffect(() => {
+  if (isSubmitting || isSubmitted) return;
+
+  const handlePopState = () => {
+    const confirmLeave = window.confirm(
+      "Are you sure you want to leave the test? Your answers will be auto-submitted."
+    );
+    if (!confirmLeave) {
+      // Push the current state again to stay on page
+      window.history.pushState(null, "", window.location.href);
+    } else {
+      handleSubmit(); // Auto-submit
+    }
+  };
+
+  // Push initial state so back button triggers popstate
+  window.history.pushState(null, "", window.location.href);
+  window.addEventListener("popstate", handlePopState);
+
+  return () => {
+    window.removeEventListener("popstate", handlePopState);
+  };
+}, [isSubmitting, isSubmitted, handleSubmit]);
 
 
+  // Show loading spinner if auth is loading
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+  if (!isAuthenticated) {
+    return null;
+  }
+  if (loading) return <div>Loading...</div>;
+  if (!testData) return <div className="p-6 text-red-600">Test not found.</div>;
 
-
-
+  // Get current question and helpers (declare only once)
+  const currentQuestion = testData.questions[currentQuestionIndex];
+  const isFirstQuestion = currentQuestionIndex === 0;
+  const getQuestionStatusClass = (question) => {
+    const isAnswered = answers[question.id] !== undefined;
+    const isMarked = markedForReview[question.id] === true;
+    if (isAnswered && isMarked) {
+      return "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-700";
+    } else if (isAnswered) {
+      return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-300 dark:border-green-700";
+    } else if (isMarked) {
+      return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-300 dark:border-yellow-700";
+    } else {
+      return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-300 dark:border-red-700 hover:bg-red-200 dark:hover:bg-red-800/40";
+    }
+  };
 
   // Format time as MM:SS
   const formatTime = (seconds) => {
@@ -198,68 +274,6 @@ export default function TakeTestPage() {
       ...prev,
       [questionId]: !prev[questionId],
     }));
-  };
-
-  // Add navigation prevention
-  useEffect(() => {
-    // Skip navigation prevention if already submitting or submitted
-    if (isSubmitting || isSubmitted) return;
-
-    //beforeunload event to warn about leaving the page
-    const blockNavigation = (e) => {
-      const message = "You have unsaved test progress. Are you sure you want to leave?";
-      e.preventDefault();
-      e.returnValue = message;
-      return message;
-    };
-
-    // Add event listener
-    window.addEventListener('beforeunload', blockNavigation);
-
-    // Clean up
-    return () => {
-      window.removeEventListener('beforeunload', blockNavigation);
-    };
-  }, [isSubmitting, isSubmitted]);
-
-  // Show loading spinner if auth is loading
-  if (authLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  // If not authenticated, the useAuthRedirect hook will handle the redirect
-  if (!isAuthenticated) {
-    return null;
-  }
-
-  // If test not found
-  if (!testData) {
-    return <div className="p-6 text-red-600">Test not found.</div>;
-  }
-
-  // Get current question
-  const currentQuestion = testData.questions[currentQuestionIndex];
-  const isFirstQuestion = currentQuestionIndex === 0;
-
-  // Get class for question status in palette
-  const getQuestionStatusClass = (question) => {
-    const isAnswered = answers[question.id] !== undefined;
-    const isMarked = markedForReview[question.id] === true;
-
-    if (isAnswered && isMarked) {
-      return "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-700";
-    } else if (isAnswered) {
-      return "bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 border border-green-300 dark:border-green-700";
-    } else if (isMarked) {
-      return "bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300 border border-yellow-300 dark:border-yellow-700";
-    } else {
-      // Change to red for not answered questions
-      return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-300 dark:border-red-700 hover:bg-red-200 dark:hover:bg-red-800/40";
-    }
   };
 
   return (
@@ -351,16 +365,23 @@ export default function TakeTestPage() {
           </div>
         </div>
         )}
-
-        {/* Current question */}
-        <div className="mb-6 border dark:border-gray-700 p-6 rounded-lg bg-white dark:bg-gray-800 shadow-sm transition-colors duration-200">
-          <p className="font-semibold mb-4 text-lg text-gray-900 dark:text-gray-100">
+       
+      <AnimatePresence mode='wait'> 
+        <motion.div 
+         key={currentQuestion.id}
+         initial={{ opacity: 0, x: 20 }}
+         animate={{ opacity: 1, x: 0 }}
+         exit={{ opacity: 0, x: -20 }}
+         transition={{ duration: 0.3 }}
+         className="mb-6 border dark:border-gray-700 p-6 rounded-lg bg-white dark:bg-gray-800 shadow-sm transition-colors duration-200"
+        >
+      <p className="font-semibold mb-4 text-lg text-gray-900 dark:text-gray-100">
             Q{currentQuestionIndex + 1}. {currentQuestion.question}
           </p>
           <div className="space-y-3">
-            {currentQuestion.options.map((opt) => (
+            {currentQuestion.options.map((opt,idx) => (
               <label
-                key={opt}
+                key={`${currentQuestion.id}-${idx}`}
                 className={`block p-3 border dark:border-gray-700 rounded-lg cursor-pointer transition-colors duration-200 ${
                   answers[currentQuestion.id] === opt
                     ? "bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700"
@@ -385,7 +406,8 @@ export default function TakeTestPage() {
               </label>
             ))}
           </div>
-        </div>
+        </motion.div>
+      </AnimatePresence>
 
         {/* Navigation buttons */}
         <div className="flex justify-between mb-6">
@@ -425,12 +447,12 @@ export default function TakeTestPage() {
         </div>
 
         {/* Submit button */}
-        <div className="text-center mb-6">
+        <div className="bottom-4 left-4 right-4 z-50 text-center mb-6">
           <button
             onClick={handleSubmit}
             disabled={isSubmitting}
             className={`px-4 py-2 bg-green-600 dark:bg-green-700 text-white rounded hover:bg-green-700 dark:hover:bg-green-800 transition-colors duration-200 ${
-              isSubmitting ? "opacity-70 cursor-not-allowed" : ""
+              isSubmitting ? "opacity-70 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
             }`}
           >
             {isSubmitting ? "Submitting..." : "Submit Test"}
@@ -483,7 +505,7 @@ export default function TakeTestPage() {
                   key={index}
                   onClick={() => goToQuestion(index)}
                   className={`w-8 h-8 rounded-md flex items-center justify-center text-sm font-medium transition-colors duration-200
-                         ${getQuestionStatusClass(question)}`}
+                         ${getQuestionStatusClass(question)} hover:ring-2 hover:ring-offset-1 focus:ring-2 focus:ring-blue-400`}
                 >
                   {index + 1}
                 </button>

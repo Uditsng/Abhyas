@@ -28,169 +28,161 @@ import {
   FormLabel,
   Input,
   Select,
-  InputGroup,
-  InputLeftElement,
   Card,
   CardBody,
   Text,
   Flex,
-  Spacer
+  useToast
 } from '@chakra-ui/react';
-import { AddIcon, EditIcon, DeleteIcon, ViewIcon, SearchIcon } from '@chakra-ui/icons';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '@/lib/firebase';
+import { AddIcon, EditIcon, DeleteIcon, ExternalLinkIcon } from '@chakra-ui/icons';
 import { useRouter } from 'next/navigation';
-import { subscriptionPlans } from '@/lib/subscriptions';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth, db } from '@/lib/firebaseConfig';
+import { getCourses, getTestsForCourse } from '@/lib/tests'; // Import getCourses and getTestsForCourse
+import { collection, doc, setDoc, deleteDoc, addDoc, getDocs } from 'firebase/firestore';
 
-export default function TestsPage() {
+export default function AdminTestsPage() {
   const [tests, setTests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [user, authLoading] = useAuthState(auth);
   const router = useRouter();
   const { isOpen, onOpen, onClose } = useDisclosure();
-
-  // New state variables for filtering and sorting
-  const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('All');
-  const [statusFilter, setStatusFilter] = useState('All');
+  const toast = useToast();
 
   const [newTest, setNewTest] = useState({
     title: '',
-    description: '',
-    category: 'General',
     duration: 60,
-    subscription: 'base',
-    totalQuestions: 20,
-    logo: '',
+    totalQuestions: 0,
+    courseId: '', // To select which course this test belongs to
   });
+  const [courses, setCourses] = useState([]); // State to store available courses
 
-  // Fetch tests from Firebase
   useEffect(() => {
-    // Check if user is authenticated and redirect if not
     if (!authLoading && !user) {
       router.push('/auth/login');
       return;
     }
 
-    // Load mock data for now
-    const mockTests = [
-      {
-        id: '1',
-        title: 'General Knowledge Test',
-        description: 'Basic general knowledge questions',
-        category: 'General',
-        duration: 30,
-        totalQuestions: 20,
-        status: 'Published',
-        createdAt: { toDate: () => new Date('2023-10-15') }
-      },
-      {
-        id: '2',
-        title: 'Mathematics Fundamentals',
-        description: 'Basic math concepts and problem solving',
-        category: 'Mathematics',
-        duration: 45,
-        totalQuestions: 25,
-        status: 'Draft',
-        createdAt: { toDate: () => new Date('2023-10-20') }
-      },
-      {
-        id: '3',
-        title: 'Science Quiz',
-        description: 'Test your knowledge of basic science concepts',
-        category: 'Science',
-        duration: 60,
-        totalQuestions: 30,
-        status: 'Published',
-        createdAt: { toDate: () => new Date('2023-10-25') }
-      }
-    ];
+    const fetchAllTests = async () => {
+      setLoading(true);
+      try {
+        const fetchedCourses = await getCourses();
+        setCourses(fetchedCourses); // Store courses for the dropdown
 
-    setTests(mockTests);
-    setLoading(false);
-  }, [user, authLoading, router]);
+        let allTests = [];
+        for (const course of fetchedCourses) {
+          const testsForCourse = await getTestsForCourse(course.id);
+          allTests = [...allTests, ...testsForCourse.map(test => ({ ...test, courseTitle: course.title }))];
+        }
+        setTests(allTests);
+      } catch (error) {
+        console.error("Error fetching tests:", error);
+        toast({
+          title: "Error loading tests",
+          description: "Failed to load tests. Please try again later.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    if (user) {
+      fetchAllTests();
+    }
+  }, [user, authLoading, router, toast]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewTest({
       ...newTest,
-      [name]: name === 'duration' || name === 'totalQuestions' ? parseInt(value) : value
+      [name]: name === 'duration' || name === 'totalQuestions' ? parseInt(value) : value,
     });
   };
 
-  const handleCreateTest = () => {
-    // For now, just add to the local state
-    const newId = (tests.length + 1).toString();
-    const testData = {
-      id: newId,
-      ...newTest,
-      status: 'Draft',
-      createdAt: { toDate: () => new Date() }
-    };
-
-    setTests([...tests, testData]);
-    onClose();
-
-    // Reset form
-    setNewTest({
-      title: '',
-      description: '',
-      category: 'General',
-      subscription: 'base',
-      duration: 60,
-      totalQuestions: 20,
-      logo: '',
-    });
-  };
-
-  // Filter tests based on search query and filters
-  const filteredTests = tests.filter(test => {
-    const matchesSearch = test.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         test.description.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesCategory = categoryFilter === 'All' || test.category === categoryFilter;
-    const matchesStatus = statusFilter === 'All' || test.status === statusFilter;
-
-    return matchesSearch && matchesCategory && matchesStatus;
-  });
-
-  // Placeholder functions for actions (we'll implement these later)
-  const handleViewTest = (id) => {
-    router.push(`/admin/tests/${id}`);
-    // Navigates to test details page
-  };
-
-  const handleEditTest = (id) => {
-    const testToEdit = tests.find(test => test.id === id);
-    if (testToEdit) {
-      setNewTest({
-        title: testToEdit.title,
-        description: testToEdit.description,
-        category: testToEdit.category,
-        duration: testToEdit.duration,
-        totalQuestions: testToEdit.totalQuestions,
-        logo: testToEdit.logo, // Include logo in the edit
+  const handleCreateTest = async () => {
+    if (!newTest.title.trim() || !newTest.courseId) {
+      toast({
+        title: 'Error',
+        description: 'Please fill in all required fields (Title and Course).',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
       });
-      onOpen();
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const testsCollectionRef = collection(db, 'courses', newTest.courseId, 'tests');
+      const docRef = await addDoc(testsCollectionRef, {
+        ...newTest,
+        createdAt: new Date().toISOString(),
+      });
+
+      // Add the new test to the local state, including its courseTitle
+      const course = courses.find(c => c.id === newTest.courseId);
+      setTests(prevTests => [
+        ...prevTests,
+        { id: docRef.id, ...newTest, courseTitle: course ? course.title : newTest.courseId.toUpperCase().replace(/-/g, ' ') }
+      ]);
+
+      onClose();
+      setNewTest({
+        title: '',
+        duration: 60,
+        totalQuestions: 0,
+        courseId: '',
+      });
+      toast({
+        title: 'Success',
+        description: 'Test created successfully.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error adding test:", error);
+      toast({
+        title: 'Error',
+        description: 'Failed to create test. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDeleteTest = (id) => {
-    const updatedTests = tests.filter(test => test.id !== id);
-    setTests(updatedTests);
-  };
+  const handleDeleteTest = async (testIdToDelete, courseIdToDelete) => {
+    setLoading(true);
+    try {
+      const testDocRef = doc(db, 'courses', courseIdToDelete, 'tests', testIdToDelete);
+      await deleteDoc(testDocRef);
 
-const handleManageQuestions = (id) => {
-  router.push(`/admin/tests/${id}/questions`);
-};
+      setTests(prevTests => prevTests.filter(test => test.id !== testIdToDelete));
 
-  const handleImageUpload = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = () => {
-        setNewTest({ ...newTest, logo: reader.result }); // Store the image as a base64 string
-      };
-      reader.readAsDataURL(file);
+      toast({
+        title: 'Success',
+        description: 'Test deleted successfully.',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Error deleting test:", error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete test. Please try again.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -204,83 +196,21 @@ const handleManageQuestions = (id) => {
 
   return (
     <Box>
-      <Card mb={6} variant="outline">
-        <CardBody>
-          <Heading size="lg" mb={4}>Test Management</Heading>
-          <Text mb={4} color="gray.600">
-            Create and manage your tests. You can add questions, set time limits, and publish tests for your users.
-          </Text>
+      <Flex justify="space-between" align="center" mb={6}>
+        <Heading size="lg">Manage Tests</Heading>
+        <Button leftIcon={<AddIcon />} colorScheme="blue" onClick={onOpen}>
+          Add New Test
+        </Button>
+      </Flex>
 
-          {/* Filters and search */}
-          <Flex direction={{ base: 'column', md: 'row' }} gap={4} mb={6}>
-            <InputGroup maxW={{ base: '100%', md: '300px' }}>
-              <InputLeftElement pointerEvents="none">
-                <SearchIcon color="gray.300" />
-              </InputLeftElement>
-              <Input
-                placeholder="Search tests..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-            </InputGroup>
-
-            <Select
-              maxW={{ base: '100%', md: '200px' }}
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-            >
-              <option value="All">All Categories</option>
-              <option value="General">General</option>
-              <option value="Mathematics">Mathematics</option>
-              <option value="Science">Science</option>
-              <option value="English">English</option>
-              <option value="History">History</option>
-            </Select>
-
-            <Select
-              maxW={{ base: '100%', md: '200px' }}
-              value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
-            >
-              <option value="All">All Statuses</option>
-              <option value="Published">Published</option>
-              <option value="Draft">Draft</option>
-              <option value="Archived">Archived</option>
-            </Select>
-
-            <Spacer />
-
-            <Button
-              leftIcon={<AddIcon />}
-              colorScheme="blue"
-              onClick={onOpen}
-              minW={{ base: '100%', md: 'auto' }}
-            >
-              Create Test
-            </Button>
-          </Flex>
-        </CardBody>
-      </Card>
-
-      {filteredTests.length === 0 ? (
+      {tests.length === 0 ? (
         <Card p={6} textAlign="center" variant="outline">
           <CardBody>
             <Heading size="md" mb={2}>No tests found</Heading>
             <Text mb={4}>
-              {tests.length === 0
-                ? "You haven't created any tests yet."
-                : "No tests match your current filters."}
+              Start by adding your first test.
             </Text>
-            {tests.length === 0 && (
-              <Button colorScheme="blue" onClick={onOpen}>Create your first test</Button>
-            )}
-            {tests.length > 0 && (
-              <Button variant="outline" onClick={() => {
-                setSearchQuery('');
-                setCategoryFilter('All');
-                setStatusFilter('All');
-              }}>Clear filters</Button>
-            )}
+            <Button colorScheme="blue" onClick={onOpen}>Add New Test</Button>
           </CardBody>
         </Card>
       ) : (
@@ -291,63 +221,45 @@ const handleManageQuestions = (id) => {
                 <Thead bg="gray.50">
                   <Tr>
                     <Th>Title</Th>
-                    <Th>Category</Th>
-                    <Th>Duration</Th>
+                    <Th>Course</Th>
+                    <Th>Duration (mins)</Th>
                     <Th>Questions</Th>
-                    <Th>Status</Th>
-                    <Th>Created</Th>
                     <Th>Actions</Th>
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {filteredTests.map(test => (
+                  {tests.map((test) => (
                     <Tr key={test.id} _hover={{ bg: 'gray.50' }}>
-                      <Td fontWeight="medium">{test.title}</Td>
-                      <Td>{test.category}</Td>
-                      <Td>{test.duration} min</Td>
-                      <Td>{test.totalQuestions}</Td>
+                      <Td>{test.title}</Td>
                       <Td>
-                        <Badge
-                          colorScheme={
-                            test.status === 'Published' ? 'green' :
-                            test.status === 'Draft' ? 'yellow' : 'red'
-                          }
-                          px={2}
-                          py={1}
-                          borderRadius="full"
-                        >
-                          {test.status}
+                        <Badge colorScheme="purple">
+                          {test.courseTitle || test.courseId.toUpperCase().replace(/-/g, ' ')}
                         </Badge>
                       </Td>
+                      <Td>{test.duration}</Td>
+                      <Td>{test.totalQuestions}</Td>
                       <Td>
-                        {test.createdAt
-                          ? (typeof test.createdAt.toDate === 'function'
-                              ? new Date(test.createdAt.toDate()).toLocaleDateString()
-                              : new Date(test.createdAt).toLocaleDateString())
-                          : 'N/A'}
-                      </Td>
-                      <Td>
-                        <HStack spacing={2}> 
+                        <HStack spacing={2}>
                           <IconButton
-                            aria-label="Edit test"
+                            aria-label="Manage Questions"
+                            icon={<ExternalLinkIcon />}
+                            size="sm"
+                            colorScheme="teal"
+                            onClick={() => router.push(`/admin/tests/${test.id}/questions?courseId=${test.courseId}`)}
+                          />
+                          <IconButton
+                            aria-label="Edit Test"
                             icon={<EditIcon />}
                             size="sm"
                             colorScheme="blue"
-                            onClick={() => handleEditTest(test.id)}
+                            // TODO: Implement edit functionality for test details
                           />
                           <IconButton
-                            aria-label="Delete test"
+                            aria-label="Delete Test"
                             icon={<DeleteIcon />}
                             size="sm"
                             colorScheme="red"
-                            onClick={() => handleDeleteTest(test.id)}
-                          />
-                          <IconButton
-                            aria-label="Manage questions"
-                            icon={<AddIcon />}
-                            size="sm"
-                            colorScheme="purple"
-                            onClick={() => handleManageQuestions(test.id)}
+                            onClick={() => handleDeleteTest(test.id, test.courseId)}
                           />
                         </HStack>
                       </Td>
@@ -360,11 +272,11 @@ const handleManageQuestions = (id) => {
         </Card>
       )}
 
-      {/* Create Test Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="lg">
+      {/* Add New Test Modal */}
+      <Modal isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Create New Test</ModalHeader>
+          <ModalHeader>Add New Test</ModalHeader>
           <ModalCloseButton />
           <ModalBody pb={6}>
             <FormControl mb={4} isRequired>
@@ -373,89 +285,52 @@ const handleManageQuestions = (id) => {
                 name="title"
                 value={newTest.title}
                 onChange={handleInputChange}
-                placeholder="Enter test title"
+                placeholder="e.g., SSC CGL Tier I - Mock Test 1"
               />
             </FormControl>
 
-            
-
             <FormControl mb={4} isRequired>
-              <FormLabel>Category</FormLabel>
-              <Select name="category" value={newTest.category} onChange={handleInputChange}>
-                <option value="General">General</option>
-                <option value="Mathematics">Mathematics</option>
-                <option value="Science">Science</option>
-                <option value="English">English</option>
-                <option value="History">History</option>
-              </Select>
-            </FormControl>
-
-            <FormControl mb={4} isRequired>
-              <FormLabel>Required Subscription Plan</FormLabel>
-              <Select 
-                name="subscription" 
-                value={newTest.subscription} 
+              <FormLabel>Course</FormLabel>
+              <Select
+                name="courseId"
+                value={newTest.courseId}
                 onChange={handleInputChange}
+                placeholder="Select course"
               >
-                {subscriptionPlans.map((plan) => (
-                  <option key={plan.id} value={plan.id}>
-                    {plan.name} (${plan.price}/{plan.duration})
+                {courses.map(course => (
+                  <option key={course.id} value={course.id}>
+                    {course.title}
                   </option>
                 ))}
               </Select>
-              <Text fontSize="sm" color="gray.500" mt={1}>
-                Select the minimum subscription plan required to access this test
-              </Text>
             </FormControl>
 
-            <HStack spacing={4}>
-              <FormControl isRequired>
-                <FormLabel>Duration (min)</FormLabel>
-                <Input
-                  name="duration"
-                  type="number"
-                  value={newTest.duration}
-                  onChange={handleInputChange}
-                  min={1}
-                />
-              </FormControl>
+            <FormControl mb={4}>
+              <FormLabel>Duration (minutes)</FormLabel>
+              <Input
+                name="duration"
+                type="number"
+                value={newTest.duration}
+                onChange={handleInputChange}
+                min={1}
+              />
+            </FormControl>
 
-              <FormControl isRequired>
-                <FormLabel>Total Questions</FormLabel>
-                <Input
-                  name="totalQuestions"
-                  type="number"
-                  value={newTest.totalQuestions}
-                  onChange={handleInputChange}
-                  min={1}
-                />
-              </FormControl>
-            </HStack>
-            {/* Image Upload Section */}
-      <FormControl mt={4}>
-        <FormLabel>Test Logo</FormLabel>
-        <Input
-          type="file"
-          accept="image/*"
-          onChange={(e) => handleImageUpload(e)}
-        />
-        {newTest.logo && (
-          <Box mt={2}>
-            <Text>Preview:</Text>
-            <Image src={newTest.logo} alt="Test Logo" boxSize="100px" objectFit="cover" />
-          </Box>
-        )}
-      </FormControl>
+            <FormControl mb={4}>
+              <FormLabel>Total Questions (initial)</FormLabel>
+              <Input
+                name="totalQuestions"
+                type="number"
+                value={newTest.totalQuestions}
+                onChange={handleInputChange}
+                min={0}
+              />
+            </FormControl>
           </ModalBody>
 
           <ModalFooter>
-            <Button
-              colorScheme="blue"
-              mr={3}
-              onClick={handleCreateTest}
-              isDisabled={!newTest.title || newTest.duration < 1 || newTest.totalQuestions < 1}
-            >
-              Create
+            <Button colorScheme="blue" mr={3} onClick={handleCreateTest}>
+              Create Test
             </Button>
             <Button onClick={onClose}>Cancel</Button>
           </ModalFooter>

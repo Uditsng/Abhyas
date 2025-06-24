@@ -17,13 +17,11 @@ export default function CourseCard({ id, title, description, image }) {
 
         {image ? (
           <Image
-            src={image}
+            src={`/images/${image}`}
             alt={`${title} logo`}
             width={80}
             height={80}
             className="w-full h-full object-cover"
-            placeholder="blur"
-            blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTYyMCIgaGVpZ2h0PSI1MDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iI2YyZjJmMiIvPjwvc3ZnPg=="
           />
         ) : (
           <span className="text-blue-600 dark:text-blue-400 text-2xl font-bold">{title.charAt(0)}</span>

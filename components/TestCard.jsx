@@ -11,7 +11,7 @@ export default function TestCard({ id, title, duration, category, isPaid, imageU
 
   const handleClick = () => {   // on click it changes page to - /test/mock1
     if (user) {
-      router.push(`/test/${id}`);
+      router.push(`/test/${id}?courseid=${category}`);
     } else {
       router.push('/auth/login');
     }
