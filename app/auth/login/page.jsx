@@ -3,9 +3,11 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { signInWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from 'firebase/auth';
-import { auth } from '@/lib/firebaseConfig'
+import { auth, db } from '@/lib/firebaseConfig'
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthContext';
+import {doc, getDoc} from 'firebase/firestore';
+
 
 export default function LoginPage() {
   const router = useRouter();
@@ -13,17 +15,29 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [userData, setUserData] = useState(null);
 
   useEffect(() => {
-    if (user) {
+    const fetchUserData = async () => {
+      if (user) {
+        //This function gets the user's document from the Firestore database using their unique ID (user.uid).
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        setUserData(userDoc.exists() ? userDoc.data() : null);
+      }
+    };
+    fetchUserData();
+  }, [user]);
+
+  useEffect(() => {
+    if (user && userData) {
       // Redirect based on user role
-      if (user.isAdmin) {
+      if (userData.role === 'admin') {
         router.push('/admin');
       } else {
         router.push('/dashboard');
       }
     }
-  }, [user, router]);
+  }, [user, userData, router]);
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -37,17 +51,6 @@ export default function LoginPage() {
     try {
       // Use await to properly handle the Promise
       await signInWithEmailAndPassword(auth, email, password);
-
-      // Store user info in localStorage
-      const storedUser = JSON.parse(localStorage.getItem('mockUser') || '{}');
-      if (storedUser && storedUser.email === email) {
-        localStorage.setItem('mockUser', JSON.stringify({
-          name: storedUser.name,
-          email: email
-        }));
-      }
-
-      // Redirect to dashboard
       router.push('/dashboard');
     } catch (error) {
       console.error('Login error:', error);

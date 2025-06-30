@@ -3,9 +3,12 @@
 'use client';
 
 import './home.css';
-import Slider from 'react-slick';
+
+import dynamic from 'next/dynamic';
+const Slider = dynamic(() => import('react-slick'), { ssr: false });
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
+
 import ExamCategories from '@/components/ExamCategories';
 import LiveTestsSection from '@/components/LiveTestsSection';
 import LottieSection from '@/components/LottieSection';
@@ -29,28 +32,29 @@ export default function HomePage() {
   }, [user, loading, router]);
 
   return (
-    <div className="container mx-auto px-4 md:px-8 lg:px-12 xl:px-24 w-full">
-      {/* Navbar would be here or is included via layout */}
+    <>
+    <div className="container mx-auto px-4 pt-20 md:px-8 lg:px-12 xl:px-24 w-full">
 
       {/* Banner Carousel */}
-      <div className="w-full max-w-[1900px] mx-auto px-4 sm:px-6 lg:px-8 carousel-container">
+        <div className="w-full">
         <Slider {...bannerCarouselSettings}>
-          <div className="relative w-full aspect-[19/6] rounded-lg overflow-hidden bg-red-400">
+          
+          <div className="relative w-full h-32 sm:h-40 md:h-56 lg:h-80 overflow-hidden bg-red-400">
             <OptimizedImage
               src="/images/textbook result banner.webp"
               alt="Textbook Result Banner"
               fill
-              sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, (max-width: 1024px) 80vw, 1900px"
+              sizes="90vw"
               className="object-cover"
               priority
             />
           </div>
-          <div className="relative w-full aspect-[19/6] rounded-lg overflow-hidden bg-blue-300">
+          <div className="relative w-full h-32 sm:h-40 md:h-56 lg:h-80 overflow-hidden bg-blue-300">
             <OptimizedImage
               src="/images/textbook selection banner.webp"
               alt="Textbook Selection Banner"
               fill
-              sizes="(max-width: 640px) 100vw, (max-width: 768px) 90vw, (max-width: 1024px) 80vw, 1900px"
+              sizes="90vw"
               className="object-cover"
             />
           </div>
@@ -72,5 +76,6 @@ export default function HomePage() {
        <Footer/>
 
     </div>
+    </>
   );
 }

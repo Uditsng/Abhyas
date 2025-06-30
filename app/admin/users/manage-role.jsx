@@ -15,6 +15,7 @@ import {
   Select,
   useToast,
   Text,
+  Box,
 } from '@chakra-ui/react';
 import { updateUserRole } from '@/lib/userService';
 

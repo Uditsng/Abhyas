@@ -2,7 +2,12 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import Slider from "react-slick";
+
+import dynamic from 'next/dynamic';
+const Slider = dynamic(() => import('react-slick'), { ssr: false });
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+
 import { TimeIcon } from "@chakra-ui/icons";
 import CourseCard from "@/components/CourseCard";
 import StatCard from "@/components/StatCard";
@@ -11,20 +16,17 @@ import SectionHeader from "@/components/SectionHeader";
 import CardContainer from "@/components/CardContainer";
 import { getCourses } from "@/lib/tests"; 
 import { getAllTestResults } from "@/lib/testResultService";
-import "slick-carousel/slick/slick.css"; 
-import "slick-carousel/slick/slick-theme.css";
 import ResourceCards from "@/components/ResourceCards";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
-import { Box, Heading, Button, HStack, Text, Spinner, useToast } from "@chakra-ui/react"; 
-import { FiArrowLeft } from "react-icons/fi";
+import { Box, Text, Spinner, useToast } from "@chakra-ui/react"; 
 
 // Define slider settings
 const sliderSettings = {
   dots: true,
   infinite: true,
-  speed: 500,
+  speed: 200,
   slidesToShow: 3,
   slidesToScroll: 1,
   responsive: [
@@ -191,22 +193,7 @@ export default function DashboardPage() {
   return (
     <Box p={6}>
 
-      
-      {/* {user?.isAdmin && (
-        <HStack justify="space-between" mb={6}>
-          <Heading>User Dashboard</Heading>
-          <Button
-            leftIcon={<FiArrowLeft />}
-            colorScheme="blue"
-            variant="outline"
-            onClick={() => router.push("/admin")}
-          >
-            Back to Admin
-          </Button>
-        </HStack>
-      )} */}
-
-      <div className="container mx-auto px-4 bg-gray-100 dark:bg-gray-900 min-h-screen pb-12 transition-colors duration-200">
+      <div className="container mx-auto px-4 pt-20 bg-gray-100 dark:bg-gray-900 min-h-screen pb-12 transition-colors duration-200">
         {/* Welcome banner */}
         <div className="text-center bg-gradient-to-r from-blue-600 to-indigo-700 dark:from-blue-800 dark:to-indigo-900 text-white py-6">
           <div className="container mx-auto px-4">

@@ -18,7 +18,7 @@
 }
 
 /* Dark mode compatibility helpers */
-.dark-mode-text {
+/* .dark-mode-text {
   color: #1a202c;
 }
 .dark .dark-mode-text {
@@ -34,7 +34,7 @@
 
 .dark-mode-border {
   border-color: #e2e8f0;
-}
+} */
 .dark .dark-mode-border {
   border-color: #2d3748;
 }

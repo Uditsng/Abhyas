@@ -1,12 +1,13 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "./AuthContext";
 import { useTheme } from "./ThemeContext";
 
 export default function Navbar() {
   const router = useRouter();
+  const pathname = usePathname()
   const [username, setUsername] = useState("");
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -33,6 +34,7 @@ export default function Navbar() {
       console.error("Error loading user data:", error);
     }
   }, [user]);
+  
 
   const handleLogout = async () => {
     try {
@@ -56,29 +58,32 @@ export default function Navbar() {
     setMenuOpen(!menuOpen);
   };
 
+
   // Don't render anything until client-side hydration is complete
   if (!mounted) return null;
 
+    // Hide Navbar on test-taking page
+    //ToDo: regex study about that
+if (/^\/tests(\/[^\/]+){1,2}$/.test(pathname)) {
+  return null;
+}
+
   return (
-    <nav className="bg-white dark:bg-gray-800 shadow dark:shadow-gray-700 p-4 transition-colors duration-200">
-      <div className="container mx-auto">
+    <nav className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md shadow-xl fixed w-full z-50 p-4">
+      <div className="container mx-auto ">
         {/* Navbar content */}
-        <div className="flex justify-between items-center">
+        <div className="flex justify-between items-center mx-10">
           {/* Logo */}
-          <div>
-            <h1
-              onClick={() => router.push("/")}
-              className="text-xl font-bold cursor-pointer text-gray-900 dark:text-gray-100"
-            >
-              MockTestApp
-            </h1>
-          </div>
+         <div className="flex items-center space-x-2 cursor-pointer" onClick={() => router.push("/")}>
+           <img src="/favicon.ico" alt="Logo" className="h-8 w-8 rounded-full shadow" />
+           <span className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">ABHYAS</span>
+         </div>
 
           {/* Hamburger menu for mobile */}
           <div className="block md:hidden">
             <button
               onClick={toggleMenu}
-              className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 focus:outline-none"
+              className="md:hidden p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
             >
               {menuOpen ? (
                 <span className="text-2xl">✕</span> // X icon when menu is open
@@ -89,28 +94,30 @@ export default function Navbar() {
           </div>
 
           {/* Desktop menu */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden md:flex items-center gap-16 mx-10">
             {username ? (
               <>
-                <span className="text-gray-700 dark:text-gray-300">
-                  Hi, {username}
+                <span className="flex items-center gap-2 px-4 py-1 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white font-semibold shadow-md border border-white/30 animate-fade-in">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  {username}
                 </span>
+                
                 <button
                   onClick={() => router.push("/dashboard")}
-                  className="text-blue-600 dark:text-blue-400 hover:underline"
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-700 transition duration-500 hover:scale-125 "
                 >
                   Dashboard
                 </button>
                 <button
                   onClick={() => router.push("/profile")}
-                  className="text-blue-600 dark:text-blue-400 hover:underline"
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-700 transition duration-500 hover:scale-125"
                 >
                   Profile
                 </button>            
 
                 <button
                   onClick={handleLogout}
-                  className="text-red-600 dark:text-red-400 hover:underline"
+                  className="text-red-600 dark:text-red-400 hover:text-red-700 transition duration-500 hover:scale-125"
                 >
                   Logout
                 </button>
@@ -119,24 +126,24 @@ export default function Navbar() {
               <>
                 <button
                   onClick={() => router.push("/auth/register")}
-                  className="text-blue-600 dark:text-blue-400 hover:underline"
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-700 transition duration-500 hover:scale-125"
                 >
                   Register
                 </button>
                 <button
                   onClick={() => router.push("/auth/login")}
-                  className="text-blue-600 dark:text-blue-400 hover:underline"
-                >
+                  className="text-red-600 dark:text-red-400 hover:text-red-700 transition duration-500 hover:scale-125">
                   Login
                 </button>
               </>
             )}
           </div>
         </div>
+        
 
         {/* Mobile menu - only shows when menuOpen is true */}
         {menuOpen && (
-          <div className="md:hidden absolute top-16 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg dark:shadow-gray-700 z-50 transition-colors duration-200">
+          <div className="md:hidden absolute top-16 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg dark:shadow-gray-700 z-50 duration-200 transition-colors">
             <div className="flex flex-col p-4 space-y-3">
               {username ? (
                 <div className="flex flex-col space-y-3">
@@ -192,7 +199,7 @@ export default function Navbar() {
               )}
             </div>
           </div>
-        )}
+        )}  
       </div>
     </nav>
   );

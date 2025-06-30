@@ -7,15 +7,22 @@ import 'react-datepicker/dist/react-datepicker.css';
 import {storage, db} from '@/lib/firebaseConfig';
 import {ref, uploadBytes, getDownloadURL} from 'firebase/storage';
 import {collection, addDoc, getDoc, doc} from 'firebase/firestore';
-import TipTapTextEditor from '@/components/text-editor/TipTapTextEditor'
-
+import dynamic from 'next/dynamic';
+import { useAuth } from '@/components/AuthContext';
+const TipTapTextEditor = dynamic(() => import('@/components/text-editor/TipTapTextEditor'), { ssr: false });
+ 
 export default function CreateAnnouncement() {
   const { register, handleSubmit } = useForm();
   const [content, setContent] = useState('');
   const [startDate, setStartDate] = useState(new Date());
-
+  const { user } = useAuth();
 
   const onSubmit = async (data) => {
+    if (!user) {
+      alert('You must be logged in to create announcements');
+      return;
+    }
+
     try {
       let attachmentUrl = null;
 
@@ -27,10 +34,10 @@ export default function CreateAnnouncement() {
         attachmentUrl = await getDownloadURL(snapshot.ref);
       }
 
-      // Fetch admin details from Firestore
-      const userDoc = await getDoc(doc(db, 'users', 'currentUserId')); // Replace 'currentUserId' with actual user ID
-      const adminName = userDoc.data()?.name || 'Unknown';
-      const adminId = userDoc.id || 'Unknown';
+      // Fetch admin details from Firestore using actual user ID
+      const userDoc = await getDoc(doc(db, 'users', user.uid));
+      const adminName = userDoc.data()?.name || user.displayName || 'Unknown';
+      const adminId = user.uid;
 
       // Announcement data
       const announcementData = {
@@ -40,6 +47,7 @@ export default function CreateAnnouncement() {
         attachmentUrl,
         adminName,
         adminId,
+        createdAt: new Date().toISOString(),
       };
 
       // Save announcement to Firestore

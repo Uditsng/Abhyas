@@ -153,6 +153,10 @@ export default function UsersPage() {
                     Joined: {user.createdAt ? new Date(user.createdAt.toDate()).toLocaleDateString() : 'N/A'}
                   </Text>
                 </Flex>
+
+                <Box mt={2}>
+                  <Text fontSize="sm" color="gray.500">Subscription Plan: <b>{user.plan || 'No Plan'}</b></Text>
+                </Box>
               </CardBody>
             </Card>
           ))}

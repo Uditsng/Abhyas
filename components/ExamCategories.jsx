@@ -4,9 +4,12 @@ import React, { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Box, Heading, Flex, Button, SimpleGrid, Card, CardBody, Text, Badge } from '@chakra-ui/react';
 import { getCourses, getTestsForCourse } from '@/lib/tests';
-import Slider from 'react-slick';
+
+import dynamic from 'next/dynamic';
+const Slider = dynamic(() => import('react-slick'), { ssr: false });
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
+
 import '@/styles/carousel.css';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthContext';

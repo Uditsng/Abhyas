@@ -5,7 +5,6 @@
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 import { AuthProvider } from '@/components/AuthContext';
 import { ThemeProvider } from '@/components/ThemeContext';
-import { SubscriptionProvider } from '@/components/SubscriptionContext';
 import Navbar from '@/components/Navbar';
 import FloatingThemeToggle from '@/components/FloatingThemeToggle';
 import PerformanceOptimizer from '@/components/PerformanceOptimizer';
@@ -87,12 +86,12 @@ function Providers({ children }) {
       {/* ThemeProvider will only render its children after client-side hydration */}
       <ChakraProvider theme={theme} resetCSS={false}>
         <AuthProvider>
-          <SubscriptionProvider>
+
             <PerformanceOptimizer />
             <Navbar />
             {children}           
             <FloatingThemeToggle />
-          </SubscriptionProvider>
+
         </AuthProvider>
       </ChakraProvider>
     </ThemeProvider>

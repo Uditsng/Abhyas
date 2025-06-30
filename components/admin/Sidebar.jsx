@@ -3,12 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  Box, Flex, IconButton, Text, useColorModeValue, VStack, Icon
-} from '@chakra-ui/react';
-import { 
-  FiHome, FiFileText, FiUsers, FiChevronLeft, FiChevronRight, FiAlertTriangle, FiDollarSign, FiList
-} from 'react-icons/fi';
+import { Box, Flex, IconButton, Text, useColorModeValue, VStack, Icon} from '@chakra-ui/react';
+import { FiHome, FiFileText, FiUsers, FiChevronLeft, FiChevronRight, FiAlertTriangle, FiDollarSign, FiList} from 'react-icons/fi';
 
 export default function AdminSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -24,7 +20,8 @@ export default function AdminSidebar() {
   const navItems = [
     { name: 'Dashboard', path: '/admin', icon: FiHome },
     { name: 'Tests', path: '/admin/tests', icon: FiFileText },
-    { name: 'Users', path: '/admin/users', icon: FiUsers },
+    { name: 'Create-Bundle', path: '/admin/create-bundle', icon: FiFileText },
+    { name: 'Users', path: '/admin/users', icon: FiUsers, icon: FiUsers },
     { name: 'Announcements', path: '/admin/announcements', icon: FiAlertTriangle },
     { name: 'Sales Revenue', path: '/admin/sales-revenue', icon: FiDollarSign }
   ];

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation'; // Import useSearchParams
+import { useParams, useRouter, useSearchParams } from 'next/navigation'; 
 import Link from 'next/link';
 import {Box,Heading,Text,Badge,Button,Flex,Progress,Card,CardBody,Stack,StackDivider,Radio,RadioGroup,Tooltip,IconButton,useToast,Spinner,Center} from '@chakra-ui/react';
 import { CheckCircleIcon, WarningIcon, InfoIcon, StarIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
@@ -12,9 +12,9 @@ import { saveBookmark, removeBookmark } from '@/lib/bookmarkService';
 export default function TestReviewPage() {
   const params = useParams();
   const router = useRouter();
-  const searchParams = useSearchParams(); // Initialize useSearchParams
+  const searchParams = useSearchParams();
   const testId = params.testId;
-  const courseId = searchParams.get('courseId'); // Get courseId from query params
+  const courseId = searchParams.get('courseId'); 
   const questionParam = searchParams.get('q');
   const toast = useToast();
   const { user } = useAuth();
@@ -388,7 +388,7 @@ export default function TestReviewPage() {
 
       {/* Action buttons */}
       <Flex justify="space-between" mt={6}>
-        <Link href={`/results/${testData.id}`}>
+        <Link href={`/results/${testData.courseId}/${testData.id}`}>
           <Button colorScheme="gray">Back to Results</Button>
         </Link>
 

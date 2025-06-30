@@ -59,17 +59,9 @@ export default function RegisterPage() {
       const userProfile = await getUserProfile(user.uid);
       const isSuperAdmin = userProfile && userProfile.role === 'superAdmin';
 
-      // 5. Save name temporarily in local Storage for greeting
-      localStorage.setItem('mockUser', JSON.stringify({
-        name,
-        email,
-        isSuperAdmin
-      }));
-
-      // 6. Show success message
+      // 5. Show success message
       setSuccess(true);
-
-      // 7. Redirect after a short delay
+      // 6. Redirect after a short delay
       setTimeout(() => {
         router.push(isSuperAdmin ? '/admin' : '/dashboard');
       }, 2000);
@@ -100,7 +92,7 @@ export default function RegisterPage() {
 
         {success ? (
           <div className="bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-3 rounded mb-4">
-            {JSON.parse(localStorage.getItem('mockUser') || '{}').isSuperAdmin ? (
+            {isSuperAdmin ? (
               <>
                 <p className="font-bold">Registration successful!</p>
                 <p>You are the first user, so you've been made a SuperAdmin.</p>

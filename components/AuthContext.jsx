@@ -47,6 +47,7 @@ export function AuthProvider({ children }) {
                 email: firebaseUser.email,
                 displayName: firebaseUser.displayName,
                 photoURL: firebaseUser.photoURL,
+                role: userData?.role || "student",
                 isAdmin: userData?.isAdmin || false
               };
 
