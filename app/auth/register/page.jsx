@@ -87,8 +87,8 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      <div className="bg-white dark:bg-gray-800 p-8 rounded shadow-md w-full max-w-md transition-colors duration-200">
-        <h1 className="text-2xl text-center font-bold mb-6 text-gray-900 dark:text-gray-100">Register</h1>
+      <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg shadow-blue-500/50 dark:shadow-cyan-500/50 w-full max-w-md transition-colors duration-200">
+        <h2 className="text-2xl text-center font-bold mb-6 text-blue-500 dark:text-cyan-100">Register</h2>
 
         {success ? (
           <div className="bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-3 rounded mb-4">

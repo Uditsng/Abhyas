@@ -9,7 +9,7 @@ const Slider = dynamic(() => import('react-slick'), { ssr: false });
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
-import ExamCategories from '@/components/ExamCategories';
+//import ExamCategories from '@/components/ExamCategories';
 import LiveTestsSection from '@/components/LiveTestsSection';
 import LottieSection from '@/components/LottieSection';
 import ExploreSuperCoaching from '@/components/ExploreSuperCoaching';
@@ -19,6 +19,8 @@ import { useEffect } from 'react';
 import { bannerCarouselSettings } from '@/app/config/carouselSettings';
 import OptimizedImage from '@/components/OptimizedImage';
 import Footer from '@/components/Footer'
+import {Box} from "@chakra-ui/react"
+import ExamBrowser from "@/components/ExamBrowser"
 
 export default function HomePage() {
   const { user, loading } = useAuth();
@@ -62,7 +64,13 @@ export default function HomePage() {
       </div>
 
       {/* Exam Categories */}
-      <ExamCategories />
+      {/* <ExamCategories /> */}
+
+            {/* Exams Carousel */}
+             <Box my={8} mx={16}>
+               <ExamBrowser />
+             </Box>
+      
 
       {/** Explore Super Coaching */}
       <ExploreSuperCoaching/>

@@ -15,9 +15,7 @@ export default function QuestionsPage() {
   const [user, authLoading] = useAuthState(auth);
   const router = useRouter();
   const params = useParams();
-  const searchParams = useSearchParams(); // Initialize useSearchParams
   const testId = params.testId;
-  const courseId = searchParams.get('courseId'); // Get courseId from query params
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
 
@@ -38,34 +36,30 @@ export default function QuestionsPage() {
     }
 
     const fetchQuestions = async () => {
-      if (!testId || !courseId) {
+      if (!testId) {
         setLoading(false);
-        if (!courseId) {
-          toast({
-            title: "Missing Course ID",
-            description: "Course ID is required to manage questions for this test.",
-            status: "error",
-            duration: 5000,
-            isClosable: true,
-          });
-          router.push('/admin/tests'); // Redirect if courseId is missing
-        }
+        toast({
+          title: "Missing Test ID",
+          description: "Test ID is required to manage questions.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+        router.push('/admin/tests');
         return;
       }
 
       try {
-        const fetchedTestData = await getTestDetails(courseId, testId); // Use courseId here
-
+        const fetchedTestData = await getTestDetails(testId);
         if (fetchedTestData) {
           setTestInfo({
-            title: fetchedTestData.title,
-            category: fetchedTestData.courseId.toUpperCase().replace(/-/g, ' ')
+            title: fetchedTestData.title
           });
           setQuestions(fetchedTestData.questions || []);
         } else {
           toast({
             title: "Test not found",
-            description: `Could not find test with ID: ${testId} in course ${courseId}`,
+            description: `Could not find test with ID: ${testId}`,
             status: "error",
             duration: 5000,
             isClosable: true,
@@ -89,7 +83,7 @@ export default function QuestionsPage() {
     if (user) {
       fetchQuestions();
     }
-  }, [user, authLoading, router, testId, courseId, toast]); // Add courseId to dependency array
+  }, [user, authLoading, router, testId, toast]); 
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -134,7 +128,7 @@ export default function QuestionsPage() {
 
     setLoading(true);
     try {
-      const questionsCollectionRef = collection(db, 'courses', courseId, 'tests', testId, 'questions'); // Use courseId here
+      const questionsCollectionRef = collection(db,'tests', testId, 'questions'); 
       const docRef = await addDoc(questionsCollectionRef, {
         ...newQuestion,
         correctAnswer: parseInt(newQuestion.correctAnswer),
@@ -176,34 +170,100 @@ export default function QuestionsPage() {
     }
   };
 
-  const handleDeleteQuestion = async (questionId) => {
-    setLoading(true);
-    try {
-      const questionDocRef = doc(db, 'courses', courseId, 'tests', testId, 'questions', questionId); // Use courseId here
-      await deleteDoc(questionDocRef);
+  // const handleDeleteQuestion = async (questionId) => {
+  //   setLoading(true);
+  //   try {
+  //     const questionDocRef = doc(db, 'tests', testId, 'questions', questionId); 
+  //     await deleteDoc(questionDocRef);
 
-      setQuestions(prevQuestions => prevQuestions.filter(q => q.id !== questionId));
+  //     setQuestions(prevQuestions => prevQuestions.filter(q => q.id !== questionId));
 
-      toast({
-        title: 'Success',
-        description: 'Question deleted successfully.',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error("Error deleting question:", error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete question. Please try again.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setLoading(false);
+  //     toast({
+  //       title: 'Success',
+  //       description: 'Question deleted successfully.',
+  //       status: 'success',
+  //       duration: 3000,
+  //       isClosable: true,
+  //     });
+  //   } catch (error) {
+  //     console.error("Error deleting question:", error);
+  //     toast({
+  //       title: 'Error',
+  //       description: 'Failed to delete question. Please try again.',
+  //       status: 'error',
+  //       duration: 3000,
+  //       isClosable: true,
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
+
+  const[editQuestion, setEditQuestion] = useState(null)
+  const [editModalOpen, setEditModalOpen] = useState(false)
+  const handleEditClick = (question) =>{
+    setEditQuestion({...question, correctAnswer:question.correctAnswer.toString()});
+    setEditModalOpen(true)
+  }
+
+  //Handle input changefor edit model
+  const handleEditInputChange = (e) =>{
+    const {name, value} = e.target;
+    if(name.startsWith('option-')){
+      const optionIndex = parseInt(name.split('-')[1]);
+      const newOptions = [...editQuestion.options];
+      newOptions = [...editQuestion.options];
+      newOptions[optionIndex] = value;
+      setEditQuestion({...editQuestion, options: newOptions})
+    } else{
+      setEditQuestion({...editQuestion, [name]: name === 'marks'? parseInt(value): value})
     }
-  };
+  }
+
+  //Update question in firestore
+  const handleUpdateQuestion = async () => {
+    if(!editQuestion.question.trim() || editQuestion.options.some(opt => !opt.trim())){
+      toast({
+        title:'Error',
+        description:'Please fill all required fields.',
+        status:'error',
+        duration: 3000,
+        isClosable: true,
+      })
+      return;
+    }
+    setLoading(true);
+    try{
+      const questionDocRef = doc(db,'tests', testId, 'questions', editQuestion.id)
+      await setDoc(questionDocRef,{
+        ...editQuestion,
+        correctAnswer:parseInt(editQuestion.correctAnswer),
+        updatedAt: new Date().toISOString(),
+      })
+      setQuestions(prev =>
+        prev.map(q => (q.id === editQuestion.id ? {...editQuestion, correctAnswer: parseInt(editQuestion.correctAnswer)}:q))
+      )
+      setEditModalOpen(false);
+      setEditQuestion(null)
+      toast({
+        title:'Success',
+        description:'Questionupdated successfully.',
+        status:'success',
+        duration:3000,
+        isClosable: true,
+      });
+    }catch(error){
+      toast({
+      title: 'Error',
+      description: 'Failed to update question.',
+      status: 'error',
+      duration: 3000,
+      isClosable: true,
+      })
+    } finally{
+      setLoading(false)
+    }
+  }
 
   if (authLoading || loading) {
     return (
@@ -230,7 +290,7 @@ export default function QuestionsPage() {
             <Box>
               <Heading size="lg">Manage Questions</Heading>
               <Text color="gray.600">
-                {testInfo?.title} - {testInfo?.category}
+                {testInfo?.title}
               </Text>
             </Box>
           </Flex>
@@ -297,15 +357,15 @@ export default function QuestionsPage() {
                             icon={<EditIcon />}
                             size="sm"
                             colorScheme="blue"
-                            // TODO: Implement edit functionality
+                            onClick={() => handleEditClick(question)}
                           />
-                          <IconButton
+                          {/* <IconButton
                             aria-label="Delete question"
                             icon={<DeleteIcon />}
                             size="sm"
                             colorScheme="red"
                             onClick={() => handleDeleteQuestion(question.id)}
-                          />
+                          /> */}
                         </HStack>
                       </Td>
                     </Tr>
@@ -404,6 +464,85 @@ export default function QuestionsPage() {
           </ModalFooter>
         </ModalContent>
       </Modal>
+
+      {/* Edit Question Modal */}
+<Modal isOpen={editModalOpen} onClose={() => setEditModalOpen(false)} size="xl">
+  <ModalOverlay />
+  <ModalContent>
+    <ModalHeader>Edit Question</ModalHeader>
+    <ModalCloseButton />
+    <ModalBody pb={6}>
+      <FormControl mb={4} isRequired>
+        <FormLabel>Question</FormLabel>
+        <Textarea
+          name="question"
+          value={editQuestion?.question || ''}
+          onChange={handleEditInputChange}
+          placeholder="Enter your question here..."
+          rows={6}
+        />
+      </FormControl>
+      <FormControl mb={4} isRequired>
+        <FormLabel>Options</FormLabel>
+        <VStack spacing={3} align="stretch">
+          {editQuestion?.options.map((option, idx) => (
+            <Input
+              key={idx}
+              name={`option-${idx}`}
+              value={option}
+              onChange={handleEditInputChange}
+              placeholder={`Option ${idx + 1}`}
+            />
+          ))}
+        </VStack>
+      </FormControl>
+      <FormControl mb={4} isRequired>
+        <FormLabel>Correct Answer</FormLabel>
+        <RadioGroup
+          name="correctAnswer"
+          value={editQuestion?.correctAnswer}
+          onChange={val => setEditQuestion(q => ({ ...q, correctAnswer: val }))}
+        >
+          <HStack>
+            {editQuestion?.options.map((option, idx) => (
+              <Radio key={idx} value={idx.toString()}>
+                Option {idx + 1}
+              </Radio>
+            ))}
+          </HStack>
+        </RadioGroup>
+      </FormControl>
+      <FormControl mb={4}>
+        <FormLabel>Explanation (Optional)</FormLabel>
+        <Textarea
+          name="explanation"
+          value={editQuestion?.explanation || ''}
+          onChange={handleEditInputChange}
+          placeholder="Explain why this is the correct answer..."
+          rows={6}
+        />
+      </FormControl>
+      <FormControl>
+        <FormLabel>Marks</FormLabel>
+        <Input
+          name="marks"
+          type="number"
+          value={editQuestion?.marks || 1}
+          onChange={handleEditInputChange}
+          min={1}
+          max={10}
+        />
+      </FormControl>
+    </ModalBody>
+    <ModalFooter>
+      <Button colorScheme="blue" mr={3} onClick={handleUpdateQuestion}>
+        Save
+      </Button>
+      <Button onClick={() => setEditModalOpen(false)}>Cancel</Button>
+    </ModalFooter>
+  </ModalContent>
+</Modal>
+
     </Box>
   );
 }

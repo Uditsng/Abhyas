@@ -9,18 +9,19 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 import { TimeIcon } from "@chakra-ui/icons";
-import CourseCard from "@/components/CourseCard";
 import StatCard from "@/components/StatCard";
 import ProgressBar from "@/components/ProgressBar";
 import SectionHeader from "@/components/SectionHeader";
 import CardContainer from "@/components/CardContainer";
-import { getCourses } from "@/lib/tests"; 
+import { getAllBundles } from "@/lib/bundleService";
 import { getAllTestResults } from "@/lib/testResultService";
+//import BundleCard from "@/components/BundleCard";
 import ResourceCards from "@/components/ResourceCards";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
 import { Box, Text, Spinner, useToast } from "@chakra-ui/react"; 
+import ExamBrowser from "@/components/ExamBrowser"
 
 // Define slider settings
 const sliderSettings = {
@@ -56,10 +57,12 @@ export default function DashboardPage() {
   const [username, setUsername] = useState("");
   const [loading, setLoading] = useState(true);
   const [recentTests, setRecentTests] = useState([]);
-  const [trendingCourses, setTrendingCourses] = useState([]);
+  const [trendingBundles, setTrendingBundles] = useState([]);
   const [upcomingTests, setUpcomingTests] = useState([]); // Still mock for now
   const [courseProgress, setCourseProgress] = useState([]); // Still mock for now
   const [error, setError] = useState(null);
+
+
 
   // Fetch user data and dynamic content
   useEffect(() => {
@@ -96,8 +99,8 @@ export default function DashboardPage() {
         }
 
         // Fetch Trending Courses from Firestore
-        const fetchedCourses = await getCourses();
-        setTrendingCourses(fetchedCourses);
+        const fetchedBundles = await getAllBundles();
+        setTrendingBundles(fetchedBundles);
 
         // Mock data for upcoming tests (TO BE MADE DYNAMIC LATER)
         setUpcomingTests([
@@ -204,23 +207,28 @@ export default function DashboardPage() {
           </div>
         </div>
 
+      {/* Exams Carousel */}
+       <Box my={8} mx={16}>
+         <ExamBrowser />
+       </Box>
+
         <div className="container mx-auto px-4 py-8">
           {/* Trending course carousel */}
-          <SectionHeader title="Trending Courses" />
+          {/* <SectionHeader title="Trending Bundles" />
           <div className="slick-container mb-16">
             <Slider {...sliderSettings}>
-              {(Array.isArray(trendingCourses) ? trendingCourses : []).map((course) => (
-                <div key={course.id} className="px-2 h-full">
-                  <CourseCard
-                    id={course.id}
-                    title={course.title}
-                    description={course.description}
-                    image={course.image}
+              {(Array.isArray(trendingBundles) ? trendingBundles : []).map((bundle) => (
+                <div key={bundle.id} className="px-2 h-full">
+                  <BundleCard
+                    id={bundle.id}
+                    title={bundle.title}
+                    description={bundle.description}
+                    image={bundle.image}
                   />
                 </div>
               ))}
             </Slider>
-          </div>
+          </div> */}
            
            {/* Resourse component  */}
           <ResourceCards />
@@ -277,7 +285,7 @@ export default function DashboardPage() {
                             <div>
                               <h3 className="font-medium text-gray-800 dark:text-gray-200">
                                 {test.title ||
-                                  `${test.courseId?.toUpperCase()} Test`}{" "}
+                                  `${test.bundlesId?.toUpperCase()} Test`}{" "}
                                 {/* Use test.title from fetched data */}
                               </h3>
                               <p className="text-sm text-gray-500 dark:text-gray-400">

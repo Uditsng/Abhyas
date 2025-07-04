@@ -22,7 +22,7 @@ export default function AdminSidebar() {
     { name: 'Tests', path: '/admin/tests', icon: FiFileText },
     { name: 'Create-Bundle', path: '/admin/create-bundle', icon: FiFileText },
     { name: 'Users', path: '/admin/users', icon: FiUsers, icon: FiUsers },
-    { name: 'Announcements', path: '/admin/announcements', icon: FiAlertTriangle },
+    { name: 'FeedBack', path: '/admin/announcements', icon: FiAlertTriangle },
     { name: 'Sales Revenue', path: '/admin/sales-revenue', icon: FiDollarSign }
   ];
 

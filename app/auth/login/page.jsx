@@ -62,14 +62,13 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      <div className="max-w-md w-full bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md transition-colors duration-200">
-        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Login</h2>
+      <div className="max-w-md w-full bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg shadow-blue-500/50 dark:shadow-blue-500/50 transition-colors duration-200">
+        <h2 className="text-2xl text-center font-bold mb-6 text-blue-500 dark:text-cyan-100">Login</h2>
 
       <form onSubmit={handleLogin}>
         <input
           type="email"
-          className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700
-                     text-gray-900 dark:text-gray-100 px-3 py-2 mb-3 rounded-md transition-colors duration-200"
+          className="w-full border border-gray-300 dark:border-gray-700 rounded-2xl mb-4 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200"
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
@@ -77,8 +76,7 @@ export default function LoginPage() {
         />
         <input
           type="password"
-          className="w-full border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-700
-                     text-gray-900 dark:text-gray-100 px-3 py-2 mb-4 rounded-md transition-colors duration-200"
+          className="w-full border border-gray-300 dark:border-gray-700 rounded-2xl mb-4 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200"
           placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}

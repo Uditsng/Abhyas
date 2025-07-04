@@ -74,6 +74,16 @@ export default function AdminTestsPage() {
       });
       return;
     }
+    if (totalQuestions <= 30) {
+      toast({
+        title: 'Error',
+        description: 'A test must have at least 30 questions.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
     setLoading(true);
     try {
       const testsCollectionRef = collection(db, 'tests');
@@ -115,34 +125,34 @@ export default function AdminTestsPage() {
     }
   };
 
-  const handleDeleteTest = async (testId,) => {
-    setLoading(true);
-    try {
-      const testDocRef = doc(db, 'tests', testId);
-      await deleteDoc(testDocRef);
+  // const handleDeleteTest = async (testId,) => {
+  //   setLoading(true);
+  //   try {
+  //     const testDocRef = doc(db, 'tests', testId);
+  //     await deleteDoc(testDocRef);
 
-      setTests((prev) => prev.filter((t) => t.id !== testId));
+  //     setTests((prev) => prev.filter((t) => t.id !== testId));
 
-      toast({
-        title: 'Success',
-        description: 'Test deleted successfully.',
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-    } catch (error) {
-      console.error("Error deleting test:", error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete test. Please try again.',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  //     toast({
+  //       title: 'Success',
+  //       description: 'Test deleted successfully.',
+  //       status: 'success',
+  //       duration: 3000,
+  //       isClosable: true,
+  //     });
+  //   } catch (error) {
+  //     console.error("Error deleting test:", error);
+  //     toast({
+  //       title: 'Error',
+  //       description: 'Failed to delete test. Please try again.',
+  //       status: 'error',
+  //       duration: 3000,
+  //       isClosable: true,
+  //     });
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   const handleEditClick = (test) => {
     setEditTest({ ...test });
@@ -165,6 +175,18 @@ export default function AdminTestsPage() {
       });
       return;
     }
+
+    if (editTest.totalQuestions < 30) {
+  toast({
+    title: 'Error',
+    description: 'A test must have at least 30 questions.',
+    status: 'error',
+    duration: 3000,
+    isClosable: true,
+  });
+  return;
+}
+
     setLoading(true);
     try {
       const ref = doc(db, 'tests', editTest.id);
@@ -251,7 +273,7 @@ export default function AdminTestsPage() {
                             icon={<ExternalLinkIcon />}
                             size="sm"
                             colorScheme="teal"
-                            onClick={() => router.push(`/admin/tests/${test.id}/questions?courseId=${test.courseId}`)}
+                            onClick={() => router.push(`/admin/tests/${test.id}/questions`)}
                           />
                           <IconButton
                             aria-label="Edit Test"
@@ -260,13 +282,13 @@ export default function AdminTestsPage() {
                             colorScheme="blue"
                             onClick={() => handleEditClick(test)}
                           />
-                          <IconButton
+                          {/* <IconButton
                             aria-label="Delete Test"
                             icon={<DeleteIcon />}
                             size="sm"
                             colorScheme="red"
                             onClick={() => handleDeleteTest(test.id, test.courseId)}
-                          />
+                          /> */}
                         </HStack>
                       </Td>
                     </Tr>
@@ -291,15 +313,15 @@ export default function AdminTestsPage() {
             </FormControl>
             <FormControl mb={4} isRequired>
               <FormLabel>Test Name</FormLabel>
-              <Input name="testName" value={newTest.testName} onChange={handleInputChange} placeholder="e.g., Algebra Practice Test" />
+              <Input name="testName" value={newTest.testName} onChange={handleInputChange} placeholder="e.g., Mathematics Test 1" />
             </FormControl>
             <FormControl mb={4}>
               <FormLabel>Duration (minutes)</FormLabel>
-              <Input name="duration" type="number" min={1} value={newTest.duration} onChange={handleInputChange} />
+              <Input name="duration" type="number" min={30} value={newTest.duration} onChange={handleInputChange} />
             </FormControl>
             <FormControl mb={4}>
               <FormLabel>Total Questions</FormLabel>
-              <Input name="totalQuestions" type="number" min={1} value={newTest.totalQuestions} onChange={handleInputChange} />
+              <Input name="totalQuestions" type="number" min={30} value={newTest.totalQuestions} onChange={handleInputChange} />
             </FormControl>
           </ModalBody>
           <ModalFooter>
@@ -326,11 +348,11 @@ export default function AdminTestsPage() {
             </FormControl>
             <FormControl mb={4}>
               <FormLabel>Duration (minutes)</FormLabel>
-              <Input name="duration" type="number" value={editTest?.duration || 60} onChange={handleEditInputChange} />
+              <Input name="duration" type="number" value={editTest?.duration || 30} onChange={handleEditInputChange} />
             </FormControl>
             <FormControl mb={4}>
               <FormLabel>Total Questions</FormLabel>
-              <Input name="totalQuestions" type="number" value={editTest?.totalQuestions || 20} onChange={handleEditInputChange} />
+              <Input name="totalQuestions" type="number" value={editTest?.totalQuestions || 30} onChange={handleEditInputChange} />
             </FormControl>
           </ModalBody>
           <ModalFooter>

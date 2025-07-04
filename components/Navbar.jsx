@@ -103,12 +103,6 @@ if (/^\/tests(\/[^\/]+){1,2}$/.test(pathname)) {
                 </span>
                 
                 <button
-                  onClick={() => router.push("/dashboard")}
-                  className="text-blue-600 dark:text-blue-400 hover:text-blue-700 transition duration-500 hover:scale-125 "
-                >
-                  Dashboard
-                </button>
-                <button
                   onClick={() => router.push("/profile")}
                   className="text-blue-600 dark:text-blue-400 hover:text-blue-700 transition duration-500 hover:scale-125"
                 >
@@ -149,16 +143,7 @@ if (/^\/tests(\/[^\/]+){1,2}$/.test(pathname)) {
                 <div className="flex flex-col space-y-3">
                   <span className="text-gray-700 dark:text-gray-300">
                     Hi, {username}
-                  </span>
-                  <button
-                    onClick={() => {
-                      router.push("/dashboard");
-                      setMenuOpen(false);
-                    }}
-                    className="text-blue-600 dark:text-blue-400 hover:underline text-left"
-                  >
-                    Dashboard
-                  </button>
+                  </span>                  
                   <button
                     onClick={() => {
                       router.push("/profile");
