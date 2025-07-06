@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { Box, Spinner, Center, useToast } from '@chakra-ui/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth, db } from '@/lib/firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
@@ -13,7 +13,9 @@ export default function AdminLayout({ children }) {
   const toast = useToast();
   const [user, authLoading] = useAuthState(auth);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isPending, setIsPending] = useState(false);
   const [loading, setLoading] = useState(true);
+  const pathname = usePathname();
 
   useEffect(() => {
     async function checkAdminRole() {
@@ -24,10 +26,30 @@ export default function AdminLayout({ children }) {
 
       try {
         const userDoc = await getDoc(doc(db, "users", user.uid));
-
+        const data = userDoc.exists() ? userDoc.data() : {};
         // Check if user has admin or superAdmin role
-        if (userDoc.exists() && (userDoc.data().role === "admin" || userDoc.data().role === "superAdmin")) {
-          setIsAdmin(true); 
+        if (data.role === "superAdmin") {
+          setIsAdmin(true);
+        } else if (data.role === "admin") {
+          if (data.validated === true) {
+            setIsAdmin(true);
+            // In-app notification for newly validated admins
+            const notifiedKey = `admin_validated_notified_${user.uid}`;
+            if (!localStorage.getItem(notifiedKey)) {
+              toast({
+                title: "Congratulations!",
+                description: "Your admin account has been approved. You now have full admin access.",
+                status: "success",
+                duration: 7000,
+                isClosable: true,
+                position: "top",
+              });
+              localStorage.setItem(notifiedKey, "true");
+            }
+          } else {
+            setIsPending(true);
+            setIsAdmin(false);
+          }
         } else {
           // Not an admin, redirect to dashboard
           toast({
@@ -70,6 +92,23 @@ export default function AdminLayout({ children }) {
         <Spinner size="xl" />
       </Center>
     );
+  }
+
+  if (isPending) {
+    if (pathname === '/admin/pending-approval') {
+      // Allow rendering of the Pending Approval page
+      return (
+        <Box position="relative" minH="100vh" pt="64px">
+          {/* No sidebar for pending approval */}
+          <Box flex={1} p={6}>
+            {children}
+          </Box>
+        </Box>
+      );
+    } else {
+      router.replace('/admin/pending-approval');
+      return null;
+    }
   }
 
   if (!isAdmin) {

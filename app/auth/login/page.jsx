@@ -31,7 +31,9 @@ export default function LoginPage() {
   useEffect(() => {
     if (user && userData) {
       // Redirect based on user role
-      if (userData.role === 'admin') {
+      if (userData.role === 'superAdmin') {
+        router.push('/superAdmin');
+      } else if (userData.role === 'admin') {
         router.push('/admin');
       } else {
         router.push('/dashboard');
@@ -49,9 +51,20 @@ export default function LoginPage() {
     }
 
     try {
-      // Use await to properly handle the Promise
-      await signInWithEmailAndPassword(auth, email, password);
-      router.push('/dashboard');
+      // Sign in with email and password
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const userId = userCredential.user.uid;
+      // Fetch user profile from Firestore
+      const userDoc = await getDoc(doc(db, 'users', userId));
+      const userData = userDoc.exists() ? userDoc.data() : null;
+      // Redirect based on role
+      if (userData?.role === 'superAdmin') {
+        router.push('/superAdmin');
+      } else if (userData?.role === 'admin') {
+        router.push('/admin');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (error) {
       console.error('Login error:', error);
       alert('Login failed: ' + (error.message || 'Please check your credentials'));
@@ -98,8 +111,19 @@ export default function LoginPage() {
             try {
               setIsLoading(true);
               const provider = new GoogleAuthProvider();
-              await signInWithPopup(auth, provider);
-              router.push('/dashboard');
+              const result = await signInWithPopup(auth, provider);
+              const userId = result.user.uid;
+              // Fetch user profile from Firestore
+              const userDoc = await getDoc(doc(db, 'users', userId));
+              const userData = userDoc.exists() ? userDoc.data() : null;
+              // Redirect based on role
+              if (userData?.role === 'superAdmin') {
+                router.push('/superAdmin');
+              } else if (userData?.role === 'admin') {
+                router.push('/admin');
+              } else {
+                router.push('/dashboard');
+              }
             } catch (error) {
               console.error('Google sign-in error:', error);
               alert('Google sign-in failed: ' + (error.message || 'Please try again'));

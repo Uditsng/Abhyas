@@ -1,33 +1,40 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Box, Flex, IconButton, Text, useColorModeValue, VStack, Icon} from '@chakra-ui/react';
-import { FiHome, FiFileText, FiUsers, FiChevronLeft, FiChevronRight, FiAlertTriangle, FiDollarSign, FiList} from 'react-icons/fi';
-import { useBreakpointValue } from '@chakra-ui/react';
+import {
+  Box, Flex, IconButton, Text, useColorModeValue, VStack, Icon, useBreakpointValue
+} from '@chakra-ui/react';
+import {
+  FiHome, FiUsers, FiDollarSign, FiChevronLeft, FiChevronRight,
+  FiMessageSquare, FiPackage, FiBookOpen, FiPieChart
+} from 'react-icons/fi';
 
-export default function AdminSidebar() {
-  const [manualToggle, setManualToggle] = useState(false);
-  const isMobile = useBreakpointValue({ base: true, md: false });
-  const isCollapsed = isMobile || manualToggle;
+const navItems = [
+  { name: 'Dashboard', path: '/superAdmin', icon: FiHome },
+  { name: 'Users', path: '/superAdmin/users', icon: FiUsers },
+  { name: 'Admins', path: '/superAdmin/admins', icon: FiUsers },
+  { name: 'Revenue', path: '/superAdmin/revenue', icon: FiDollarSign },
+  { name: 'Communication', path: '/superAdmin/communication', icon: FiMessageSquare },
+  { name: 'Packages', path: '/superAdmin/packages', icon: FiPackage },
+  { name: 'Exams', path: '/superAdmin/exams', icon: FiBookOpen },
+  { name: 'Expenses', path: '/superAdmin/expenses', icon: FiPieChart },
+];
 
-  // Get current path to highlight active link
+export default function Sidebar() {
   const pathname = usePathname();
-  
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const textColor = useColorModeValue('gray.800', 'white');
 
-  // Simple nav items 
-  const navItems = [
-    { name: 'Dashboard', path: '/admin', icon: FiHome },
-    { name: 'Tests', path: '/admin/tests', icon: FiFileText },
-    { name: 'Create-Bundle', path: '/admin/create-bundle', icon: FiFileText },
-    { name: 'Users', path: '/admin/users', icon: FiUsers, icon: FiUsers },
-    { name: 'FeedBack', path: '/admin/announcements', icon: FiAlertTriangle },
-    { name: 'Sales Revenue', path: '/admin/sales-revenue', icon: FiDollarSign }
-  ];
+  const isMobile = useBreakpointValue({ base: true, md: false });
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    // Auto-collapse on mobile screens
+    if (isMobile) setIsCollapsed(true);
+  }, [isMobile]);
 
   return (
     <Box
@@ -47,22 +54,22 @@ export default function AdminSidebar() {
       pb='96px'
     >
       {/* Header with toggle button */}
-      <Flex 
+      <Flex
         p={4}
         justifyContent={isCollapsed ? 'center' : 'space-between'}
         alignItems='center'
       >
-        {!isCollapsed && <Text fontWeight='bold'>Admin Panel</Text>}
+        {!isCollapsed && <Text fontWeight='bold'>SuperAdmin</Text>}
         <IconButton
           aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
           icon={isCollapsed ? <FiChevronRight /> : <FiChevronLeft />}
           size='sm'
           variant='ghost'
-          onClick={() => setManualToggle((prev) => !prev)}
+          onClick={() => setIsCollapsed(!isCollapsed)}
         />
       </Flex>
 
-      {/* Nav links */}
+      {/* Nav Links */}
       <VStack align="stretch" spacing={1} mt={4}>
         {navItems.map((item) => (
           <Link href={item.path} key={item.name} passHref>
@@ -72,8 +79,13 @@ export default function AdminSidebar() {
               borderRadius='md'
               bg={pathname === item.path ? 'blue.500' : 'transparent'}
               color={pathname === item.path ? 'white' : textColor}
-              _hover={{ bg: pathname === item.path ? 'blue.600' : useColorModeValue('gray.100', 'gray.700') }}
+              _hover={{
+                bg: pathname === item.path
+                  ? 'blue.600'
+                  : useColorModeValue('gray.100', 'gray.700'),
+              }}
               alignItems="center"
+              cursor="pointer"
             >
               <Icon as={item.icon} boxSize={5} />
               {!isCollapsed && <Text ml={4}>{item.name}</Text>}

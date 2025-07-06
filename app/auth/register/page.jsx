@@ -7,6 +7,8 @@ import Link from 'next/link';
 import { auth } from '@/lib/firebaseConfig';
 import { useAuth } from '@/components/AuthContext';
 import { saveUserProfile, getUserProfile } from '@/lib/userService';
+import { getDoc, doc } from 'firebase/firestore';
+import { db } from '@/lib/firebaseConfig';
 
 export default function RegisterPage() {
 
@@ -18,6 +20,8 @@ export default function RegisterPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const {signIn} = useAuth();
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [registerRole, setRegisterRole] = useState('user');
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -45,9 +49,12 @@ export default function RegisterPage() {
         name: name,
         email: email,
         displayName: name,
-        role: "user", // Default role (may be changed to superAdmin if first user)
+        role: registerRole,
         createdAt: new Date(),
       };
+      if (registerRole === 'admin') {
+        userData.validated = false;
+      }
 
       const profileSaved = await saveUserProfile(user.uid, userData);
 
@@ -57,13 +64,22 @@ export default function RegisterPage() {
 
       // 4. Check if user was made a superAdmin (first user in system)
       const userProfile = await getUserProfile(user.uid);
-      const isSuperAdmin = userProfile && userProfile.role === 'superAdmin';
+      const isSuperAdminUser = userProfile && userProfile.role === 'superAdmin';
+      setIsSuperAdmin(isSuperAdminUser);
 
       // 5. Show success message
       setSuccess(true);
       // 6. Redirect after a short delay
       setTimeout(() => {
-        router.push(isSuperAdmin ? '/admin' : '/dashboard');
+        if (isSuperAdminUser) {
+          router.push('/superAdmin');
+        } else if (userProfile?.role === 'admin' && userProfile?.validated === false) {
+          router.push('/admin/pending-approval');
+        } else if (userProfile?.role === 'admin') {
+          router.push('/admin');
+        } else {
+          router.push('/dashboard');
+        }
       }, 2000);
 
     } catch (err) {
@@ -96,7 +112,7 @@ export default function RegisterPage() {
               <>
                 <p className="font-bold">Registration successful!</p>
                 <p>You are the first user, so you've been made a SuperAdmin.</p>
-                <p>Redirecting to admin panel...</p>
+                <p>Redirecting to SuperAdmin panel...</p>
               </>
             ) : (
               <p>Registration successful! Redirecting to dashboard...</p>
@@ -128,6 +144,33 @@ export default function RegisterPage() {
               onChange={(e) => setPassword(e.target.value)}
               required
             />
+            <div className="mb-4">
+              <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Register as:</label>
+              <div className="flex gap-4">
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="registerRole"
+                    value="user"
+                    checked={registerRole === 'user'}
+                    onChange={() => setRegisterRole('user')}
+                    className="mr-2"
+                  />
+                  User
+                </label>
+                <label className="flex items-center">
+                  <input
+                    type="radio"
+                    name="registerRole"
+                    value="admin"
+                    checked={registerRole === 'admin'}
+                    onChange={() => setRegisterRole('admin')}
+                    className="mr-2"
+                  />
+                  Admin
+                </label>
+              </div>
+            </div>
 
             {error && (
               <div className="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded mb-4">
@@ -148,8 +191,21 @@ export default function RegisterPage() {
               onClick={async () => {
                 try {
                   setIsLoading(true);
-                  await signIn(); // Ensure this function is implemented in AuthContext
-                  router.push('/dashboard');
+                  const result = await signIn();
+                  const userId = result.user ? result.user.uid : (result.uid || result.user?.uid);
+                  // Fetch user profile from Firestore
+                  let userProfile = null;
+                  if (userId) {
+                    const userDoc = await getDoc(doc(db, 'users', userId));
+                    userProfile = userDoc.exists() ? userDoc.data() : null;
+                  }
+                  if (userProfile?.role === 'superAdmin') {
+                    router.push('/superAdmin');
+                  } else if (userProfile?.role === 'admin') {
+                    router.push('/admin');
+                  } else {
+                    router.push('/dashboard');
+                  }
                 } catch (err) {
                   setError('Google sign-in failed. Please try again.');
                 } finally {
