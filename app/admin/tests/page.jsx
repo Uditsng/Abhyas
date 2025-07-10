@@ -53,7 +53,7 @@ export default function AdminTestsPage() {
       fetchAllTests();
     }
   }, [user, authLoading, router, toast]);
-
+console.log(tests)
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewTest((prev)=> ({

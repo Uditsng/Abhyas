@@ -13,7 +13,7 @@ import { auth } from "@/lib/firebaseConfig";
 import { getAllTests } from "@/lib/tests";
 import { getAllBundles, createBundle, uploadBundleImage } from "@/lib/bundleService";
 
-export default function CreateBundlePage() {
+export default function CreateBundlePage() {    
   const [user, loadingUser] = useAuthState(auth);
   const [bundles, setBundles] = useState([]);
   const [loading, setLoading] = useState(true);

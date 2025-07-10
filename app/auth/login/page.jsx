@@ -8,7 +8,6 @@ import Link from 'next/link';
 import { useAuth } from '@/components/AuthContext';
 import {doc, getDoc} from 'firebase/firestore';
 
-
 export default function LoginPage() {
   const router = useRouter();
   const { user } = useAuth();
@@ -17,16 +16,16 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [userData, setUserData] = useState(null);
 
-  useEffect(() => {
-    const fetchUserData = async () => {
-      if (user) {
-        //This function gets the user's document from the Firestore database using their unique ID (user.uid).
-        const userDoc = await getDoc(doc(db, 'users', user.uid));
-        setUserData(userDoc.exists() ? userDoc.data() : null);
-      }
-    };
-    fetchUserData();
-  }, [user]);
+  // useEffect(() => {
+  //   const fetchUserData = async () => {
+  //     if (user) {
+  //       //This function gets the user's document from the Firestore database using their unique ID (user.uid).
+  //       const userDoc = await getDoc(doc(db, 'users', user.uid));
+  //       setUserData(userDoc.exists() ? userDoc.data() : null);
+  //     }
+  //   };
+  //   fetchUserData();
+  // }, [user]);
 
   useEffect(() => {
     if (user && userData) {

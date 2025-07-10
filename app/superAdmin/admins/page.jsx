@@ -1,12 +1,6 @@
 "use client";
 import React, { useEffect, useState } from 'react';
-import {
-  getAllAdmins,
-  validateAdmin,
-  setAdminStatus,
-  deleteAdmin,
-  getAdminStats
-} from '../../../lib/superAdminAdminService';
+import {getAllAdmins,validateAdmin,setAdminStatus,deleteAdmin,getAdminStats} from '../../../lib/superAdminAdminService';
 import { Box, Button, Input, Table, Thead, Tbody, Tr, Th, Td, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Spinner, Badge } from '@chakra-ui/react';
 
 export default function SuperAdminAdminsPage() {
@@ -70,7 +64,7 @@ export default function SuperAdminAdminsPage() {
   };
 
   return (
-    <Box p={6} mt={16}>
+    <Box p={6} mt={8}>
       <h2 className="text-2xl font-bold mb-4">Manage Admins</h2>
       <Input
         placeholder="Search by name or email"
@@ -132,6 +126,11 @@ export default function SuperAdminAdminsPage() {
                 <p><b>Validated:</b> {selectedAdmin.validated ? 'Yes' : 'No'}</p>
                 <p><b>Status:</b> {selectedAdmin.status || 'active'}</p>
                 <p><b>Joined:</b> {selectedAdmin.createdAt && selectedAdmin.createdAt.toDate ? selectedAdmin.createdAt.toDate().toLocaleString() : ''}</p>
+                <p><b>Qualifications:</b> {selectedAdmin.qualifications}</p>
+                <p><b>Subjects/Exams Taught:</b> {Array.isArray(selectedAdmin.subjects) ? selectedAdmin.subjects.join(', ') : selectedAdmin.subjects}</p>
+                <p><b>Teaching Experience:</b> {selectedAdmin.experience}</p>
+                <p><b>Phone Number:</b> {selectedAdmin.phone}</p>
+                <p><b>Profile Picture:</b> <span>{selectedAdmin.profilePic}</span></p>
                 {adminStats ? (
                   <>
                     <p><b>Bundles Created:</b> {adminStats.bundlesCreated}</p>

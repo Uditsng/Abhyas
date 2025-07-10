@@ -8,7 +8,7 @@ import {
   getPackageStats,
   getAllBundles
 } from '../../../lib/superAdminPackagesService';
-import { Box, Button, Input, Select, Table, Thead, Tbody, Tr, Th, Td, Spinner, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure } from '@chakra-ui/react';
+import { Box, Button, Input, Select, Table, Thead, Tbody, Tr, Th, Td, Spinner, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Checkbox, Flex, FormControl, FormLabel, Text } from '@chakra-ui/react';
 
 export default function SuperAdminPackagesPage() {
   const [packages, setPackages] = useState([]);
@@ -80,18 +80,46 @@ export default function SuperAdminPackagesPage() {
     setPackageStats(stats);
   };
 
+  const toggleBundleSelection = (bundleId) => {
+    setForm(f => {
+      const selected = f.bundleIds.includes(bundleId)
+        ? f.bundleIds.filter(id => id !== bundleId)
+        : [...f.bundleIds, bundleId];
+      return { ...f, bundleIds: selected };
+    });
+  };
+
   return (
-    <Box p={6} mt={16}>
+    <Box p={6} mt={8}>
       <h2 className="text-2xl font-bold mb-4">Manage Packages</h2>
       <form onSubmit={handleCreateOrEdit} className="mb-8 bg-white p-4 rounded shadow">
         <div className="flex flex-col md:flex-row gap-4 mb-4">
-          <Input name="name" placeholder="Package Name" value={form.name} onChange={handleFormChange} maxW="200px" required />
-          <Input name="examId" placeholder="Exam ID" value={form.examId} onChange={handleFormChange} maxW="200px" required />
-          <Select name="bundleIds" multiple value={form.bundleIds} onChange={handleFormChange} maxW="300px">
-            {bundles.map(b => <option key={b.id} value={b.id}>{b.title || b.id}</option>)}
-          </Select>
-          <Input name="price" type="number" placeholder="Price (₹)" value={form.price} onChange={handleFormChange} maxW="120px" required />
+          <Input name="name" placeholder="Package Name" value={form.name} onChange={handleFormChange} maxW="300px" required />
+          <Input name="examId" placeholder="Exam ID" value={form.examId} onChange={handleFormChange} maxW="300px" required />
+          <Input name="price" type="number" placeholder="Price (₹)" value={form.price} onChange={handleFormChange} maxW="300px" required />
         </div>
+        <Box maxW="600px" minW="220px" mb={4}>
+          <FormControl>
+            <FormLabel>Select Bundles to Include</FormLabel>
+            {bundles.length === 0 ? (
+              <Text color="gray.500">No bundles available.</Text>
+            ) : (
+              <Flex direction="column" gap={2} height="140px" overflowY="auto" border="1px solid #ccc" p={3} borderRadius="md" bg="gray.50">
+                {bundles.map((b) => (
+                  <Checkbox
+                    key={b.id}
+                    isChecked={form.bundleIds.includes(b.id)}
+                    onChange={() => toggleBundleSelection(b.id)}
+                  >
+                    <Box>
+                      <Text fontWeight="medium">{b.title || b.id}</Text>
+                    </Box>
+                  </Checkbox>
+                ))}
+              </Flex>
+            )}
+          </FormControl>
+        </Box>
         <Button type="submit" colorScheme="blue" isLoading={actionLoading}>{editingId ? 'Update' : 'Create'} Package</Button>
         {editingId && <Button ml={2} onClick={() => { setForm({ name: '', examId: '', bundleIds: [], price: '' }); setEditingId(null); }}>Cancel</Button>}
       </form>

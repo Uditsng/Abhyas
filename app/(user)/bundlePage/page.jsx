@@ -40,12 +40,10 @@ export default function BundlesPage() {
       </Center>
     );
   }
-
   return (
-    <Container maxW="container.xl" py={8}>
+    <Box pt={24} mb={24}>
+      <Container maxW="container.xl" py={4}>
       <SectionHeader title="Explore Bundles" />
-
-
       {/* Search and Bundles List (existing UI) */}
       <Box mb={6}>
         <InputGroup>
@@ -76,6 +74,8 @@ export default function BundlesPage() {
           ))}
         </SimpleGrid>
       )}
+    
     </Container>
-  );
+  </Box>
+);
 }

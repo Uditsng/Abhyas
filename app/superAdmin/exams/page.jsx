@@ -58,7 +58,7 @@ export default function SuperAdminExamsPage() {
   };
 
   return (
-    <Box p={6} mt={16}>
+    <Box p={6} mt={8}>
       <h2 className="text-2xl font-bold mb-4">Manage Exams</h2>
       <form onSubmit={handleCreateOrEdit} className="mb-8 bg-white p-4 rounded shadow flex flex-col md:flex-row gap-4">
         <Input name="name" placeholder="Exam Name" value={form.name} onChange={handleFormChange} maxW="300px" required />

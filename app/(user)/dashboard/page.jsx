@@ -15,7 +15,6 @@ import SectionHeader from "@/components/SectionHeader";
 import CardContainer from "@/components/CardContainer";
 import { getAllBundles } from "@/lib/bundleService";
 import { getAllTestResults } from "@/lib/testResultService";
-//import BundleCard from "@/components/BundleCard";
 import ResourceCards from "@/components/ResourceCards";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { useRouter } from "next/navigation";
@@ -197,6 +196,7 @@ export default function DashboardPage() {
     <Box p={6}>
 
       <div className="container mx-auto px-4 pt-20 bg-gray-100 dark:bg-gray-900 min-h-screen pb-12 transition-colors duration-200">
+        
         {/* Welcome banner */}
         <div className="text-center bg-gradient-to-r from-blue-600 to-indigo-700 dark:from-blue-800 dark:to-indigo-900 text-white py-6">
           <div className="container mx-auto px-4">
@@ -211,24 +211,6 @@ export default function DashboardPage() {
        <Box my={8} mx={16}>
          <ExamBrowser />
        </Box>
-
-        <div className="container mx-auto px-4 py-8">
-          {/* Trending course carousel */}
-          {/* <SectionHeader title="Trending Bundles" />
-          <div className="slick-container mb-16">
-            <Slider {...sliderSettings}>
-              {(Array.isArray(trendingBundles) ? trendingBundles : []).map((bundle) => (
-                <div key={bundle.id} className="px-2 h-full">
-                  <BundleCard
-                    id={bundle.id}
-                    title={bundle.title}
-                    description={bundle.description}
-                    image={bundle.image}
-                  />
-                </div>
-              ))}
-            </Slider>
-          </div> */}
            
            {/* Resourse component  */}
           <ResourceCards />
@@ -329,6 +311,7 @@ export default function DashboardPage() {
                 </div>
               )}
             </CardContainer>
+          
           </div>
 
           {/*cards for Upcoming Tests and Course Progress */}
@@ -337,6 +320,7 @@ export default function DashboardPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {/* Upcoming Tests Card - Still mock for now */}
+              
               <CardContainer>
                 <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
                   <h3 className="font-medium text-gray-800 dark:text-gray-200">
@@ -387,6 +371,7 @@ export default function DashboardPage() {
 
               {/* Course Progress Card - Still mock for now */}
               <CardContainer>
+
                 <div className="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-700">
                   <h3 className="font-medium text-gray-800 dark:text-gray-200">
                     Course Progress
@@ -425,11 +410,13 @@ export default function DashboardPage() {
                     </div>
                   )}
                 </div>
+
               </CardContainer>
+            
             </div>
           </div>
+
         </div>
-      </div>
     </Box>
   );
 }

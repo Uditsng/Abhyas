@@ -6,7 +6,8 @@ import {
   getAllPayouts,
   markPayoutAsPaid
 } from '../../../lib/superAdminRevenueService';
-import { Box, Button, Table, Thead, Tbody, Tr, Th, Td, Spinner, Badge } from '@chakra-ui/react';
+import { getAllExpenses } from '../../../lib/superAdminExpensesService';
+import { Box, Button, Table, Thead, Tbody, Tr, Th, Td, Spinner, Badge, Flex } from '@chakra-ui/react';
 
 export default function SuperAdminRevenuePage() {
   const [stats, setStats] = useState({ totalEarnings: 0, platformCommission: 0 });
@@ -14,18 +15,21 @@ export default function SuperAdminRevenuePage() {
   const [payouts, setPayouts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+  const [expenses, setExpenses] = useState([]);
 
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
-      const [earnings, monthlyRev, allPayouts] = await Promise.all([
+      const [earnings, monthlyRev, allPayouts, allExpenses] = await Promise.all([
         getEarningsAndCommission(),
         getMonthlyRevenue(),
-        getAllPayouts()
+        getAllPayouts(),
+        getAllExpenses()
       ]);
       setStats(earnings);
       setMonthly(monthlyRev);
       setPayouts(allPayouts);
+      setExpenses(allExpenses);
       setLoading(false);
     }
     fetchData();
@@ -39,14 +43,18 @@ export default function SuperAdminRevenuePage() {
   };
 
   return (
-    <Box p={6} mt={16}>
+    <Box p={6} mt={8}>
       <h2 className="text-2xl font-bold mb-4">Revenue & Payouts</h2>
       {loading ? <Spinner size="lg" /> : (
         <>
-          <Box className="mb-6">
-            <p><b>Total Earnings:</b> ₹{stats.totalEarnings}</p>
-            <p><b>Platform Commission (20%):</b> ₹{stats.platformCommission}</p>
-          </Box>
+          <Flex justify="space-between" align="flex-start" mb={6} direction={{ base: 'column', md: 'row' }}>
+            <Box className="mb-6" mb={{ base: 4, md: 0 }}>
+              <p><b>Total Earnings:</b> ₹{stats.totalEarnings}</p>
+              <p><b>Package Earnings:</b> ₹{stats.totalEarnings}</p>
+              <p><b>Platform Commission (20%):</b> ₹{stats.platformCommission}</p>
+            </Box>
+            <Box mb={4} fontWeight="bold" minW="220px">Total Expenses: ₹{expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0)}</Box>
+          </Flex>
           <Box className="mb-6">
             <h3 className="font-semibold mb-2">Monthly Revenue</h3>
             <Table variant="simple" className="bg-white rounded shadow">

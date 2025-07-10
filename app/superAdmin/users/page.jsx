@@ -62,7 +62,7 @@ export default function SuperAdminUsersPage() {
   };
 
   return (
-    <Box p={6} mt={16}>
+    <Box p={6} mt={8}>
       <h2 className="text-2xl font-bold mb-4">Manage Users</h2>
       <Input
         placeholder="Search by name or email"

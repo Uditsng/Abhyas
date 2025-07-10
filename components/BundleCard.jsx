@@ -1,63 +1,81 @@
-import { Box, Image, Text, Button, Flex, Badge, Stack } from "@chakra-ui/react";
+import { Box, Image, Text, Button, Flex, Badge, Stack, useColorModeValue } from "@chakra-ui/react";
+import Link from "next/link";
 
-export default function BundleCard({ bundle, onPurchase }) {
+export default function BundleCard({ bundle }) {
+  const cardBg = useColorModeValue('white', 'whiteAlpha.100');
+  const border = useColorModeValue('gray.200', 'whiteAlpha.200');
+  const textColor = useColorModeValue('gray.800', 'gray.100');
+  const subTextColor = useColorModeValue('gray.600', 'gray.300');
+  const badgeBg = useColorModeValue('blue.50', 'blue.900');
+  const badgeColor = useColorModeValue('blue.600', 'blue.200');
+  const priceBg = useColorModeValue('green.50', 'green.900');
+  const priceColor = useColorModeValue('green.600', 'green.200');
+
   return (
-    <Box
-      bg="white"
-      borderRadius="lg"
-      boxShadow="md"
-      overflow="hidden"
-      transition="box-shadow 0.2s"
-      _hover={{ boxShadow: "xl" }}
-      maxW="360px"
-      w="100%"
-      mx="auto"
-      display="flex"
-      flexDirection="column"
-    >
-      {/* 4:3 Image */}
+    <Link href={`/bundle/${bundle.id}`} style={{ textDecoration: 'none' }}>
       <Box
-        pos="relative"
+        bg={cardBg}
+        borderRadius="2xl"
+        boxShadow="md"
+        overflow="hidden"
+        transition="box-shadow 0.2s, transform 0.2s"
+        _hover={{ boxShadow: "xl", transform: 'translateY(-2px) scale(1.03)' }}
+        maxW="360px"
         w="100%"
-        pt="50%" // 2:1 aspect ratio
-        bg="gray.100"
+        mx="auto"
+        display="flex"
+        flexDirection="column"
+        borderWidth="1px"
+        borderColor={border}
+        className="backdrop-blur-lg border border-white/20 shadow-md"
+        cursor="pointer"
       >
-        <Image
-          src={"/banner1.jpg"}
-          alt={bundle.title}
-          objectFit="cover"
-          position="absolute"
-          top={0}
-          left={0}
+        {/* 4:3 Image */}
+        <Box
+          pos="relative"
           w="100%"
-          h="100%"
-        />
-      </Box>
-      <Stack spacing={2} p={3} flex="1 1 auto">
-        <Text fontWeight="bold" fontSize="lg" noOfLines={1}>
-          {bundle.title}
-        </Text>
-        <Text color="gray.600" fontSize="sm" noOfLines={1}>
-          Subject: <b>{bundle.subject}</b>
-        </Text>
-        <Flex align="center" gap={2}>
-          <Badge colorScheme="blue" fontSize="0.9em">
-            ₹{bundle.price}
-          </Badge>
-          <Badge colorScheme="green" fontSize="0.9em">
-            {bundle.testIds?.length || 0} Tests
-          </Badge>
-        </Flex>
-        <Button
-          colorScheme="blue"
-          variant="solid"
-          mt={2}
-          borderRadius="full"
-          onClick={() => onPurchase?.(bundle)}
+          pt="50%" // 2:1 aspect ratio
+          bg="gray.100"
+          _dark={{ bg: 'gray.800' }}
         >
-          Purchase Bundle
-        </Button>
-      </Stack>
-    </Box>
+          <Image
+            src={"/banner1.jpg"}
+            alt={bundle.title}
+            objectFit="cover"
+            position="absolute"
+            top={0}
+            left={0}
+            w="100%"
+            h="100%"
+          />
+        </Box>
+        <Stack spacing={2} p={4} flex="1 1 auto">
+          <Text fontWeight="bold" fontSize="lg" noOfLines={1} color={textColor}>
+            {bundle.title}
+          </Text>
+          <Text color={subTextColor} fontSize="sm" noOfLines={1}>
+            Subject: <b>{bundle.subject}</b>
+          </Text>
+          <Flex align="center" gap={2}>
+            <Badge bg={priceBg} color={priceColor} fontSize="0.9em" px={2} py={1} borderRadius="md">
+              ₹{bundle.price}
+            </Badge>
+            <Badge bg={badgeBg} color={badgeColor} fontSize="0.9em" px={2} py={1} borderRadius="md">
+              {bundle.testIds?.length || 0} Tests
+            </Badge>
+          </Flex>
+          <Button
+            colorScheme="blue"
+            variant="solid"
+            mt={2}
+            borderRadius="full"
+            w="full"
+            isDisabled
+          >
+            View Bundle
+          </Button>
+        </Stack>
+      </Box>
+    </Link>
   );
 }

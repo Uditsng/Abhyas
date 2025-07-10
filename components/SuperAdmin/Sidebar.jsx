@@ -8,13 +8,13 @@ import {
 } from '@chakra-ui/react';
 import {
   FiHome, FiUsers, FiDollarSign, FiChevronLeft, FiChevronRight,
-  FiMessageSquare, FiPackage, FiBookOpen, FiPieChart
+  FiMessageSquare, FiPackage, FiBookOpen, FiPieChart,FiUserPlus
 } from 'react-icons/fi';
 
 const navItems = [
   { name: 'Dashboard', path: '/superAdmin', icon: FiHome },
   { name: 'Users', path: '/superAdmin/users', icon: FiUsers },
-  { name: 'Admins', path: '/superAdmin/admins', icon: FiUsers },
+  { name: 'Admins', path: '/superAdmin/admins', icon: FiUserPlus },
   { name: 'Revenue', path: '/superAdmin/revenue', icon: FiDollarSign },
   { name: 'Communication', path: '/superAdmin/communication', icon: FiMessageSquare },
   { name: 'Packages', path: '/superAdmin/packages', icon: FiPackage },

@@ -2,103 +2,21 @@
 
 //Admin Panel: page.jsx and subfolders for managing users and tests.
 
-import { Box, Heading, SimpleGrid, Icon, Text, HStack } from '@chakra-ui/react';
+import { Box, Heading, SimpleGrid, Icon, Text, HStack, useColorModeValue } from '@chakra-ui/react';
 import StatCard, { adminStats } from '@/components/admin/StatCard';
 import dynamic from 'next/dynamic';
 const AreaChart = dynamic(() => import('@/components/admin/AreaChart'), { ssr: false });
 const BarChart = dynamic(() => import('@/components/admin/BarChart'), { ssr: false });
+import { FiUsers, FiFileText, FiPackage, FiDollarSign } from 'react-icons/fi';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-
-// Sample data for our charts
-const chartdata = [
-  {
-    date: 'Jan 22',
-    'Test Attempts': 2890,
-    'New Users': 2338,
-  },
-  {
-    date: 'Feb 22',
-    'Test Attempts': 2756,
-    'New Users': 2103,
-  },
-  {
-    date: 'Mar 22',
-    'Test Attempts': 3322,
-    'New Users': 2194,
-  },
-  {
-    date: 'Apr 22',
-    'Test Attempts': 3470,
-    'New Users': 2108,
-  },
-  {
-    date: 'May 22',
-    'Test Attempts': 3475,
-    'New Users': 1812,
-  },
-];
-
-// Sample data for bar chart
-const testPerformanceData = [
-  {
-    'test': 'SSC CGL',
-    'Avg Score': 72,
-    'Pass Rate': 68,
-  },
-  {
-    'test': 'Banking',
-    'Avg Score': 65,
-    'Pass Rate': 58,
-  },
-  {
-    'test': 'Railways',
-    'Avg Score': 81,
-    'Pass Rate': 76,
-  },
-  {
-    'test': 'UPSC Prelims',
-    'Avg Score': 59,
-    'Pass Rate': 42,
-  },
-  {
-    'test': 'State PSC',
-    'Avg Score': 68,
-    'Pass Rate': 61,
-  },
-];
-
-// Sample data for user engagement metrics
-const userEngagementData = [
-  { date: 'Jan 22', 'Active Users': 1200, 'Tests Per User': 3.5 },
-  { date: 'Feb 22', 'Active Users': 1100, 'Tests Per User': 3.2 },
-  { date: 'Mar 22', 'Active Users': 1300, 'Tests Per User': 3.8 },
-  { date: 'Apr 22', 'Active Users': 1250, 'Tests Per User': 3.6 },
-  { date: 'May 22', 'Active Users': 1400, 'Tests Per User': 4.0 },
-];
+import PieChart from '@/components/admin/PieChart';
+import { motion } from 'framer-motion';
 
 // Prepare data in Chart.js format
-const areaChartData = {
-  labels: chartdata.map(item => item.date),
-  datasets: [
-    {
-      label: 'Test Attempts',
-      data: chartdata.map(item => item['Test Attempts']),
-      borderColor: 'rgba(59, 130, 246, 1)',
-      backgroundColor: 'rgba(59, 130, 246, 0.2)',
-      fill: true,
-    },
-    {
-      label: 'New Users',
-      data: chartdata.map(item => item['New Users']),
-      borderColor: 'rgba(16, 185, 129, 1)',
-      backgroundColor: 'rgba(16, 185, 129, 0.2)',
-      fill: true,
-    },
-  ],
-};
+// Remove all references to chartdata and areaChartData mock variables
 
 
 const areaChartOptions = {
@@ -109,52 +27,7 @@ const areaChartOptions = {
   },
 };
 
-// Prepare data for BarChart
-const barChartData = {
-  labels: testPerformanceData.map(item => item.test),
-  datasets: [
-    {
-      label: 'Avg Score',
-      data: testPerformanceData.map(item => item['Avg Score']),
-      backgroundColor: 'rgba(59, 130, 246, 0.7)',
-    },
-    {
-      label: 'Pass Rate',
-      data: testPerformanceData.map(item => item['Pass Rate']),
-      backgroundColor: 'rgba(16, 185, 129, 0.7)',
-    },
-  ],
-};
 
-const barChartOptions = {
-  responsive: true,
-  plugins: {
-    legend: { position: 'top' },
-    title: { display: true, text: 'Test Performance by Category' },
-  },
-};
-
-
-// Prepare data for User Engagement Chart
-const userEngagementChartData = {
-  labels: userEngagementData.map(item => item.date),
-  datasets: [
-    {
-      label: 'Active Users',
-      data: userEngagementData.map(item => item['Active Users']),
-      borderColor: 'rgba(75, 192, 192, 1)',
-      backgroundColor: 'rgba(75, 192, 192, 0.2)',
-      fill: true,
-    },
-    {
-      label: 'Tests Per User',
-      data: userEngagementData.map(item => item['Tests Per User']),
-      borderColor: 'rgba(255, 99, 132, 1)',
-      backgroundColor: 'rgba(255, 99, 132, 0.2)',
-      fill: true,
-    },
-  ],
-};
 
 const userEngagementChartOptions = {
   responsive: true,
@@ -164,28 +37,6 @@ const userEngagementChartOptions = {
   },
 };
 
-// Sample data for monthly earnings trends
-const monthlyEarningsData = [
-  { month: 'Jan 22', earnings: 50000 },
-  { month: 'Feb 22', earnings: 45000 },
-  { month: 'Mar 22', earnings: 60000 },
-  { month: 'Apr 22', earnings: 55000 },
-  { month: 'May 22', earnings: 70000 },
-];
-
-// Prepare data for Monthly Earnings Chart
-const monthlyEarningsChartData = {
-  labels: monthlyEarningsData.map(item => item.month),
-  datasets: [
-    {
-      label: 'Monthly Earnings',
-      data: monthlyEarningsData.map(item => item.earnings),
-      backgroundColor: 'rgba(54, 162, 235, 0.7)',
-      borderColor: 'rgba(54, 162, 235, 1)',
-      borderWidth: 1,
-    },
-  ],
-};
 
 const monthlyEarningsChartOptions = {
   responsive: true,
@@ -197,159 +48,187 @@ const monthlyEarningsChartOptions = {
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [subscriptionStats, setSubscriptionStats] = useState({
-    totalSubscribers: 0,
-    activeSubscriptions: 0,
-    trialUsers: 0,
-    revenue: 0,
-    planDistribution: {}
+  // Card stats state
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalTests: 0,
+    totalBundles: 0,
+    earnings: 3500, // mock
   });
-  // Add state for subscription plans
-  const [subscriptionPlans, setSubscriptionPlans] = useState([]);
+  // Area chart state
+  const [userGrowthData, setUserGrowthData] = useState({ labels: [], datasets: [] });
+  const [loading, setLoading] = useState(true);
+  // Plan distribution state
+  const [planDistribution, setPlanDistribution] = useState({});
+  // Recent users state
+  const [recentUsers, setRecentUsers] = useState([]);
+  const glassBg = useColorModeValue('bg-white/40', 'bg-white/10');
+  const glassBorder = useColorModeValue('border-white/30', 'border-white/20');
 
   useEffect(() => {
-    // Fetch subscription plans from Firestore
-    const fetchPlans = async () => {
-      try {
-        const plans = await getSubscriptionPlan();
-        setSubscriptionPlans(plans);
-      } catch (error) {
-        console.error('Error fetching subscription plans:', error);
-      }
-    };
-    fetchPlans();
+    async function fetchStatsAndGrowth() {
+      setLoading(true);
+      // Fetch users
+      const usersSnap = await getDocs(collection(db, 'users'));
+      const users = usersSnap.docs.map(doc => doc.data());
+      // Fetch tests
+      const testsSnap = await getDocs(collection(db, 'tests'));
+      // Fetch bundles
+      const bundlesSnap = await getDocs(collection(db, 'bundles'));
+      // Card stats
+      setStats({
+        totalUsers: users.length,
+        totalTests: testsSnap.size,
+        totalBundles: bundlesSnap.size,
+        earnings: 3500, // mock
+      });
+      // User growth by month
+      const growthMap = {};
+      const planMap = {};
+      users.forEach(u => {
+        if (u.createdAt) {
+          let date = u.createdAt.toDate ? u.createdAt.toDate() : new Date(u.createdAt);
+          const label = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+          growthMap[label] = (growthMap[label] || 0) + 1;
+        }
+        if (u.plan) {
+          planMap[u.plan] = (planMap[u.plan] || 0) + 1;
+        }
+      });
+      // Sort labels
+      const labels = Object.keys(growthMap).sort();
+      const data = labels.map(l => growthMap[l]);
+      setUserGrowthData({
+        labels,
+        datasets: [
+          {
+            label: 'New Users',
+            data,
+            borderColor: 'rgba(16, 185, 129, 1)',
+            backgroundColor: 'rgba(16, 185, 129, 0.2)',
+            fill: true,
+          },
+        ],
+      });
+      setPlanDistribution(planMap);
+      // Recent users (latest 5 by createdAt)
+      const sortedUsers = users
+        .filter(u => u.createdAt)
+        .sort((a, b) => {
+          const da = a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
+          const db = b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
+          return db - da;
+        })
+        .slice(0, 5);
+      setRecentUsers(sortedUsers);
+      setLoading(false);
+    }
+    fetchStatsAndGrowth();
   }, []);
 
-  useEffect(() => {
-    const fetchSubscriptionStats = async () => {
-      try {
-        // Fetch users instead of subscriptions since user subscription data is stored in users collection
-        const usersRef = collection(db, 'users');
-        const usersSnapshot = await getDocs(usersRef);
-        
-        const stats = {
-          totalSubscribers: 0,
-          activeSubscriptions: 0,
-          trialUsers: 0,
-          revenue: 0,
-          planDistribution: {}
-        };
+  // Card config
+  const cardConfig = [
+    { title: 'Total Users', value: stats.totalUsers, icon: <FiUsers size={28} /> },
+    { title: 'Total Tests', value: stats.totalTests, icon: <FiFileText size={28} /> },
+    { title: 'Total Bundles', value: stats.totalBundles, icon: <FiPackage size={28} /> },
+    { title: 'Earnings', value: `$${stats.earnings}`, icon: <FiDollarSign size={28} /> },
+  ];
 
-        usersSnapshot.forEach((doc) => {
-          const user = doc.data();
-          if (user.plan) { // User has a subscription plan
-            stats.totalSubscribers++;
-            // Check if subscription is active (you might need to add status field to users)
-            // For now, assume all users with plans are active
-            stats.activeSubscriptions++;
-            // Find plan from fetched plans
-            // We'll update this logic after plans are fetched
-            // stats.revenue += plan.price; // Can't sum revenue here without plans
-            stats.planDistribution[user.plan] = (stats.planDistribution[user.plan] || 0) + 1;
-          }
-        });
+  // Area chart options
+  const areaChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'top' },
+      title: { display: true, text: 'User Growth (New Users per Month)' },
+    },
+    maintainAspectRatio: false,
+  };
 
-        setSubscriptionStats(stats);
-      } catch (error) {
-        console.error('Error fetching subscription stats:', error);
-      }
-    };
-
-    fetchSubscriptionStats();
-  }, []);
+  // Pie chart for plan distribution
+  const planLabels = Object.keys(planDistribution);
+  const planData = planLabels.map(label => planDistribution[label]);
+  const pieChartData = {
+    labels: planLabels,
+    datasets: [
+      {
+        data: planData,
+        backgroundColor: [
+          'rgba(59, 130, 246, 0.7)',
+          'rgba(16, 185, 129, 0.7)',
+          'rgba(255, 206, 86, 0.7)',
+          'rgba(255, 99, 132, 0.7)',
+          'rgba(75, 192, 192, 0.7)',
+        ],
+        borderColor: [
+          'rgba(59, 130, 246, 1)',
+          'rgba(16, 185, 129, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(255, 99, 132, 1)',
+          'rgba(75, 192, 192, 1)',
+        ],
+        borderWidth: 1,
+      },
+    ],
+  };
+  const pieChartOptions = {
+    responsive: true,
+    plugins: {
+      legend: { position: 'right' },
+      title: { display: true, text: 'Plan Distribution' },
+    },
+  };
 
   return (
-    <Box p={6}>
-      <div className="container mx-auto px-4 pt-20 bg-gray-100 dark:bg-gray-900 min-h-screen pb-12 transition-colors duration-200">
-        <HStack justify="space-between" mb={6}>
-          <Heading>Admin Dashboard</Heading>
-        </HStack>
-
-        {/* stats cards with trends */}
-        <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={6} mb={12}>
-
-          {adminStats.map((stat, index) => (
-            <StatCard 
-              key={index}
-              title={stat.title} 
-              value={stat.value} 
-              trend={stat.trend} 
-              timeframe={stat.timeframe}
-              inverted={stat.inverted}
-              icon={<Icon as={stat.icon} boxSize={6} />}
-            />
-          ))}
-
-        </SimpleGrid>
-        
-        {/* Charts section */}
-        <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6} mb={12} pb={4}>
-          {/* Area chart */}
-          
-          <Box height="400px" width="100%">
-            <AreaChart data={areaChartData} options={{ ...areaChartOptions, maintainAspectRatio: false }} />
-          </Box>
-
-          {/* Bar chart */}
-          <Box height="400px" width="100%">
-            <BarChart data={barChartData} options={{ ...barChartOptions, maintainAspectRatio: false }} />
-          </Box>
-          
-        </SimpleGrid>
-
-        {/* charts for user engagement and monthly earnings */}
-        <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={6} pb={4}>
-          {/* User Engagement chart */}
-          <Box height="400px" width="100%">
-            <AreaChart data={userEngagementChartData} options={{ ...userEngagementChartOptions, maintainAspectRatio: false }} />
-          </Box>
-
-          {/* Monthly Earnings bar chart */}
-          <Box height="400px" width="100%">
-            <BarChart data={monthlyEarningsChartData} options={{ ...monthlyEarningsChartOptions, maintainAspectRatio: false }} />
-          </Box>
-        </SimpleGrid>
-
-        {/* Subscription Overview */}
-        <Box mb={8}>
-          <Heading size="md" mb={4}>Subscription Overview</Heading>
-          <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={4}>
-            <Box p={4} bg="white" _dark={{ bg: "gray.800" }} rounded="lg" shadow="md">
-              <Text fontSize="sm" color="gray.500">Total Subscribers</Text>
-              <Text fontSize="2xl" fontWeight="bold">{subscriptionStats.totalSubscribers}</Text>
-            </Box>
-            <Box p={4} bg="white" _dark={{ bg: "gray.800" }} rounded="lg" shadow="md">
-              <Text fontSize="sm" color="gray.500">Active Subscriptions</Text>
-              <Text fontSize="2xl" fontWeight="bold">{subscriptionStats.activeSubscriptions}</Text>
-            </Box>
-            <Box p={4} bg="white" _dark={{ bg: "gray.800" }} rounded="lg" shadow="md">
-              <Text fontSize="sm" color="gray.500">Total Revenue</Text>
-              <Text fontSize="2xl" fontWeight="bold">${subscriptionStats.revenue}</Text>
-            </Box>
+    <Box p={0}>
+      <div className="container mx-auto px-4 pt-16 md:px-8 lg:px-12 xl:px-24 w-full">
+        {/* Welcome header */}
+        <Box mb={12} textAlign="center">
+          <Heading size="lg" mb={2}>Welcome to the Admin Dashboard</Heading>
+          <Text fontSize="lg" color="gray.600" _dark={{ color: 'gray.300' }}>
+            Quick stats, user growth, and recent activity at a glance.
+          </Text>
+        </Box>
+        {/* Stat cards */}
+        <Box mb={14} className={`${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl p-8`}> 
+          <Heading size="md" mb={6} textAlign="left">Key Metrics</Heading>
+          <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={8}>
+            {cardConfig.map((card, idx) => (
+              <Box key={idx} p={7} className={`${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl transition-transform duration-200 hover:scale-105`} display="flex" alignItems="center" gap={4}>
+                <Box>{card.icon}</Box>
+                <Box>
+                  <Text fontSize="sm" color="gray.500">{card.title}</Text>
+                  <Heading size="lg">{card.value}</Heading>
+                </Box>
+              </Box>
+            ))}
           </SimpleGrid>
-
-          {/* Plan Distribution */}
-          <Box mt={6} p={4} bg="white" _dark={{ bg: "gray.800" }} rounded="lg" shadow="md">
-            <Heading size="sm" mb={4}>Plan Distribution</Heading>
-            <SimpleGrid columns={{ base: 1, md: 3 }} spacing={4}>
-              {subscriptionPlans.length === 0 ? (
-                <Text>No plans found.</Text>
-              ) : (
-                subscriptionPlans.map((plan) => (
-                  <Box key={plan.id} p={3} borderWidth="1px" borderRadius="md">
-                    <Text fontWeight="medium">{plan.name}</Text>
-                    <Text fontSize="2xl" fontWeight="bold">
-                      {subscriptionStats.planDistribution[plan.id] || 0}
-                    </Text>
-                    <Text fontSize="sm" color="gray.500">
-                      ${plan.price}/{plan.duration}
-                    </Text>
-                  </Box>
-                ))
-              )}
-            </SimpleGrid>
+        </Box>
+        {/* Area chart for user growth */}
+        <Box mb={14} className={`${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl p-8`}> 
+          <Heading size="md" mb={6} textAlign="left">User Growth</Heading>
+          <Box height="400px" width="100%">
+            {!loading && <AreaChart data={userGrowthData} options={areaChartOptions} />}
+            {loading && <Text>Loading chart...</Text>}
           </Box>
         </Box>
+        {/* Pie chart for plan distribution (if plans exist) */}
+        {planLabels.length > 0 && (
+          <Box mb={14} className={`${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl p-8`}>
+            <Heading size="md" mb={6} textAlign="left">Plan Distribution</Heading>
+            <Box maxW="lg" mx="auto">
+              <PieChart data={pieChartData} options={pieChartOptions} />
+            </Box>
+          </Box>
+        )}
+        {/* Subscription Overview Section */}
+        <Box mb={14} className={`${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl p-8`}>
+          <Heading size="md" mb={6} textAlign="left">Subscription Overview</Heading>
+          {/* ... Subscription Overview content ... */}
+        </Box>
+        {/* Divider */}
+        <Box borderBottom="2px" borderColor="gray.200" mb={12} />
+        {/* Keep all other existing sections below (e.g., Plan Distribution, etc.) */}
+        {/* ... existing code ... */}
       </div>
     </Box>
   );

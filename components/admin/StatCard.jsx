@@ -1,41 +1,7 @@
 'use client';
 
 import { Box, Flex, Text, Heading, useColorModeValue } from '@chakra-ui/react';
-import { FiUsers, FiFileText, FiCheckCircle, FiDollarSign } from 'react-icons/fi';
 import TrendIndicator from './TrendIndicator';
-
-// all stat cards data here
-export const adminStats = [
-  {
-    title: "Total Users",
-    value: "1,024",
-    trend: 12,
-    timeframe: "vs last month",
-    icon: FiUsers
-  },
-  {
-    title: "Active Tests",
-    value: "42",
-    trend: 8,
-    timeframe: "vs last month",
-    icon: FiFileText
-  },
-  {
-    title: "Questions",
-    value: "2,580",
-    trend: 15,
-    timeframe: "vs last month",
-    icon: FiCheckCircle
-  },
-  {
-    title: "Earnings",
-    value: "3500",
-    trend: -2,
-    timeframe: "vs last month",
-    inverted: true,
-    icon: FiDollarSign
-  }
-];
 
 export default function StatCard({ 
   title, 

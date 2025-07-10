@@ -1,253 +1,257 @@
-"use client";
+'use client';
 
-// app/tests/[course]/[test]/page.jsx  handle test listings and individual test pages.
+import { useState, useEffect, useCallback } from 'react';
 
-import { useParams } from "next/navigation";
-import { useState, useEffect, useCallback, useRef } from "react";
-import { useToast } from "@chakra-ui/react";
-import { saveTestResult } from "@/lib/testResultService";
-import { useAuthState } from "react-firebase-hooks/auth";
-import { auth } from "@/lib/firebaseConfig";
-import { useAuthRedirect } from "@/hooks/useAuthRedirect";
-import { motion, AnimatePresence } from "framer-motion";
-import { AlertDialog, AlertDialogBody, AlertDialogFooter, AlertDialogHeader, AlertDialogContent, AlertDialogOverlay, Button, Box } from "@chakra-ui/react";
+import { useParams, useRouter } from 'next/navigation';
+import { Box, Heading, Text, Button, Flex, Progress, useToast, Spinner, Center, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton, useDisclosure, VStack, HStack, Tooltip, IconButton } from '@chakra-ui/react';
+import { CheckCircleIcon } from '@chakra-ui/icons';
+import { motion, AnimatePresence } from 'framer-motion';
+import { getTestDetails } from '@/lib/tests';
+import { saveTestResult } from '@/lib/testResultService';
+import { useAuth } from '@/components/AuthContext';
+// Bookmarking removed
+//import SubscriptionAccessGuard from '@/components/SubscriptionAccessGuard';
 
-export default function TakeTestPage() {
-  const { isAuthenticated, isLoading: authLoading } = useAuthRedirect();
+export default function TestPage() {
   const params = useParams();
+  const router = useRouter();
+  const testId = params.testId;
   const toast = useToast();
-  const [user] = useAuthState(auth);
-  const courseId = params.course;
-  const testId = params.test;
+  const { user } = useAuth();
 
-  // State for answers and submission
-  const [answers, setAnswers] = useState({});
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSubmitted , setIsSubmitted] = useState(false);
-
-  // Timer state
-  const [timeRemaining, setTimeRemaining] = useState(0);
-  const [timerStarted, setTimerStarted] = useState(false);
-
-  // Question navigation state
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-
-  // Marked for review state
-  const [markedForReview, setMarkedForReview] = useState({});
-
-  // Mobile palette visibility
-  const [showMobilePalette, setShowMobilePalette] = useState(false);
-
-  // Test data and loading state
   const [testData, setTestData] = useState(null);
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [userAnswers, setUserAnswers] = useState({});
+  const [timeLeft, setTimeLeft] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  // Mark for review state
+  const [markedForReview, setMarkedForReview] = useState({});
+  const [showPalette, setShowPalette] = useState(false); // For mobile palette toggle
 
-  // Confirmation dialog state
-  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
-  const cancelRef = useRef();
+  const { isOpen, onOpen, onClose } = useDisclosure(); // For confirmation modal
 
+  // Fetch test data
   useEffect(() => {
-    async function fetchTest() {
+    const fetchTestData = async () => {
+      if (!testId) {
+        setLoading(false);
+        toast({
+          title: "Missing Test ID",
+          description: "Test ID is required to load this test.",
+          status: "error",
+          duration: 5000,
+          isClosable: true,
+        });
+        router.push('/dashboard');
+        return;
+      }
+
       try {
-        const data = await getTestDetails(testId);
-        if (data) {
-          setTestData(data);
+        const fetchedData = await getTestDetails(testId); // Only use testId
+
+        if (fetchedData) {
+          setTestData(fetchedData);
+          setTimeLeft(fetchedData.duration * 60); // Convert minutes to seconds
         } else {
           toast({
             title: "Test not found",
-            description: "The requested test could not be found.",
+            description: `Could not find test with ID: ${testId}`,
             status: "error",
-            duration: 3000,
+            duration: 5000,
             isClosable: true,
           });
+          router.push('/dashboard');
         }
       } catch (error) {
-        console.error("Error fetching test:", error);
+        console.error("Error fetching test data:", error);
         toast({
-          title: "Error",
-          description: "Failed to load test data.",
+          title: "Error loading test",
+          description: "Failed to load test data. Please try again later.",
           status: "error",
-          duration: 3000,
+          duration: 5000,
           isClosable: true,
         });
+        router.push('/dashboard');
       } finally {
         setLoading(false);
       }
-    }
-    fetchTest();
-  }, [testId, toast]);
+    };
 
-  // Timer for Tests
+    fetchTestData();
+  }, [testId, router, toast]);
+
+  // Timer effect
   useEffect(() => {
-    if (testData) {
-      // Convert minutes to seconds
-      setTimeRemaining(testData.duration * 60);
-      setTimerStarted(true);
-    }
-  }, [testData]);
-
-  // Define handleSubmit function
-
-  const handleSubmit = useCallback(async () => {
-    if (isSubmitting) return;
-    setIsConfirmOpen(false);
-
-    setIsSubmitting(true);
-
-    try {
-      // Calculate score
-      let score = 0;
-      testData.questions.forEach((question) => {
-        if (answers[question.id] === question.answer) {
-          score++;
-        }
-      });
-
-      // Create result object
-      const result = {
-        testId: testId,
-        courseId: courseId,
-        answers,
-        score,
-        totalQuestions: testData.questions.length,
-        date: new Date().toISOString(),
-      };
-
-      console.log('Submitting result:', result);
-
-      // Store in Firebase if logged in
-      if (user) {
-        await saveTestResult(user.uid, result);
-      } else {
-        // Fallback to localStorage for non-logged in users
-        const results = JSON.parse(localStorage.getItem("testResults") || "[]");
-
-        // Remove any existing result for this test to avoid duplicates
-        const filteredResults = results.filter(
-          (r) => !(r.testId === testId && r.courseId === courseId)
-        );
-
-        filteredResults.push(result);
-        localStorage.setItem("testResults", JSON.stringify(filteredResults));
-      }
-
-      // Set test as submitted to disable navigation prevention
-      setIsSubmitted(true);
-
-      toast({
-        title: "Test submitted",
-        description: "Your answers have been recorded",
-        status: "success",
-        duration: 3000,
-        isClosable: true,
-      });
-
-      setTimeout(() => {
-        // Use window.location for a full page navigation which avoids React hydration issues
-        window.location.href = `/results/${courseId}/${testId}`;
-      }, 1000);
-    } catch (error) {
-      console.error("Error submitting test:", error);
-      toast({
-        title: "Error",
-        description: "Failed to submit test. Please try again.",
-        status: "error",
-        duration: 3000,
-        isClosable: true,
-      });
-      setIsSubmitting(false);
-    }
-  }, [isSubmitting, testData, answers, courseId, testId, user, toast]);
-
-  // Timer countdown effect
-  useEffect(() => {
-    if (!timerStarted || timeRemaining <= 0) return;
+    if (timeLeft <= 0 || !testData) return;
 
     const timer = setInterval(() => {
-      setTimeRemaining((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          // Auto-submit when time runs out
-          handleSubmit();
-          return 0;
-        }
-        return prev - 1;
-      });
+      setTimeLeft((prevTime) => prevTime - 1);
     }, 1000);
 
     return () => clearInterval(timer);
-  }, [timerStarted, timeRemaining, handleSubmit]);
+  }, [timeLeft, testData]);
 
-  // Add navigation prevention
+  // Auto-submit when time runs out
   useEffect(() => {
+    if (timeLeft <= 0 && testData && !submitting) {
+      handleSubmitTest();
+    }
+  }, [timeLeft, testData, submitting]);
 
-    //beforeunload event to warn about leaving the page
+
+  // Navigation prevention (beforeunload, popstate)
+  useEffect(() => {
     const handleBeforeUnload = (e) => {
-
-      // Skip navigation prevention if already submitting or submitted
-      if (isSubmitting || isSubmitted) return;
       e.preventDefault();
-      //ToDo: add styling
-      e.returnValue = " ";
-      //Auto-submit in background
-      handleSubmit()
-      return e.returnValue;
+      e.returnValue = '';
     };
-
-    // Add event listener
+    const handlePopState = (e) => {
+      if (!window.confirm('Are you sure you want to leave? Your progress will be lost.')) {
+        router.push(`/test/${testId}`);
+      }
+    };
     window.addEventListener('beforeunload', handleBeforeUnload);
-    // Clean up
+    window.addEventListener('popstate', handlePopState);
     return () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('popstate', handlePopState);
     };
-  }, [isSubmitting, isSubmitted, handleSubmit]);
+  }, [router, testId]);
 
-  // Prevent back button navigation
-useEffect(() => {
-  if (isSubmitting || isSubmitted) return;
 
-  const handlePopState = () => {
-    const confirmLeave = window.confirm(
-     "Submit before leaving..."
-    );
-    if (!confirmLeave) {
-      // Push the current state again to stay on page
-      window.history.pushState(null, "", window.location.href);
-    } else {
-      handleSubmit(); // Auto-submit
+  const handleAnswerChange = (questionId, selectedOption) => {
+    setUserAnswers((prevAnswers) => ({
+      ...prevAnswers,
+      [questionId]: selectedOption,
+    }));
+    // If answered, unmark for review
+    setMarkedForReview((prev) => ({ ...prev, [questionId]: false }));
+  };
+
+  // Mark for review toggle
+  const toggleMarkForReview = (questionId) => {
+    setMarkedForReview((prev) => ({ ...prev, [questionId]: !prev[questionId] }));
+  };
+
+  const goToNextQuestion = () => {
+    if (currentQuestionIndex < testData.questions.length - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
+    }
+  };
+  const goToPreviousQuestion = () => {
+    if (currentQuestionIndex > 0) {
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
+    }
+  };
+  const goToQuestion = (index) => {
+    setCurrentQuestionIndex(index);
+    setShowPalette(false); // Hide palette on mobile after selection
+  };
+
+  const calculateScore = useCallback(() => {
+    let correctCount = 0;
+    testData.questions.forEach((question) => {
+      if (userAnswers[question.id] === question.answer) {
+        correctCount++;
+      }
+    });
+    return correctCount;
+  }, [testData, userAnswers]);
+
+  const handleSubmitTest = async () => {
+    setSubmitting(true);
+    const score = calculateScore();
+    const totalQuestions = testData.questions.length;
+
+    const result = {
+      testId: testId, // Use from params
+      title: testData.title,
+      score: score,
+      totalQuestions: totalQuestions,
+      answers: userAnswers,
+      durationTaken: testData.duration * 60 - timeLeft, // Time taken in seconds
+      date: new Date().toISOString(),
+    };
+
+    console.log('Submitting result:', result);
+
+    try {
+      if (user) {
+        await saveTestResult(user.uid, result);
+      } else {
+        // Save to local storage for mock users or non-logged-in users
+        const existingResults = JSON.parse(localStorage.getItem('testResults') || '[]');
+        localStorage.setItem('testResults', JSON.stringify([...existingResults, result]));
+      }
+
+      toast({
+        title: "Test Submitted",
+        description: `You scored ${score} out of ${totalQuestions}!`,
+        status: "success",
+        duration: 5000,
+        isClosable: true,
+      });
+      // Always use params for redirect
+      router.push(`/results/${testId}`); // Redirect to results page with testId only
+    } catch (error) {
+      console.error("Error submitting test:", error);
+      toast({
+        title: "Submission Failed",
+        description: "There was an error submitting your test. Please try again.",
+        status: "error",
+        duration: 5000,
+        isClosable: true,
+      });
+    } finally {
+      setSubmitting(false);
+      onClose(); // Close modal if open
     }
   };
 
-  // Push initial state so back button triggers popstate
-  window.history.pushState(null, "", window.location.href);
-  window.addEventListener("popstate", handlePopState);
-
-  return () => {
-    window.removeEventListener("popstate", handlePopState);
+  const formatTime = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
-}, [isSubmitting, isSubmitted, handleSubmit]);
+
+  // Bookmarking removed
 
 
-  // Show loading spinner if auth is loading
-  if (authLoading) {
+  // Responsive timer color
+  const timerColor = timeLeft < 60 ? 'red.500' : timeLeft < 180 ? 'orange.400' : 'green.500';
+
+  // Auth redirect and loading state
+  if (loading || !testData) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
-      </div>
+      <Center h="100vh" bg="gray.50">
+        <Spinner size="xl" />
+        <Text ml={4}>Loading test...</Text>
+      </Center>
     );
   }
-  if (!isAuthenticated) {
+  if (!user) {
+    router.push('/auth/login');
     return null;
   }
-  if (loading) return <div>Loading...</div>;
-  if (!testData) return <div className="p-6 text-red-600">Test not found.</div>;
 
-  // Get current question and helpers (declare only once)
+
   const currentQuestion = testData.questions[currentQuestionIndex];
-  const isFirstQuestion = currentQuestionIndex === 0;
-  const getQuestionStatusClass = (question) => {
-  const isAnswered = answers[question.id] !== undefined;
-  const isMarked = markedForReview[question.id] === true;
+  if (!currentQuestion) {
+    return (
+      <Center h="100vh">
+        <Text fontSize="xl" color="gray.500">
+          No questions found for this test.
+        </Text>
+      </Center>
+    );
+  }
+  const progress = ((currentQuestionIndex + 1) / testData.questions.length) * 100;
+
+  // Helper for palette button color classes
+  function getQuestionStatusClass(question) {
+    const isAnswered = userAnswers[question.id] !== undefined;
+    const isMarked = markedForReview[question.id] === true;
     if (isAnswered && isMarked) {
       return "bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300 border border-purple-300 dark:border-purple-700";
     } else if (isAnswered) {
@@ -257,49 +261,7 @@ useEffect(() => {
     } else {
       return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-300 dark:border-red-700 hover:bg-red-200 dark:hover:bg-red-800/40";
     }
-  };
-
-  // Format time as MM:SS
-const formatTime = (seconds) => {
-  if (typeof seconds !== "number" || isNaN(seconds)) {
-    return "00:00"; // fallback if seconds is invalid
   }
-  const mins = Math.floor(seconds / 60);
-  const secs = seconds % 60;
-  return `${mins.toString().padStart(2, "0")}:${secs
-    .toString()
-    .padStart(2, "0")}`;
-};
-
-  // Handle option selection
-  const handleOptionChange = (qId, selected) => {
-    setAnswers((prev) => ({ ...prev, [qId]: selected }));
-  };
-
-  // Navigation functions
-  const goToNextQuestion = () => {
-    if (currentQuestionIndex < testData.questions.length - 1) {
-      setCurrentQuestionIndex(currentQuestionIndex + 1);
-    }
-  };
-
-  const goToPreviousQuestion = () => {
-    if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(currentQuestionIndex - 1);
-    }
-  };
-
-  const goToQuestion = (index) => {
-    setCurrentQuestionIndex(index);
-  };
-
-  // Handle marking questions for review
-  const toggleMarkForReview = (questionId) => {
-    setMarkedForReview((prev) => ({
-      ...prev,
-      [questionId]: !prev[questionId],
-    }));
-  };
 
   return (
     <Box p={6}>
@@ -311,22 +273,21 @@ const formatTime = (seconds) => {
           <div className="sticky top-0 bg-white dark:bg-gray-800 z-10 p-3 mb-4 border-b dark:border-gray-700 transition-colors duration-200">
             <div className="flex justify-between items-center mb-2">
               <h2 className="text-xl font-bold text-gray-900 dark:text-gray-100">
-                {testData.title}
+                {testData.testName}
               </h2>
               <div
-                className={`font-mono text-lg font-bold rounded-md px-3 py-1 ${
-                  timeRemaining < 60
+                className={`font-mono text-lg font-bold rounded-md px-2 py-1 ${
+                  timeLeft < 60
                     ? "bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400"
                     : "bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400"
                 }`}
               >
-                Time: {!timerStarted ? 'Loading...' : formatTime(timeRemaining)}
+                Time: {formatTime(timeLeft)}
               </div>
-
               {/* Hamburger button - only visible on mobile */}
               <button
-                onClick={() => setShowMobilePalette(!showMobilePalette)}
-                className="lg:hidden p-2 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
+                onClick={() => setShowPalette(!showPalette)}
+                className="lg:hidden p-1 rounded-md bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300"
               >
                 <span className="sr-only">Toggle question palette</span>
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -337,7 +298,7 @@ const formatTime = (seconds) => {
           </div>
 
           {/* Mobile question palette - visible only when toggled */}
-          {showMobilePalette && (
+          {showPalette && (
           <div className="lg:hidden mb-4 bg-white dark:bg-gray-800 p-3 rounded-lg shadow-md transition-colors duration-200">
             {/* Question palette */}
             <div>
@@ -380,7 +341,7 @@ const formatTime = (seconds) => {
                     key={index}
                     onClick={() => {
                       goToQuestion(index);
-                      setShowMobilePalette(false); // Close palette after selection
+                      setShowPalette(false); // Close palette after selection
                     }}
                     className={`w-6 h-6 rounded-md flex items-center justify-center text-sm font-medium transition-colors duration-200
                            ${getQuestionStatusClass(question)}`}
@@ -410,7 +371,7 @@ const formatTime = (seconds) => {
                 <label
                   key={`${currentQuestion.id}-${idx}`}
                   className={`block p-3 border dark:border-gray-700 rounded-lg cursor-pointer transition-colors duration-200 ${
-                    answers[currentQuestion.id] === opt
+                    userAnswers[currentQuestion.id] === opt
                       ? "bg-blue-50 dark:bg-blue-900/30 border-blue-300 dark:border-blue-700"
                       : "hover:bg-gray-50 dark:hover:bg-gray-700"
                   }`}
@@ -420,10 +381,8 @@ const formatTime = (seconds) => {
                       type="radio"
                       name={currentQuestion.id}
                       value={opt}
-                      checked={answers[currentQuestion.id] === opt}
-                      onChange={() =>
-                        handleOptionChange(currentQuestion.id, opt)
-                      }
+                      checked={userAnswers[currentQuestion.id] === opt}
+                      onChange={() => handleAnswerChange(currentQuestion.id, opt)}
                       className="mr-3 accent-blue-600 dark:accent-blue-400"
                     />
                     <span className="text-gray-800 dark:text-gray-200">
@@ -440,9 +399,9 @@ const formatTime = (seconds) => {
           <div className="flex justify-between mb-6">
             <button
               onClick={goToPreviousQuestion}
-              disabled={isFirstQuestion}
+              disabled={currentQuestionIndex === 0}
               className={`px-4 py-2 border dark:border-gray-700 rounded transition-colors duration-200 ${
-                isFirstQuestion
+                currentQuestionIndex === 0
                   ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
                   : "bg-white dark:bg-gray-800 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-gray-700"
               }`}
@@ -476,13 +435,13 @@ const formatTime = (seconds) => {
           {/* Submit button */}
           <div className="bottom-4 left-4 right-4 z-50 text-center mb-6">
             <button
-              onClick={() => setIsConfirmOpen(true)}
-              disabled={isSubmitting}
+              onClick={onOpen}
+              disabled={submitting}
               className={`px-4 py-2 bg-green-600 dark:bg-green-700 text-white rounded hover:bg-green-700 dark:hover:bg-green-800 transition-colors duration-200 ${
-                isSubmitting ? "opacity-70 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
+                submitting ? "opacity-70 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
               }`}
             >
-              {isSubmitting ? "Submitting..." : "Submit Test"}
+              {submitting ? "Submitting..." : "Submit Test"}
             </button>
           </div>
         </div>
@@ -543,30 +502,27 @@ const formatTime = (seconds) => {
           </div>
         </div>
 
-        {/* Confirmation dialog */}
-        <AlertDialog
-          isOpen={isConfirmOpen}
-          leastDestructiveRef={cancelRef}
-          onClose={() => setIsConfirmOpen(false)}
-        >
-          <AlertDialogOverlay>
-            <AlertDialogContent>
-              <AlertDialogHeader>Submit Test?</AlertDialogHeader>
-              <AlertDialogBody>
-                Are you sure you want to submit this test?
-              </AlertDialogBody>
-              <AlertDialogFooter>
-                <Button ref={cancelRef} onClick={() => setIsConfirmOpen(false)}>
-                  Cancel
-                </Button>
-                <Button colorScheme="green" onClick={handleSubmit} ml={3} isLoading={isSubmitting}>
-                  Submit
-                </Button>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialogOverlay>
-        </AlertDialog>
+        {/* Submission Confirmation Modal */}
+        <Modal isOpen={isOpen} onClose={onClose} isCentered>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Confirm Submission</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              Are you sure you want to submit the test?
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" onClick={onClose}>Cancel</Button>
+              <Button colorScheme="green" ml={3} onClick={handleSubmitTest} isLoading={submitting}>
+                Submit
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
       </div>
     </Box>
   );
+
+  // --- COMPONENTS REMOVED: Palette/Legend now inline in main render ---
 }
+

@@ -93,7 +93,7 @@ export default function SuperAdminDashboardPage() {
   if (error) return <div className="p-8 text-red-500">{error}</div>;
 
   return (
-    <div className="mt-16">
+    <div className="mt-8">
       <h1 className="text-3xl font-bold mb-6">SuperAdmin Dashboard</h1>
       {/* Stats Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

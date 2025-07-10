@@ -38,7 +38,7 @@ export default function SuperAdminCommunicationPage() {
   };
 
   return (
-    <Box p={6} mt={16}>
+    <Box p={6} mt={8}>
       <h2 className="text-2xl font-bold mb-4">Communication & Announcements</h2>
       <form onSubmit={handleSend} className="mb-8 bg-white p-4 rounded shadow">
         <div className="flex flex-col md:flex-row gap-4 mb-4">

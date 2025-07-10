@@ -60,12 +60,12 @@ export default function SuperAdminExpensesPage() {
   const total = expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0);
 
   return (
-    <Box p={6} mt={16}>
+    <Box p={6} mt={8}>
       <h2 className="text-2xl font-bold mb-4">Platform Expenses</h2>
       <form onSubmit={handleCreateOrEdit} className="mb-8 bg-white p-4 rounded shadow flex flex-col md:flex-row gap-4">
         <Input name="description" placeholder="Description" value={form.description} onChange={handleFormChange} maxW="300px" required />
-        <Input name="amount" type="number" placeholder="Amount (₹)" value={form.amount} onChange={handleFormChange} maxW="120px" required />
-        <Input name="date" type="date" placeholder="Date" value={form.date} onChange={handleFormChange} maxW="160px" required />
+        <Input name="amount" type="number" placeholder="Amount (₹)" value={form.amount} onChange={handleFormChange} maxW="300px" required />
+        <Input name="date" type="date" placeholder="Date" value={form.date} onChange={handleFormChange} maxW="300px" required />
         <Button type="submit" colorScheme="blue" isLoading={actionLoading}>{editingId ? 'Update' : 'Add'} Expense</Button>
         {editingId && <Button ml={2} onClick={() => { setForm({ description: '', amount: '', date: '' }); setEditingId(null); }}>Cancel</Button>}
       </form>

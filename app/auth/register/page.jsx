@@ -10,66 +10,98 @@ import { saveUserProfile, getUserProfile } from '@/lib/userService';
 import { getDoc, doc } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
 
-export default function RegisterPage() {
-
-  const router = useRouter();
+function UserRegister({ onRegister, isLoading, error }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const {signIn} = useAuth();
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const [registerRole, setRegisterRole] = useState('user');
 
-  const handleRegister = async (e) => {
+  return (
+    <form onSubmit={e => onRegister(e, { name, email, password })}>
+      <input type="text" placeholder="Full Name" className="w-full border border-gray-300 dark:border-gray-700 rounded-2xl mb-4 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200" value={name} onChange={e => setName(e.target.value)} required />
+      <input type="email" placeholder="Email" className="w-full border border-gray-300 dark:border-gray-700 rounded-2xl mb-4 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200" value={email} onChange={e => setEmail(e.target.value)} required />
+      <input type="password" placeholder="Password" className="w-full border border-gray-300 dark:border-gray-700 rounded-2xl mb-4 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200" value={password} onChange={e => setPassword(e.target.value)} required />
+      {error && <div className="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded mb-4"><p>{error}</p></div>}
+      <button type="submit" className={`w-full bg-green-600 text-white py-2 rounded-2xl p-3 hover:bg-green-700 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`} disabled={isLoading}>{isLoading ? 'Registering...' : 'Register'}</button>
+    </form>
+  );
+}
+
+function AdminRegister({ onRegister, isLoading, error }) {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [qualifications, setQualifications] = useState('');
+  const [subjects, setSubjects] = useState([]);
+  const [experience, setExperience] = useState('');
+  const [phone, setPhone] = useState('');
+  const [profilePic, setProfilePic] = useState(null);
+
+  return (
+    <form onSubmit={e => onRegister(e, { name, email, password, qualifications, subjects, experience, phone, profilePic })}>
+      <input type="text" placeholder="Full Name" className="w-full border border-gray-300 dark:border-gray-700 rounded-2xl mb-4 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200" value={name} onChange={e => setName(e.target.value)} required />
+      <input type="email" placeholder="Email" className="w-full border border-gray-300 dark:border-gray-700 rounded-2xl mb-4 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200" value={email} onChange={e => setEmail(e.target.value)} required />
+      <input type="password" placeholder="Password" className="w-full border border-gray-300 dark:border-gray-700 rounded-2xl mb-4 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200" value={password} onChange={e => setPassword(e.target.value)} required />
+      <input type="text" placeholder="Qualifications" className="w-full border border-gray-300 dark:border-gray-700 rounded-2xl mb-4 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200" value={qualifications} onChange={e => setQualifications(e.target.value)} required />
+      <input type="text" placeholder="Subjects/Exams Taught" className="w-full border border-gray-300 dark:border-gray-700 rounded-2xl mb-4 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200" value={subjects} onChange={e => setSubjects(e.target.value)} required />
+      <input type="text" placeholder="Teaching Experience (years or description)" className="w-full border border-gray-300 dark:border-gray-700 rounded-2xl mb-4 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200" value={experience} onChange={e => setExperience(e.target.value)} required />
+      <input type="tel" placeholder="Phone Number" className="w-full border border-gray-300 dark:border-gray-700 rounded-2xl mb-4 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200" value={phone} onChange={e => setPhone(e.target.value)} required />
+      <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Profile Picture</label>
+      <input type="file" accept="image/*" className="mb-4" onChange={e => setProfilePic(e.target.files[0])} />
+      {error && <div className="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded mb-4"><p>{error}</p></div>}
+      <button type="submit" className={`w-full bg-green-600 text-white py-2 rounded-2xl p-3 hover:bg-green-700 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`} disabled={isLoading}>{isLoading ? 'Registering...' : 'Register as Admin'}</button>
+    </form>
+  );
+}
+
+export default function RegisterPage() {
+  const router = useRouter();
+  const { signIn } = useAuth();
+  const [registerRole, setRegisterRole] = useState('user');
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState(false);
+
+  const handleRegister = async (e, formData) => {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-
-
-
-    if (!name || !email || !password) {
+    const { name, email, password, qualifications, subjects, experience, phone, profilePic } = formData;
+    if (!name || !email || !password || (registerRole === 'admin' && (!qualifications || !subjects?.length || !experience || !phone))) {
       setError('All fields are required');
       setIsLoading(false);
       return;
     }
-
     try {
-      // 1. Create the user in Firebase Auth
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCred.user;
-
-      // 2. Update the user's display name
       await updateProfile(user, { displayName: name });
-
-      // 3. Create a document in the users collection
       const userData = {
-        name: name,
-        email: email,
+        name,
+        email,
         displayName: name,
         role: registerRole,
         createdAt: new Date(),
       };
       if (registerRole === 'admin') {
+        userData.qualifications = qualifications;
+        userData.subjects = subjects;
+        userData.experience = experience;
+        userData.phone = phone;
         userData.validated = false;
+        if (profilePic) {
+          // You can implement upload logic here
+          userData.profilePic = profilePic.name;
+        }
       }
-
       const profileSaved = await saveUserProfile(user.uid, userData);
-
       if (!profileSaved) {
-        console.error("Failed to save user profile to Firestore");
+        console.error('Failed to save user profile to Firestore');
       }
-
-      // 4. Check if user was made a superAdmin (first user in system)
       const userProfile = await getUserProfile(user.uid);
       const isSuperAdminUser = userProfile && userProfile.role === 'superAdmin';
       setIsSuperAdmin(isSuperAdminUser);
-
-      // 5. Show success message
       setSuccess(true);
-      // 6. Redirect after a short delay
       setTimeout(() => {
         if (isSuperAdminUser) {
           router.push('/superAdmin');
@@ -81,11 +113,8 @@ export default function RegisterPage() {
           router.push('/dashboard');
         }
       }, 2000);
-
     } catch (err) {
       let errorMessage = 'Registration failed. Please try again.';
-
-      // Extract specific Firebase error messages
       if (err.code === 'auth/email-already-in-use') {
         errorMessage = 'Email already in use. Please use a different email.';
       } else if (err.code === 'auth/weak-password') {
@@ -93,9 +122,8 @@ export default function RegisterPage() {
       } else if (err.code === 'auth/invalid-email') {
         errorMessage = 'Invalid email address.';
       }
-
       setError(errorMessage);
-      console.error("Registration error:", err);
+      console.error('Registration error:', err);
     } finally {
       setIsLoading(false);
     }
@@ -103,9 +131,12 @@ export default function RegisterPage() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg shadow-blue-500/50 dark:shadow-cyan-500/50 w-full max-w-md transition-colors duration-200">
+      <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg shadow-blue-500/50 dark:shadow-cyan-500/50 w-full max-w-lg transition-colors duration-200 mt-24 mb-8">
         <h2 className="text-2xl text-center font-bold mb-6 text-blue-500 dark:text-cyan-100">Register</h2>
-
+        <div className="flex justify-center mb-6 gap-4">
+          <button onClick={() => setRegisterRole('user')} className={`px-4 py-2 rounded-full font-semibold ${registerRole === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200'}`}>User</button>
+          <button onClick={() => setRegisterRole('admin')} className={`px-4 py-2 rounded-full font-semibold ${registerRole === 'admin' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200'}`}>Admin</button>
+        </div>
         {success ? (
           <div className="bg-green-100 dark:bg-green-900 border border-green-400 dark:border-green-700 text-green-700 dark:text-green-300 px-4 py-3 rounded mb-4">
             {isSuperAdmin ? (
@@ -119,111 +150,16 @@ export default function RegisterPage() {
             )}
           </div>
         ) : (
-          <form onSubmit={handleRegister}>
-            <input
-              type="text"
-              placeholder="Full Name"
-              className="w-full border border-gray-300 dark:border-gray-700 rounded-2xl mb-4 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-            <input
-              type="email"
-              placeholder="Email"
-              className="w-full border border-gray-300 dark:border-gray-700 rounded-2xl mb-4 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-            <input
-              type="password"
-              placeholder="Password"
-              className="w-full border border-gray-300 dark:border-gray-700 rounded-2xl mb-4 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-            />
-            <div className="mb-4">
-              <label className="block text-gray-700 dark:text-gray-300 font-medium mb-2">Register as:</label>
-              <div className="flex gap-4">
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="registerRole"
-                    value="user"
-                    checked={registerRole === 'user'}
-                    onChange={() => setRegisterRole('user')}
-                    className="mr-2"
-                  />
-                  User
-                </label>
-                <label className="flex items-center">
-                  <input
-                    type="radio"
-                    name="registerRole"
-                    value="admin"
-                    checked={registerRole === 'admin'}
-                    onChange={() => setRegisterRole('admin')}
-                    className="mr-2"
-                  />
-                  Admin
-                </label>
-              </div>
-            </div>
-
-            {error && (
-              <div className="bg-red-100 dark:bg-red-900 border border-red-400 dark:border-red-700 text-red-700 dark:text-red-300 px-4 py-3 rounded mb-4">
-                <p>{error}</p>
-              </div>
+          <div className="w-full max-w-lg">
+            {registerRole === 'admin' ? (
+              <AdminRegister onRegister={handleRegister} isLoading={isLoading} error={error} />
+            ) : (
+              <UserRegister onRegister={handleRegister} isLoading={isLoading} error={error} />
             )}
-
-            <button
-              type="submit"
-              className={`w-full bg-green-600 text-white py-2 rounded-2xl p-3 hover:bg-green-700 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Registering...' : 'Register'}
-            </button>
-
-            <button
-              type="button"
-              onClick={async () => {
-                try {
-                  setIsLoading(true);
-                  const result = await signIn();
-                  const userId = result.user ? result.user.uid : (result.uid || result.user?.uid);
-                  // Fetch user profile from Firestore
-                  let userProfile = null;
-                  if (userId) {
-                    const userDoc = await getDoc(doc(db, 'users', userId));
-                    userProfile = userDoc.exists() ? userDoc.data() : null;
-                  }
-                  if (userProfile?.role === 'superAdmin') {
-                    router.push('/superAdmin');
-                  } else if (userProfile?.role === 'admin') {
-                    router.push('/admin');
-                  } else {
-                    router.push('/dashboard');
-                  }
-                } catch (err) {
-                  setError('Google sign-in failed. Please try again.');
-                } finally {
-                  setIsLoading(false);
-                }
-              }}
-              className={`w-full bg-blue-600 text-white my-2 py-2 rounded-2xl p-3 hover:bg-blue-700 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
-              disabled={isLoading}
-            >
-              {isLoading ? 'Signing in...' : 'Sign in with Google'}
-            </button>
-
-
-
             <div className="text-center mt-4">
               <p className="text-gray-700 dark:text-gray-300">Already have an account? <Link href="/auth/login" className="text-blue-600 dark:text-blue-400 hover:underline">Login here</Link></p>
             </div>
-          </form>
+          </div>
         )}
       </div>
     </div>
