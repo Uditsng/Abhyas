@@ -12,6 +12,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "@/lib/firebaseConfig";
 import { getAllTests } from "@/lib/tests";
 import { getAllBundles, createBundle, uploadBundleImage } from "@/lib/bundleService";
+import { getAllExams } from "@/lib/superAdminExamsService";
 
 export default function CreateBundlePage() {    
   const [user, loadingUser] = useAuthState(auth);
@@ -30,26 +31,30 @@ export default function CreateBundlePage() {
   const [createdBundleId, setCreatedBundleId] = useState(null);
   const [createdBundleTitle, setCreatedBundleTitle] = useState("");
   const [formLoading, setFormLoading] = useState(false);
+  const [exams, setExams] = useState([]);
 
   const toast = useToast();
   const router = useRouter();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
-  // Fetch bundles and tests
+  // Fetch bundles, tests, and exams
   useEffect(() => {
     async function fetchData() {
       setLoading(true);
       try {
-        const [allBundles, allTests] = await Promise.all([
-          getAllBundles(),
-          getAllTests()
+        if (!user) return;
+        const [allBundles, allTests, allExams] = await Promise.all([
+          getAllBundles(user.uid),
+          getAllTests(user.uid),
+          getAllExams()
         ]);
         setBundles(allBundles);
         setTests(allTests);
+        setExams(allExams);
       } catch (error) {
         toast({
           title: "Error",
-          description: "Failed to load bundles or tests.",
+          description: "Failed to load bundles, tests, or exams.",
           status: "error",
           duration: 4000,
           isClosable: true,
@@ -59,7 +64,16 @@ export default function CreateBundlePage() {
       }
     }
     fetchData();
-  }, [toast]);
+  }, [toast, user]);
+
+  // Build category to subcategory mapping
+  const examCategoryMap = exams.reduce((acc, exam) => {
+    if (!acc[exam.category]) acc[exam.category] = [];
+    if (!acc[exam.category].includes(exam.subCategory)) acc[exam.category].push(exam.subCategory);
+    return acc;
+  }, {});
+  const examCategories = Object.keys(examCategoryMap);
+  const subExamOptions = examCategoryMap[exam] || [];
 
   // Handle bundle creation
   const handleSubmit = async () => {
@@ -221,21 +235,33 @@ export default function CreateBundlePage() {
                   </FormControl>
                   <FormControl isRequired>
                     <FormLabel>Exam</FormLabel>
-                    <Input
-                      variant="filled"
+                    <Select
+                      placeholder="Select Main Exam Category"
                       value={exam}
-                      onChange={(e) => setExam(e.target.value)}
-                      placeholder="e.g. SSC, NDA, NEET"
-                    />
+                      onChange={e => {
+                        setExam(e.target.value);
+                        setSubExamCategory(""); // Reset sub exam when main exam changes
+                      }}
+                      variant="filled"
+                    >
+                      {examCategories.map(cat => (
+                        <option key={cat} value={cat}>{cat}</option>
+                      ))}
+                    </Select>
                   </FormControl>
                   <FormControl isRequired>
                     <FormLabel>Sub Exam Category</FormLabel>
-                    <Input
-                      variant="filled"
+                    <Select
+                      placeholder="Select Sub Exam Category"
                       value={subExamCategory}
-                      onChange={(e) => setSubExamCategory(e.target.value)}
-                      placeholder="e.g. SSC CGL, JEE mains, JEE Advance"
-                    />
+                      onChange={e => setSubExamCategory(e.target.value)}
+                      variant="filled"
+                      isDisabled={!exam}
+                    >
+                      {subExamOptions.map(sub => (
+                        <option key={sub} value={sub}>{sub}</option>
+                      ))}
+                    </Select>
                   </FormControl>
                   <FormControl isRequired>
                     <FormLabel>Subject</FormLabel>

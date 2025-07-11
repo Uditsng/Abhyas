@@ -34,7 +34,7 @@ export default function AdminTestsPage() {
     const fetchAllTests = async () => {
       setLoading(true);
       try {
-        const allTests = await getAllTests();
+        const allTests = await getAllTests(user.uid);
         setTests(allTests);
       } catch (error) {
         console.error("Error fetching tests", error);

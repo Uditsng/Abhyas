@@ -10,7 +10,7 @@ import { Box, Button, Input, Table, Thead, Tbody, Tr, Th, Td, Spinner } from '@c
 
 export default function SuperAdminExamsPage() {
   const [exams, setExams] = useState([]);
-  const [form, setForm] = useState({ name: '' });
+  const [form, setForm] = useState({ name: '', category: '', subCategory: '' });
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -37,7 +37,7 @@ export default function SuperAdminExamsPage() {
     } else {
       await createExam(form);
     }
-    setForm({ name: '' });
+    setForm({ name: '', category: '', subCategory: '' });
     setEditingId(null);
     const all = await getAllExams();
     setExams(all);
@@ -45,7 +45,7 @@ export default function SuperAdminExamsPage() {
   };
 
   const handleEdit = (exam) => {
-    setForm({ name: exam.name });
+    setForm({ name: exam.name, category: exam.category || '', subCategory: exam.subCategory || '' });
     setEditingId(exam.id);
   };
 
@@ -61,15 +61,19 @@ export default function SuperAdminExamsPage() {
     <Box p={6} mt={8}>
       <h2 className="text-2xl font-bold mb-4">Manage Exams</h2>
       <form onSubmit={handleCreateOrEdit} className="mb-8 bg-white p-4 rounded shadow flex flex-col md:flex-row gap-4">
-        <Input name="name" placeholder="Exam Name" value={form.name} onChange={handleFormChange} maxW="300px" required />
+        <Input name="name" placeholder="Sub Exam Name (e.g. SBI PO)" value={form.name} onChange={handleFormChange} maxW="300px" required />
+        <Input name="category" placeholder="Main Exam Category (e.g. Banking Exams)" value={form.category} onChange={handleFormChange} maxW="300px" required />
+        <Input name="subCategory" placeholder="Sub Exam Category (e.g. SBI PO)" value={form.subCategory} onChange={handleFormChange} maxW="300px" required />
         <Button type="submit" colorScheme="blue" isLoading={actionLoading}>{editingId ? 'Update' : 'Create'} Exam</Button>
-        {editingId && <Button ml={2} onClick={() => { setForm({ name: '' }); setEditingId(null); }}>Cancel</Button>}
+        {editingId && <Button ml={2} onClick={() => { setForm({ name: '', category: '', subCategory: '' }); setEditingId(null); }}>Cancel</Button>}
       </form>
       {loading ? <Spinner size="lg" /> : (
         <Table variant="simple" className="bg-white rounded shadow">
           <Thead>
             <Tr>
               <Th>Name</Th>
+              <Th>Main Exam</Th>
+              <Th>Sub Exam</Th>
               <Th>Actions</Th>
             </Tr>
           </Thead>
@@ -77,6 +81,8 @@ export default function SuperAdminExamsPage() {
             {exams.map(exam => (
               <Tr key={exam.id}>
                 <Td>{exam.name}</Td>
+                <Td>{exam.category}</Td>
+                <Td>{exam.subCategory}</Td>
                 <Td>
                   <Button size="sm" colorScheme="blue" mr={2} onClick={() => handleEdit(exam)}>Edit</Button>
                   <Button size="sm" colorScheme="red" onClick={() => handleDelete(exam.id)} isLoading={actionLoading}>Delete</Button>

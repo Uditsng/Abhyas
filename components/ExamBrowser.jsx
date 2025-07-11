@@ -1,83 +1,72 @@
 'use client';
 
-import { Box, Text, Button, SimpleGrid } from '@chakra-ui/react';
+import { Box, Text, Button, SimpleGrid, Spinner } from '@chakra-ui/react';
 import { ChevronRightIcon } from '@chakra-ui/icons';
 import { useRouter } from 'next/navigation';
-
-// Mock Exams Data 
-const examData = [
-  {
-    category: 'Banking Exams',
-    subExams: [
-      'SBI PO', 'SBI Clerk', 'IBPS PO', 'IBPS Clerk',
-      'RRB Officer Scale - I', 'RRB Office Assistant',
-      'HARCO Bank Clerk', 'IBPS SO', 'Indian Overseas Bank LBO',
-      'Bank of Baroda Peon', 'Bihar State Cooperative Bank'
-    ]
-  },
-  {
-    category: 'SSC Exams',
-    subExams: ['SSC CGL', 'SSC CHSL', 'SSC MTS']
-  },
-  {
-    category: 'Teaching Exams',
-    subExams: ['CTET', 'DSSSB', 'KVS']
-  },
-  {
-    category: 'Civil Services Exam',
-    subExams: ['UPSC Prelims', 'UPSC Mains']
-  },
-  {
-    category: 'Railways Exams',
-    subExams: ['RRB NTPC', 'RRB Group D']
-  },
-  {
-    category: 'Engineering Recruitment Exams',
-    subExams: ['GATE', 'ISRO Scientist']
-  }
-];
+import { useEffect, useState } from 'react';
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '@/lib/firebaseConfig';
 
 export default function ExamBrowser() {
   const router = useRouter();
+  const [exams, setExams] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [selectedCategory, setSelectedCategory] = useState('');
+
+  useEffect(() => {
+    async function fetchExams() {
+      setLoading(true);
+      const snap = await getDocs(collection(db, 'exams'));
+      const allExams = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setExams(allExams);
+      // Set first category as default
+      const categories = [...new Set(allExams.map(e => e.category))];
+      setSelectedCategory(categories[0] || '');
+      setLoading(false);
+    }
+    fetchExams();
+  }, []);
+
+  // Get unique categories
+  const categories = [...new Set(exams.map(e => e.category))];
+  // Filter exams for selected category
+  const filteredExams = exams.filter(e => e.category === selectedCategory);
+
+  if (loading) return <Box p={6}><Spinner size="lg" /></Box>;
 
   return (
     <Box className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
       <Text fontSize="2xl" fontWeight="bold" mb={3}>
         Popular Exams
       </Text>
-
-      <div className="flex flex-wrap gap-3 mb-6">
-        {examData.map((exam) => (
+      {/* Category Tabs */}
+      <Box display="flex" flexWrap="wrap" gap={3} mb={6}>
+        {categories.map((cat) => (
           <Button
-            key={exam.category}
-            variant="outline"
+            key={cat}
+            variant={cat === selectedCategory ? 'solid' : 'outline'}
             colorScheme="blue"
             className="rounded-full"
             size="sm"
+            onClick={() => setSelectedCategory(cat)}
           >
-            {exam.category}
+            {cat}
           </Button>
         ))}
-      </div>
-
-      <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={4}>
-        {examData[0].subExams.map((subExam) => (
+      </Box>
+      {/* Sub Exam Cards */}
+      <SimpleGrid columns={{ base: 2, sm: 3, md: 4 }} spacing={4}>
+        {filteredExams.map((exam) => (
           <Box
-            key={subExam}
-            onClick={() => router.push(`/dashboard/${subExam.replace(/\s+/g, '-').toLowerCase()}`)}
-            className="bg-white dark:bg-gray-700 border rounded-lg p-4 flex items-center justify-between shadow-sm hover:shadow-md transition cursor-pointer"
+            key={exam.id}
+            onClick={() => router.push(`/dashboard/exam/${exam.id}`)}
+            className="bg-white dark:bg-gray-700 border rounded-lg p-3 flex items-center justify-between shadow-sm hover:shadow-md transition cursor-pointer "
           >
-            <Text fontWeight="medium">{subExam}</Text>
+            <Text fontWeight="medium">{exam.subCategory || exam.name}</Text>
             <ChevronRightIcon boxSize={5} />
           </Box>
         ))}
       </SimpleGrid>
-
-      <Box mt={6} textAlign="center">
-        <Button variant="link" colorScheme="blue">
-          Explore all exams
-        </Button>
-      </Box>
     </Box>
   );
 }

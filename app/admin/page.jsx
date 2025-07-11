@@ -14,9 +14,10 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import PieChart from '@/components/admin/PieChart';
 import { motion } from 'framer-motion';
-
-// Prepare data in Chart.js format
-// Remove all references to chartdata and areaChartData mock variables
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from '@/lib/firebaseConfig';
+import { getAllTests } from '@/lib/tests';
+import { getAllBundles } from '@/lib/bundleService';
 
 
 const areaChartOptions = {
@@ -48,6 +49,7 @@ const monthlyEarningsChartOptions = {
 
 export default function AdminDashboard() {
   const router = useRouter();
+  const [user, authLoading] = useAuthState(auth);
   // Card stats state
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -68,21 +70,24 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function fetchStatsAndGrowth() {
       setLoading(true);
-      // Fetch users
+      // Fetch users (global)
       const usersSnap = await getDocs(collection(db, 'users'));
       const users = usersSnap.docs.map(doc => doc.data());
-      // Fetch tests
-      const testsSnap = await getDocs(collection(db, 'tests'));
-      // Fetch bundles
-      const bundlesSnap = await getDocs(collection(db, 'bundles'));
+      // Fetch only this admin's tests and bundles
+      let adminTests = [];
+      let adminBundles = [];
+      if (user) {
+        adminTests = await getAllTests(user.uid);
+        adminBundles = await getAllBundles(user.uid);
+      }
       // Card stats
       setStats({
         totalUsers: users.length,
-        totalTests: testsSnap.size,
-        totalBundles: bundlesSnap.size,
+        totalTests: adminTests.length,
+        totalBundles: adminBundles.length,
         earnings: 3500, // mock
       });
-      // User growth by month
+      // User growth by month (global)
       const growthMap = {};
       const planMap = {};
       users.forEach(u => {
@@ -111,7 +116,7 @@ export default function AdminDashboard() {
         ],
       });
       setPlanDistribution(planMap);
-      // Recent users (latest 5 by createdAt)
+      // Recent users (latest 5 by createdAt, global)
       const sortedUsers = users
         .filter(u => u.createdAt)
         .sort((a, b) => {
@@ -123,8 +128,10 @@ export default function AdminDashboard() {
       setRecentUsers(sortedUsers);
       setLoading(false);
     }
-    fetchStatsAndGrowth();
-  }, []);
+    if (!authLoading && user) {
+      fetchStatsAndGrowth();
+    }
+  }, [user, authLoading]);
 
   // Card config
   const cardConfig = [
