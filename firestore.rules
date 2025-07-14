@@ -82,7 +82,7 @@ service cloud.firestore {
     match /announcements/{announcementId} {
       // Allow admins and superAdmins to create, read, update, and delete announcements
       allow read, write: if isAdmin() || isSuperAdmin();
-    }
+    } 
 
     // Default deny
     match /{document=**} {
@@ -90,4 +90,3 @@ service cloud.firestore {
     }
   }
 }
-

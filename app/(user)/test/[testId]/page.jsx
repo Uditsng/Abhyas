@@ -30,6 +30,16 @@ export default function TestPage() {
   const [showPalette, setShowPalette] = useState(false); // For mobile palette toggle
 
   const { isOpen, onOpen, onClose } = useDisclosure(); // For confirmation modal
+  
+  //Fisher-Yates algorithm to shuffle the questions
+  function shuffleArray(array) {
+  const arr = array.slice(); // Copy array
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
 
   // Fetch test data
   useEffect(() => {
@@ -51,8 +61,10 @@ export default function TestPage() {
         const fetchedData = await getTestDetails(testId); // Only use testId
 
         if (fetchedData) {
-          setTestData(fetchedData);
-          setTimeLeft(fetchedData.duration * 60); // Convert minutes to seconds
+          const shuffledQuestions = shuffleArray(fetchedData.questions || []);
+          setTestData({ ...fetchedData, questions: shuffledQuestions });
+          setTimeLeft(fetchedData.duration * 60);
+        
         } else {
           toast({
             title: "Test not found",
@@ -152,7 +164,8 @@ export default function TestPage() {
   const calculateScore = useCallback(() => {
     let correctCount = 0;
     testData.questions.forEach((question) => {
-      if (userAnswers[question.id] === question.answer) {
+      const correctAnswerString = question.options[question.correctAnswer];
+      if (userAnswers[question.id] === correctAnswerString) {
         correctCount++;
       }
     });
@@ -163,10 +176,9 @@ export default function TestPage() {
     setSubmitting(true);
     const score = calculateScore();
     const totalQuestions = testData.questions.length;
-
     const result = {
       testId: testId, // Use from params
-      title: testData.title,
+      title: testData.title || "Untitled Test",
       score: score,
       totalQuestions: totalQuestions,
       answers: userAnswers,
@@ -174,17 +186,21 @@ export default function TestPage() {
       date: new Date().toISOString(),
     };
 
-    console.log('Submitting result:', result);
-
     try {
-      if (user) {
-        await saveTestResult(user.uid, result);
-      } else {
-        // Save to local storage for mock users or non-logged-in users
-        const existingResults = JSON.parse(localStorage.getItem('testResults') || '[]');
-        localStorage.setItem('testResults', JSON.stringify([...existingResults, result]));
+      if (!user) {
+        toast({
+          title: "Login Required",
+          description: "Please log in to submit your test and view results.",
+          status: "warning",
+          duration: 5000,
+          isClosable: true,
+        });
+        router.push('/auth/login');
+        return;
       }
-
+      console.log('[DEBUG] Saving test result:', { userId: user.uid, result });
+      await saveTestResult(user.uid, result);
+      console.log('[DEBUG] Test result saved for user:', user.uid, 'testId:', testId);
       toast({
         title: "Test Submitted",
         description: `You scored ${score} out of ${totalQuestions}!`,
@@ -192,8 +208,7 @@ export default function TestPage() {
         duration: 5000,
         isClosable: true,
       });
-      // Always use params for redirect
-      router.push(`/results/${testId}`); // Redirect to results page with testId only
+      router.push(`/results/${testId}`);
     } catch (error) {
       console.error("Error submitting test:", error);
       toast({
@@ -205,7 +220,7 @@ export default function TestPage() {
       });
     } finally {
       setSubmitting(false);
-      onClose(); // Close modal if open
+      onClose();
     }
   };
 
@@ -262,7 +277,7 @@ export default function TestPage() {
       return "bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-300 dark:border-red-700 hover:bg-red-200 dark:hover:bg-red-800/40";
     }
   }
-
+ 
   return (
     <Box p={6}>
       <div className="container mx-auto px-4 pt-20 bg-gray-100 dark:bg-gray-900 min-h-screen pb-12 transition-colors duration-200">
@@ -523,6 +538,5 @@ export default function TestPage() {
     </Box>
   );
 
-  // --- COMPONENTS REMOVED: Palette/Legend now inline in main render ---
 }
 

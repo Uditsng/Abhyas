@@ -1,12 +1,38 @@
 "use client";
-import React, { useEffect, useState } from 'react';
-import {getAllAdmins,validateAdmin,setAdminStatus,deleteAdmin,getAdminStats} from '../../../lib/superAdminAdminService';
-import { Box, Button, Input, Table, Thead, Tbody, Tr, Th, Td, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Spinner, Badge } from '@chakra-ui/react';
+import React, { useEffect, useState } from "react";
+import {
+  getAllAdmins,
+  validateAdmin,
+  setAdminStatus,
+  deleteAdmin,
+  getAdminStats,
+} from "../../../lib/superAdminAdminService";
+import {
+  Box,
+  Button,
+  Input,
+  Table,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+  Spinner,
+  Badge,
+} from "@chakra-ui/react";
+import { FaLock, FaUnlock, FaTrash, FaCheck } from "react-icons/fa";
 
 export default function SuperAdminAdminsPage() {
   const [admins, setAdmins] = useState([]);
   const [filtered, setFiltered] = useState([]);
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState("");
   const [selectedAdmin, setSelectedAdmin] = useState(null);
   const [adminStats, setAdminStats] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -26,32 +52,49 @@ export default function SuperAdminAdminsPage() {
 
   useEffect(() => {
     if (!search) setFiltered(admins);
-    else setFiltered(admins.filter(a =>
-      (a.displayName || '').toLowerCase().includes(search.toLowerCase()) ||
-      (a.email || '').toLowerCase().includes(search.toLowerCase())
-    ));
+    else
+      setFiltered(
+        admins.filter(
+          (a) =>
+            (a.displayName || "")
+              .toLowerCase()
+              .includes(search.toLowerCase()) ||
+            (a.email || "").toLowerCase().includes(search.toLowerCase())
+        )
+      );
   }, [search, admins]);
 
   const handleValidate = async (admin) => {
     setActionLoading(true);
     await validateAdmin(admin.id);
-    setAdmins(admins.map(a => a.id === admin.id ? { ...a, validated: true } : a));
+    setAdmins(
+      admins.map((a) => (a.id === admin.id ? { ...a, validated: true } : a))
+    );
     setActionLoading(false);
   };
 
   const handleBlockToggle = async (admin) => {
     setActionLoading(true);
-    await setAdminStatus(admin.id, admin.status === 'blocked' ? 'active' : 'blocked');
-    setAdmins(admins.map(a => a.id === admin.id ? { ...a, status: a.status === 'blocked' ? 'active' : 'blocked' } : a));
+    await setAdminStatus(
+      admin.id,
+      admin.status === "blocked" ? "active" : "blocked"
+    );
+    setAdmins(
+      admins.map((a) =>
+        a.id === admin.id
+          ? { ...a, status: a.status === "blocked" ? "active" : "blocked" }
+          : a
+      )
+    );
     setActionLoading(false);
   };
 
   const handleDelete = async (admin) => {
-    if (!window.confirm('Are you sure you want to delete this admin?')) return;
+    if (!window.confirm("Are you sure you want to delete this admin?")) return;
     setActionLoading(true);
     await deleteAdmin(admin.id);
-    setAdmins(admins.filter(a => a.id !== admin.id));
-    setFiltered(filtered.filter(a => a.id !== admin.id));
+    setAdmins(admins.filter((a) => a.id !== admin.id));
+    setFiltered(filtered.filter((a) => a.id !== admin.id));
     setActionLoading(false);
   };
 
@@ -69,7 +112,7 @@ export default function SuperAdminAdminsPage() {
       <Input
         placeholder="Search by name or email"
         value={search}
-        onChange={e => setSearch(e.target.value)}
+        onChange={(e) => setSearch(e.target.value)}
         mb={4}
         maxW="400px"
       />
@@ -88,24 +131,55 @@ export default function SuperAdminAdminsPage() {
             </Tr>
           </Thead>
           <Tbody>
-            {filtered.map(admin => (
-              <Tr key={admin.id} className="cursor-pointer hover:bg-gray-50" onClick={() => handleRowClick(admin)}>
+            {filtered.map((admin) => (
+              <Tr
+                key={admin.id}
+                className="cursor-pointer hover:bg-gray-50"
+                onClick={() => handleRowClick(admin)}
+              >
                 <Td>{admin.displayName || admin.name}</Td>
                 <Td>{admin.email}</Td>
-                <Td>{admin.validated ? <Badge colorScheme="green">Yes</Badge> : <Badge colorScheme="yellow">No</Badge>}</Td>
-                <Td>{admin.status || 'active'}</Td>
-                <Td>{admin.createdAt && admin.createdAt.toDate ? admin.createdAt.toDate().toLocaleDateString() : ''}</Td>
-                <Td onClick={e => e.stopPropagation()}>
+                <Td>
+                  {admin.validated ? (
+                    <Badge colorScheme="green">Yes</Badge>
+                  ) : (
+                    <Badge colorScheme="yellow">No</Badge>
+                  )}
+                </Td>
+                <Td>{admin.status || "active"}</Td>
+                <Td>
+                  {admin.createdAt && admin.createdAt.toDate
+                    ? admin.createdAt.toDate().toLocaleDateString()
+                    : ""}
+                </Td>
+                <Td onClick={(e) => e.stopPropagation()}>
                   {!admin.validated && (
-                    <Button size="sm" colorScheme="blue" mr={2} isLoading={actionLoading} onClick={() => handleValidate(admin)}>
-                      Validate
+                    <Button
+                      size="sm"
+                      colorScheme="blue"
+                      mr={2}
+                      isLoading={actionLoading}
+                      onClick={() => handleValidate(admin)}
+                    >
+                      <FaTrash/>
                     </Button>
                   )}
-                  <Button size="sm" colorScheme={admin.status === 'blocked' ? 'green' : 'red'} mr={2} isLoading={actionLoading} onClick={() => handleBlockToggle(admin)}>
-                    {admin.status === 'blocked' ? 'Unblock' : 'Block'}
+                  <Button
+                    size="sm"
+                    colorScheme={admin.status === "blocked" ? "green" : "red"}
+                    mr={2}
+                    isLoading={actionLoading}
+                    onClick={() => handleBlockToggle(admin)}
+                  >
+                    {admin.status === 'blocked' ? <FaUnlock /> : <FaLock />}
                   </Button>
-                  <Button size="sm" colorScheme="red" isLoading={actionLoading} onClick={() => handleDelete(admin)}>
-                    Delete
+                  <Button
+                    size="sm"
+                    colorScheme="red"
+                    isLoading={actionLoading}
+                    onClick={() => handleDelete(admin)}
+                  >
+                    <FaTrash/>
                   </Button>
                 </Td>
               </Tr>
@@ -121,21 +195,55 @@ export default function SuperAdminAdminsPage() {
           <ModalBody>
             {selectedAdmin && (
               <Box>
-                <p><b>Name:</b> {selectedAdmin.displayName || selectedAdmin.name}</p>
-                <p><b>Email:</b> {selectedAdmin.email}</p>
-                <p><b>Validated:</b> {selectedAdmin.validated ? 'Yes' : 'No'}</p>
-                <p><b>Status:</b> {selectedAdmin.status || 'active'}</p>
-                <p><b>Joined:</b> {selectedAdmin.createdAt && selectedAdmin.createdAt.toDate ? selectedAdmin.createdAt.toDate().toLocaleString() : ''}</p>
-                <p><b>Qualifications:</b> {selectedAdmin.qualifications}</p>
-                <p><b>Subjects/Exams Taught:</b> {Array.isArray(selectedAdmin.subjects) ? selectedAdmin.subjects.join(', ') : selectedAdmin.subjects}</p>
-                <p><b>Teaching Experience:</b> {selectedAdmin.experience}</p>
-                <p><b>Phone Number:</b> {selectedAdmin.phone}</p>
-                <p><b>Profile Picture:</b> <span>{selectedAdmin.profilePic}</span></p>
+                <p>
+                  <b>Name:</b> {selectedAdmin.displayName || selectedAdmin.name}
+                </p>
+                <p>
+                  <b>Email:</b> {selectedAdmin.email}
+                </p>
+                <p>
+                  <b>Validated:</b> {selectedAdmin.validated ? "Yes" : "No"}
+                </p>
+                <p>
+                  <b>Status:</b> {selectedAdmin.status || "active"}
+                </p>
+                <p>
+                  <b>Joined:</b>{" "}
+                  {selectedAdmin.createdAt && selectedAdmin.createdAt.toDate
+                    ? selectedAdmin.createdAt.toDate().toLocaleString()
+                    : ""}
+                </p>
+                <p>
+                  <b>Qualifications:</b> {selectedAdmin.qualifications}
+                </p>
+                <p>
+                  <b>Subjects/Exams Taught:</b>{" "}
+                  {Array.isArray(selectedAdmin.subjects)
+                    ? selectedAdmin.subjects.join(", ")
+                    : selectedAdmin.subjects}
+                </p>
+                <p>
+                  <b>Teaching Experience:</b> {selectedAdmin.experience}
+                </p>
+                <p>
+                  <b>Phone Number:</b> {selectedAdmin.phone}
+                </p>
+                <p>
+                  <b>Profile Picture:</b>{" "}
+                  <span>{selectedAdmin.profilePic}</span>
+                </p>
                 {adminStats ? (
                   <>
-                    <p><b>Bundles Created:</b> {adminStats.bundlesCreated}</p>
-                    <p><b>Revenue:</b> ₹{adminStats.revenue}</p>
-                    <p><b>Engagement (Bundle Purchases):</b> {adminStats.engagement}</p>
+                    <p>
+                      <b>Bundles Created:</b> {adminStats.bundlesCreated}
+                    </p>
+                    <p>
+                      <b>Revenue:</b> ₹{adminStats.revenue}
+                    </p>
+                    <p>
+                      <b>Engagement (Bundle Purchases):</b>{" "}
+                      {adminStats.engagement}
+                    </p>
                   </>
                 ) : (
                   <Spinner size="sm" />
@@ -150,4 +258,4 @@ export default function SuperAdminAdminsPage() {
       </Modal>
     </Box>
   );
-} 
+}

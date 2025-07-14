@@ -165,7 +165,7 @@ export default function DashboardPage() {
   }
 
   return (
-    <Box p={6}>
+    <Box px={24} py={8}>
       <div className="container mx-auto px-4 pt-20 bg-gray-100 dark:bg-gray-900 min-h-screen pb-12 transition-colors duration-200">
         {/* Welcome banner */}
         <div className="text-center bg-gradient-to-r from-blue-600 to-indigo-700 dark:from-blue-800 dark:to-indigo-900 text-white py-6">

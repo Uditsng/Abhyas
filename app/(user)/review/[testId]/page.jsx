@@ -8,13 +8,13 @@ import { CheckCircleIcon, WarningIcon, InfoIcon, StarIcon, ChevronLeftIcon, Chev
 import { getTestDetails } from '@/lib/tests';
 import { useAuth } from '@/components/AuthContext';
 import { saveBookmark, removeBookmark } from '@/lib/bookmarkService';
+import { getTestResult } from '@/lib/testResultService';
 
 export default function TestReviewPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
   const testId = params.testId;
-  const courseId = searchParams.get('courseId'); 
   const questionParam = searchParams.get('q');
   const toast = useToast();
   const { user } = useAuth();
@@ -30,53 +30,54 @@ export default function TestReviewPage() {
   useEffect(() => {
     const fetchAndLoadData = async () => {
       setLoading(true);
-      if (!testId || !courseId) { // Ensure courseId is available
+      if (!testId) { // Only testId is required now
         setLoading(false);
-        if (!courseId) {
-          toast({
-            title: "Missing Course ID",
-            description: "Course ID is required to review this test.",
-            status: "error",
-            duration: 5000,
-            isClosable: true,
-          });
-          router.push('/dashboard'); // Redirect if courseId is missing
-        }
         return;
       }
 
       try {
-        const fetchedData = await getTestDetails(courseId, testId); // Use courseId here
+        const fetchedData = await getTestDetails(testId);
 
         if (fetchedData) {
           setTestData(fetchedData);
 
-          // Only access localStorage on the client side
-          if (typeof window !== 'undefined') {
+          let answers = {};
+          let score = 0;
+          // Try to fetch from Firestore if logged in
+          if (user) {
             try {
-              const results = JSON.parse(localStorage.getItem('testResults') || '[]');
-              // Filter results by both testId and courseId
-              const testResult = results.find(result => result.testId === testId && result.courseId === courseId);
-
-              if (testResult) {
-                setUserAnswers(testResult.answers || {});
-                setScore(testResult.score || 0);
-              } else {
-                toast({
-                  title: "No results found",
-                  description: "We couldn't find your results for this test",
-                  status: "warning",
-                  duration: 3000,
-                  isClosable: true,
-                });
+              const result = await getTestResult(user.uid, testId);
+              if (result) {
+                answers = result.answers || {};
+                score = result.score || 0;
               }
-
-              const storedBookmarks = localStorage.getItem('bookmarkedQuestions');
-              if (storedBookmarks) {
-                setBookmarkedQuestions(JSON.parse(storedBookmarks));
+            } catch (e) {
+              // fallback to localStorage
+            }
+          }
+          // Fallback to localStorage if not logged in or Firestore fetch failed
+          if (!user || Object.keys(answers).length === 0) {
+            if (typeof window !== 'undefined') {
+              try {
+                const results = JSON.parse(localStorage.getItem('testResults') || '[]');
+                const testResult = results.find(result => result.testId === testId);
+                if (testResult) {
+                  answers = testResult.answers || {};
+                  score = testResult.score || 0;
+                }
+              } catch (error) {
+                console.error("Error loading local data:", error);
               }
-            } catch (error) {
-              console.error("Error loading local data:", error);
+            }
+          }
+          setUserAnswers(answers);
+          setScore(score);
+
+          // Bookmarks
+          if (typeof window !== 'undefined') {
+            const storedBookmarks = localStorage.getItem('bookmarkedQuestions');
+            if (storedBookmarks) {
+              setBookmarkedQuestions(JSON.parse(storedBookmarks));
             }
           }
 
@@ -90,7 +91,7 @@ export default function TestReviewPage() {
         } else {
           toast({
             title: "Test not found",
-            description: `Could not find test: ${testId} in course ${courseId}`,
+            description: `Could not find test: ${testId}`,
             status: "error",
             duration: 3000,
             isClosable: true,
@@ -113,7 +114,7 @@ export default function TestReviewPage() {
     };
 
     fetchAndLoadData();
-  }, [testId, courseId, questionParam, router, toast]); // Add courseId to dependency array
+  }, [testId, questionParam, router, toast, user]);
 
   // Handle navigation between questions
   const goToNextQuestion = () => {
@@ -159,7 +160,6 @@ export default function TestReviewPage() {
         // If not bookmarked, add it with test info
         const bookmarkData = {
           testId: testData.id,
-          courseId: testData.courseId,
           testTitle: testData.title,
           questionId: questionId,
           question: testData.questions[currentQuestionIndex].question,
@@ -212,18 +212,19 @@ export default function TestReviewPage() {
   const scorePercentage = Math.round((score / testData.questions.length) * 100);
   const currentQuestion = testData.questions[currentQuestionIndex];
   const userAnswer = userAnswers[currentQuestion.id];
-  const isCorrect = userAnswer === currentQuestion.answer;
+  const correctAnswerString = currentQuestion.options[currentQuestion.correctAnswer];
+  const isCorrect = userAnswer === correctAnswerString;
 
   // Check if current question is bookmarked
   const bookmarkKey = `${testData.id}_${currentQuestion.id}`;
   const isBookmarked = bookmarkedQuestions[bookmarkKey] !== undefined;
 
   return (
-    <Box p={4} maxW="800px" mx="auto" className="min-h-screen">
-      <Heading size="lg" mb={4}>{testData.title} - Review</Heading>
+    <Box px={4} py={24} maxW="800px" mx="auto" className="min-h-screen">
+      <Heading size="lg" mb={4}>{testData.title}Review</Heading>
 
       {/* Score summary */}
-      <Card mb={6}>
+      {/* <Card mb={6}>
         <CardBody>
           <Stack divider={<StackDivider />} spacing={4}>
             <Box>
@@ -255,7 +256,7 @@ export default function TestReviewPage() {
             </Flex>
           </Stack>
         </CardBody>
-      </Card>
+      </Card> */}
 
       {/* Question navigation */}
       <Flex justify="space-between" mb={4} align="center">
@@ -312,64 +313,68 @@ export default function TestReviewPage() {
 
           <RadioGroup value={userAnswer || ''}>
             <Stack spacing={3}>
-              {currentQuestion.options.map((option, index) => (
-                <Box
-                  key={index}
-                  p={3}
-                  borderWidth={1}
-                  borderRadius="md"
-                  borderColor={
-                    option === currentQuestion.answer
-                      ? 'green.300'
-                      : option === userAnswer && option !== currentQuestion.answer
-                        ? 'red.300'
-                        : 'gray.200'
-                  }
-                  _dark={{
-                    borderColor:
-                      option === currentQuestion.answer
-                        ? 'green.500'
-                        : option === userAnswer && option !== currentQuestion.answer
-                          ? 'red.500'
-                          : 'gray.600',
-                    bg:
-                      option === currentQuestion.answer
-                        ? 'green.900'
-                        : option === userAnswer && option !== currentQuestion.answer
-                          ? 'red.900'
-                          : 'gray.700'
-                  }}
-                  bg={
-                    option === currentQuestion.answer
-                      ? 'green.50'
-                      : option === userAnswer && option !== currentQuestion.answer
-                        ? 'red.50'
-                        : 'white'
-                  }
-                >
-                  <Flex align="center">
-                    <Radio
-                      value={option}
-                      isDisabled={true}
-                      colorScheme={option === currentQuestion.answer ? 'green' : 'red'}
-                    >
-                      {option}
-                    </Radio>
+              {currentQuestion.options.map((option, index) => {
+                const isOptionCorrect = option === correctAnswerString;
+                const isUserSelected = option === userAnswer;
+                return (
+                  <Box
+                    key={index}
+                    p={3}
+                    borderWidth={1}
+                    borderRadius="md"
+                    borderColor={
+                      isOptionCorrect
+                        ? 'green.300'
+                        : isUserSelected && !isOptionCorrect
+                          ? 'red.300'
+                          : 'gray.200'
+                    }
+                    _dark={{
+                      borderColor:
+                        isOptionCorrect
+                          ? 'green.500'
+                          : isUserSelected && !isOptionCorrect
+                            ? 'red.500'
+                            : 'gray.600',
+                      bg:
+                        isOptionCorrect
+                          ? 'green.900'
+                          : isUserSelected && !isOptionCorrect
+                            ? 'red.900'
+                            : 'gray.700'
+                    }}
+                    bg={
+                      isOptionCorrect
+                        ? 'green.50'
+                        : isUserSelected && !isOptionCorrect
+                          ? 'red.50'
+                          : 'white'
+                    }
+                  >
+                    <Flex align="center">
+                      <Radio
+                        value={option}
+                        isDisabled={true}
+                        colorScheme={isOptionCorrect ? 'green' : 'red'}
+                      >
+                        {option}
+                      </Radio>
 
-                    {option === currentQuestion.answer && (
-                      <Tooltip label="Correct answer" placement="right">
-                        <CheckCircleIcon ml={2} color="green.500" />
-                      </Tooltip>
-                    )}
+                      {isOptionCorrect && (
+                        <Tooltip label="Correct answer" placement="right">
+                          <CheckCircleIcon ml={2} color="green.500" />
+                        </Tooltip>
+                      )}
 
-                    {option === userAnswer && option !== currentQuestion.answer && (
-                      <Tooltip label="Your answer (incorrect)" placement="right">
-                        <WarningIcon ml={2} color="red.500" />
-                      </Tooltip>
-                    )}
-                  </Flex>
-                </Box>
-              ))}
+                      {isUserSelected && !isOptionCorrect && (
+                        <Tooltip label="Your answer (incorrect)" placement="right">
+                          <WarningIcon ml={2} color="red.500" />
+                        </Tooltip>
+                      )}
+                    </Flex>
+                  </Box>
+                );
+              })}
             </Stack>
           </RadioGroup>
 
@@ -388,7 +393,7 @@ export default function TestReviewPage() {
 
       {/* Action buttons */}
       <Flex justify="space-between" mt={6}>
-        <Link href={`/results/${testData.courseId}/${testData.id}`}>
+        <Link href={`/results/${testData.id}`}>
           <Button colorScheme="gray">Back to Results</Button>
         </Link>
 

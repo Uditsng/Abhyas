@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation'; // Removed useSearchParams
+import { useParams, useRouter } from 'next/navigation';
 import { Box, Heading, Text, Button, Flex, Stat, StatLabel, StatNumber, StatHelpText, StatArrow, SimpleGrid, Card, CardBody, Stack, StackDivider, useToast, Spinner, Center, Badge } from '@chakra-ui/react';
 import { CheckCircleIcon} from '@chakra-ui/icons';
 import Link from 'next/link';
@@ -12,8 +12,7 @@ import { getTestDetails } from '@/lib/tests';
 export default function ResultsPage() {
   const params = useParams();
   const router = useRouter();
-  const testId = Array.isArray(params.test)? params.test[0]: params.test; 
-  const courseId = Array.isArray(params.course)? params.course[0]:params.course;
+  const testId = Array.isArray(params.testId) ? params.testId[0] : params.testId;
   const toast = useToast();
   const { user, loading: authLoading } = useAuth();
 
@@ -25,11 +24,23 @@ export default function ResultsPage() {
     const fetchResults = async () => {
       if (authLoading) return;
 
-      if (!testId || !courseId) {
+      if (!user) {
+        toast({
+          title: "Login Required",
+          description: "Please log in to view your test results.",
+          status: "warning",
+          duration: 5000,
+          isClosable: true,
+        });
+        router.push('/auth/login');
+        return;
+      }
+
+      if (!testId) {
         setLoading(false);
         toast({
           title: "Missing Information",
-          description: "Test ID or Course ID is missing to view results.",
+          description: "Test ID is missing to view results.",
           status: "error",
           duration: 5000,
           isClosable: true,
@@ -38,57 +49,52 @@ export default function ResultsPage() {
         return;
       }
 
-      try {
-        let fetchedResult = null;
-        if (user && user.uid) {
-          fetchedResult = await getTestResult(user.uid, testId, courseId);
-        } else {
-          // Try to get from localStorage
-          let existingResults = [];
-          try {
-            existingResults = JSON.parse(localStorage.getItem('testResults') || '[]');
-          } catch (e) {}
-          fetchedResult = existingResults.find(res => (
-            (res.testId === testId || res.id === testId) &&
-            (res.courseId === courseId || res.course === courseId)
-          ));
+      let fetchedResult = null;
+      let attempts = 0;
+      while (attempts < 5 && !fetchedResult) {
+        try {
+          console.log('[DEBUG] Fetching test result:', { userId: user.uid, testId });
+          fetchedResult = await getTestResult(user.uid, testId);
+          console.log('[DEBUG] Fetched result:', fetchedResult);
+          if (fetchedResult) break;
+          // Wait 400ms before retrying
+          await new Promise(res => setTimeout(res, 400));
+        } catch (error) {
+          // Only show error after all retries
+          if (attempts === 4) {
+            console.error("Error fetching test results:", error);
+            toast({
+              title: "Error",
+              description: "Failed to load test results. Please try again later.",
+              status: "error",
+              duration: 5000,
+              isClosable: true,
+            });
+            router.push('/dashboard');
+          }
         }
-
-        console.log('Results Page Debug:', { testId, courseId, user, fetchedResult });
-
-        if (fetchedResult) {
-          setResult(fetchedResult);
-          const details = await getTestDetails(courseId, testId);
-          setTestDetails(details);
-        } else {
-          console.log('Result not found, redirecting to dashboard.', { testId, courseId, user, fetchedResult });
-          toast({
-            title: "Result Not Found",
-            description: "Could not find results for this test.",
-            status: "warning",
-            duration: 5000,
-            isClosable: true,
-          });
-          router.push('/dashboard');
-        }
-      } catch (error) {
-        console.error("Error fetching test results:", error);
+        attempts++;
+      }
+  
+      if (fetchedResult) {
+        setResult(fetchedResult);
+        const details = await getTestDetails(testId);
+        setTestDetails(details);
+      } else if (attempts === 5) {
         toast({
-          title: "Error",
-          description: "Failed to load test results. Please try again later.",
-          status: "error",
+          title: "Result Not Found",
+          description: "Could not find results for this test.",
+          status: "warning",
           duration: 5000,
           isClosable: true,
         });
         router.push('/dashboard');
-      } finally {
-        setLoading(false);
       }
+      setLoading(false);
     };
-
+  
     fetchResults();
-  }, [testId, courseId, user, authLoading, router, toast]);
-
+  }, [testId, user, authLoading, router, toast]);
   if (loading || !result || !testDetails) {
     return (
       <Center h="100vh">
@@ -181,7 +187,7 @@ export default function ResultsPage() {
         </SimpleGrid>
 
         <Flex justify="center" gap={4} mt={8}>
-          <Link href={`/review/${testId}?courseId=${courseId}`}>
+          <Link href={`/review/${testId}`}>
             <Button colorScheme="blue" size="lg" leftIcon={<CheckCircleIcon />}>
               Review Answers
             </Button>

@@ -101,7 +101,6 @@ export default function HomePage() {
     <>
     <div className="container mx-auto px-4 pt-20 md:px-8 lg:px-12 xl:px-24 w-full">
       {/* Banner Carousel */}
-      {/* <Box mb={14} className={`${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl p-6`}>  */}
         <div className="w-full">
           <Slider {...bannerCarouselSettings}>
             <div className="relative w-full h-32 sm:h-40 md:h-56 lg:h-80 overflow-hidden bg-red-400">
@@ -125,13 +124,12 @@ export default function HomePage() {
             </div>
           </Slider>
         </div>
-      {/* </Box> */}
+      
       {/* Exams Carousel */}
-      {/* <Box mb={14} className={`${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl p-6`}> */}
         <Box my={8} mx={0}>
           <ExamBrowser />
         </Box>
-      {/* </Box> */}
+      
       {/* Top Bundles / Popular Plans Section */}
       <motion.section
         className={`mb-14 ${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl p-8`}
@@ -149,13 +147,12 @@ export default function HomePage() {
             <div className="col-span-full text-center text-gray-500">No bundles found.</div>
           ) : (
             topBundles.map(bundle => (
-              // <Box key={bundle.id} className={`transition-transform duration-200 hover:scale-105 ${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl p-4`}>
                 <BundleCard bundle={bundle} />
-              // </Box>
             ))
           )}
         </div>
       </motion.section>
+      
       {/* Why Choose Us Section */}
       <motion.section
         className={`mb-14 ${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl p-8`}
@@ -188,6 +185,7 @@ export default function HomePage() {
           ))}
         </div>
       </motion.section>
+
       {/* Testimonials Section */}
       <motion.div
         className={`mb-14 ${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl p-8`}
@@ -198,6 +196,7 @@ export default function HomePage() {
       >
         <TestimonialsSection />
       </motion.div>
+
       {/* Blog/Articles Preview Section */}
       <motion.div
         className={`mb-14 ${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl p-8`}
@@ -208,16 +207,6 @@ export default function HomePage() {
       >
         <BlogPreviewSection />
       </motion.div>
-      {/* Pricing / Plans Preview Section */}
-      {/* <motion.div
-        className={`mb-14 ${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl p-8`}
-        initial="hidden"
-        whileInView="visible"
-        viewport={{ once: true, amount: 0.2 }}
-        variants={fadeInUp}
-      >
-        <PricingPlansSection />
-      </motion.div> */}
       
       {/* App Download / Mobile Promo Section */}
       <motion.div
@@ -229,6 +218,7 @@ export default function HomePage() {
       >
         <AppDownloadSection />
       </motion.div>
+
       {/* Partner With Us / Become a Teacher Section */}
       <motion.div
         className={`mb-14 ${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl p-8`}
@@ -239,6 +229,7 @@ export default function HomePage() {
       >
         <PartnerWithUsSection />
       </motion.div>
+
       {/* FAQs Section */}
       <motion.div
         className={`mb-14 ${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl p-8`}
