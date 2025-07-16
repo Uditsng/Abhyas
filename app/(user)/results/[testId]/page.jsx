@@ -78,6 +78,7 @@ export default function ResultsPage() {
   
       if (fetchedResult) {
         setResult(fetchedResult);
+        sessionStorage.setItem('testCompleted', 'true');
         const details = await getTestDetails(testId);
         setTestDetails(details);
       } else if (attempts === 5) {

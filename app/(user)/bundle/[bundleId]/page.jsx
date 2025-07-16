@@ -29,6 +29,15 @@ export default function BundleDetailsPage() {
   return (
     <Box maxW="900px" mx="auto" mb={32} py={8} px={8}>
       <Heading mb={2} mt={16}>{bundle.title}</Heading>
+      {bundle.imageUrl && (
+        <Box mb={6}>
+          <img
+            src={bundle.imageUrl}
+            alt={bundle.title}
+            style={{ width: '100%', maxHeight: 320, objectFit: 'cover', borderRadius: 12, border: '1px solid #eee' }}
+          />
+        </Box>
+      )}
       <Card mb={4} bg="gray.50" _dark={{ bg: "gray.800" }}>
       </Card>
       {(!bundle.testIds || bundle.testIds.length === 0) ? (

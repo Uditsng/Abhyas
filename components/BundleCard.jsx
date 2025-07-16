@@ -39,7 +39,7 @@ export default function BundleCard({ bundle }) {
           _dark={{ bg: 'gray.800' }}
         >
           <Image
-            src={"/banner1.jpg"}
+            src={bundle.imageUrl || "/images/defence1.jpg"}
             alt={bundle.title}
             objectFit="cover"
             position="absolute"
@@ -70,7 +70,6 @@ export default function BundleCard({ bundle }) {
             mt={2}
             borderRadius="full"
             w="full"
-            isDisabled
           >
             View Bundle
           </Button>

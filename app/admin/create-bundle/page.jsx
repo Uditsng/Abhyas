@@ -89,7 +89,7 @@ export default function CreateBundlePage() {
     }
     setFormLoading(true);
     try {
-      let imageURL =" "
+      let imageURL = "";
       if (imageFile){
         imageURL = await uploadBundleImage(imageFile);
       }
@@ -104,6 +104,7 @@ export default function CreateBundlePage() {
         promote: promoteBundle,
         createdBy: user.uid,
         createdAt: new Date().toISOString(),
+        ...(imageURL && { imageUrl: imageURL }),
       };
       const newId = await createBundle(bundleData);
       setCreatedBundleId(newId);

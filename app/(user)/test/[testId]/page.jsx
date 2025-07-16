@@ -1,10 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
-
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Box, Heading, Text, Button, Flex, Progress, useToast, Spinner, Center, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton, useDisclosure, VStack, HStack, Tooltip, IconButton } from '@chakra-ui/react';
-import { CheckCircleIcon } from '@chakra-ui/icons';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getTestDetails } from '@/lib/tests';
 import { saveTestResult } from '@/lib/testResultService';
@@ -25,11 +23,12 @@ export default function TestPage() {
   const [timeLeft, setTimeLeft] = useState(0);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  // Mark for review state
   const [markedForReview, setMarkedForReview] = useState({});
   const [showPalette, setShowPalette] = useState(false); // For mobile palette toggle
-
-  const { isOpen, onOpen, onClose } = useDisclosure(); // For confirmation modal
+  const { isOpen, onOpen, onClose } = useDisclosure(); // For leave modal
+  const { isOpen: isSubmitModalOpen, onOpen: onSubmitOpen, onClose: onSubmitClose } = useDisclosure(); // For submit modal
+  const [isTestSubmitted, setIsTestSubmitted] = useState(false); // NEW: flag for submission
+  const nextRouteRef = useRef(null); // NEW: store next route for modal
   
   //Fisher-Yates algorithm to shuffle the questions
   function shuffleArray(array) {
@@ -40,6 +39,34 @@ export default function TestPage() {
   }
   return arr;
 }
+
+
+// SAFER: Only intercept browser refresh/close
+useEffect(() => {
+  const handleBeforeUnload = (e) => {
+    if (!isTestSubmitted) {
+      e.preventDefault();
+      e.returnValue = '';
+    }
+  };
+  window.addEventListener('beforeunload', handleBeforeUnload);
+  return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+}, [isTestSubmitted]);
+
+useEffect(() => {
+  const handlePopState = (e) => {
+    if (!isTestSubmitted) {
+      e.preventDefault?.();
+      nextRouteRef.current = '/dashboard'; // default fallback
+      onOpen();
+      window.history.pushState(null, '', window.location.href); // Prevent back
+    }
+  };
+  window.history.pushState(null, '', window.location.href); // Trap back
+  window.addEventListener('popstate', handlePopState);
+  return () => window.removeEventListener('popstate', handlePopState);
+}, [isTestSubmitted, onOpen]);
+
 
   // Fetch test data
   useEffect(() => {
@@ -110,27 +137,6 @@ export default function TestPage() {
       handleSubmitTest();
     }
   }, [timeLeft, testData, submitting]);
-
-
-  // Navigation prevention (beforeunload, popstate)
-  useEffect(() => {
-    const handleBeforeUnload = (e) => {
-      e.preventDefault();
-      e.returnValue = '';
-    };
-    const handlePopState = (e) => {
-      if (!window.confirm('Are you sure you want to leave? Your progress will be lost.')) {
-        router.push(`/test/${testId}`);
-      }
-    };
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('popstate', handlePopState);
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('popstate', handlePopState);
-    };
-  }, [router, testId]);
-
 
   const handleAnswerChange = (questionId, selectedOption) => {
     setUserAnswers((prevAnswers) => ({
@@ -208,6 +214,7 @@ export default function TestPage() {
         duration: 5000,
         isClosable: true,
       });
+      setIsTestSubmitted(true); // Allow navigation
       router.push(`/results/${testId}`);
     } catch (error) {
       console.error("Error submitting test:", error);
@@ -220,7 +227,18 @@ export default function TestPage() {
       });
     } finally {
       setSubmitting(false);
-      onClose();
+      onSubmitClose(); // Close submit modal
+    }
+  };
+
+  // Modal: on confirm, allow navigation
+  const handleConfirmLeave = () => {
+    setIsTestSubmitted(true);
+    onClose();
+    if (nextRouteRef.current) {
+      router.push(nextRouteRef.current);
+    } else {
+      router.push('/dashboard');
     }
   };
 
@@ -229,9 +247,6 @@ export default function TestPage() {
     const remainingSeconds = seconds % 60;
     return `${minutes.toString().padStart(2, '0')}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
-
-  // Bookmarking removed
-
 
   // Responsive timer color
   const timerColor = timeLeft < 60 ? 'red.500' : timeLeft < 180 ? 'orange.400' : 'green.500';
@@ -441,8 +456,14 @@ export default function TestPage() {
 
             <button
               onClick={goToNextQuestion}
-              className="px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-800 transition-colors duration-200"
-            >
+              disabled={currentQuestionIndex === testData.questions.length - 1}
+              className={`px-4 py-2 rounded transition-colors duration-200
+                ${
+                    currentQuestionIndex === testData.questions.length - 1
+                    ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-600 cursor-not-allowed"
+                    : "bg-blue-600 dark:bg-blue-700 text-white hover:bg-blue-700 dark:hover:bg-blue-800"
+                }
+              `}            >
               Next
             </button>
           </div>
@@ -450,7 +471,7 @@ export default function TestPage() {
           {/* Submit button */}
           <div className="bottom-4 left-4 right-4 z-50 text-center mb-6">
             <button
-              onClick={onOpen}
+              onClick={onSubmitOpen}
               disabled={submitting}
               className={`px-4 py-2 bg-green-600 dark:bg-green-700 text-white rounded hover:bg-green-700 dark:hover:bg-green-800 transition-colors duration-200 ${
                 submitting ? "opacity-70 cursor-not-allowed" : "bg-green-600 hover:bg-green-700"
@@ -521,13 +542,32 @@ export default function TestPage() {
         <Modal isOpen={isOpen} onClose={onClose} isCentered>
           <ModalOverlay />
           <ModalContent>
+            <ModalHeader>Leave Test?</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              Are you sure you want to leave? Your progress will be lost.
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" onClick={onClose}>Cancel</Button>
+              <Button colorScheme="red" ml={3} onClick={handleConfirmLeave}>
+                Leave
+              </Button>
+            </ModalFooter>
+            
+          </ModalContent>
+        </Modal>
+
+        {/* Submit Confirmation Modal */}
+        <Modal isOpen={isSubmitModalOpen} onClose={onSubmitClose} isCentered>
+          <ModalOverlay />
+          <ModalContent>
             <ModalHeader>Confirm Submission</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
               Are you sure you want to submit the test?
             </ModalBody>
             <ModalFooter>
-              <Button variant="ghost" onClick={onClose}>Cancel</Button>
+              <Button variant="ghost" onClick={onSubmitClose}>Cancel</Button>
               <Button colorScheme="green" ml={3} onClick={handleSubmitTest} isLoading={submitting}>
                 Submit
               </Button>
