@@ -6,7 +6,7 @@ import { Box, Heading, SimpleGrid, Spinner, Text, Container } from "@chakra-ui/r
 import { getAllBundles } from "@/lib/bundleService";
 import { collection, getDoc, doc, getDocs } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
-import BundleCard from "@/components/BundleCard";
+import BundlePurchase from "@/components/BundlePurchase";
 
 export default function ExamBundlesPage() {
   const params = useParams();
@@ -66,7 +66,7 @@ export default function ExamBundlesPage() {
         ) : (
           <SimpleGrid columns={{ base: 1, md: 2, lg: 3, xl: 4 }} spacing={6}>
             {bundles.map((bundle) => (
-              <BundleCard key={bundle.id} bundle={bundle} />
+              <BundlePurchase key={bundle.id} bundle={bundle} />
             ))}
           </SimpleGrid>
         )}

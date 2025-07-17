@@ -12,7 +12,7 @@ export default function BundleCard({ bundle }) {
   const priceColor = useColorModeValue('green.600', 'green.200');
 
   return (
-    <Link href={`/bundle/${bundle.id}`} style={{ textDecoration: 'none' }}>
+    <Link href={`/testList/${bundle.id}`} style={{ textDecoration: 'none' }}>
       <Box
         bg={cardBg}
         borderRadius="2xl"
@@ -39,7 +39,7 @@ export default function BundleCard({ bundle }) {
           _dark={{ bg: 'gray.800' }}
         >
           <Image
-            src={bundle.imageUrl || "/images/defence1.jpg"}
+            src={bundle.imageUrl }
             alt={bundle.title}
             objectFit="cover"
             position="absolute"

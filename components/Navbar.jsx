@@ -106,7 +106,7 @@ if (/^\/tests(\/[^\/]+){1,2}$/.test(pathname)) {
                   onClick={() => router.push("/profile")}
                   className="text-blue-600 dark:text-blue-400 hover:text-blue-700 transition duration-500 hover:scale-125"
                 >
-                  Profile
+                  Account
                 </button>            
 
                 <button
@@ -151,7 +151,7 @@ if (/^\/tests(\/[^\/]+){1,2}$/.test(pathname)) {
                     }}
                     className="text-blue-600 dark:text-blue-400 hover:underline text-left"
                   >
-                    Profile
+                    Account
                   </button>
                   <button
                     onClick={handleLogout}

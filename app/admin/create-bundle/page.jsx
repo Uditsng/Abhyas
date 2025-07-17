@@ -87,12 +87,20 @@ export default function CreateBundlePage() {
       });
       return;
     }
+    if (!imageFile) {
+      toast({
+        title: "Validation Error",
+        description: "Bundle image is required.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
     setFormLoading(true);
     try {
-      let imageURL = "";
-      if (imageFile){
-        imageURL = await uploadBundleImage(imageFile);
-      }
+      let imageURL = await uploadBundleImage(imageFile);  
+
       const bundleData = {
         title,
         exam,
@@ -104,9 +112,10 @@ export default function CreateBundlePage() {
         promote: promoteBundle,
         createdBy: user.uid,
         createdAt: new Date().toISOString(),
-        ...(imageURL && { imageUrl: imageURL }),
+        imageUrl: imageURL,
       };
       const newId = await createBundle(bundleData);
+      console.log("Bundle created with ID:", newId);
       setCreatedBundleId(newId);
       setCreatedBundleTitle(title);
 

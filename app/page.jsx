@@ -10,9 +10,9 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 //import ExamCategories from '@/components/ExamCategories';
-import LiveTestsSection from '@/components/LiveTestsSection';
-import LottieSection from '@/components/LottieSection';
-import ExploreSuperCoaching from '@/components/ExploreSuperCoaching';
+import LiveTestsSection from '@/components/(LandingPage)/LiveTestsSection';
+import LottieSection from '@/components/(LandingPage)/LottieSection';
+import ExploreSuperCoaching from '@/components/(LandingPage)/ExploreSuperCoaching';
 import { useAuth } from '@/components/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -27,12 +27,12 @@ import { db } from '@/lib/firebaseConfig';
 import { useState } from 'react';
 import { FiAward, FiBookOpen, FiDollarSign, FiSmartphone, FiBarChart2 } from 'react-icons/fi';
 import { useColorModeValue } from '@chakra-ui/react';
-import TestimonialsSection from '@/components/TestimonialsSection';
-import BlogPreviewSection from '@/components/BlogPreviewSection';
-import PricingPlansSection from '@/components/PricingPlansSection';
-import AppDownloadSection from '@/components/AppDownloadSection';
-import PartnerWithUsSection from '@/components/PartnerWithUsSection';
-import FAQsSection from '@/components/FAQsSection';
+import TestimonialsSection from '@/components/(LandingPage)/TestimonialsSection';
+import BlogPreviewSection from '@/components/(LandingPage)/BlogPreviewSection';
+import PricingPlansSection from '@/components/(LandingPage)/PricingPlansSection';
+import AppDownloadSection from '@/components/(LandingPage)/AppDownloadSection';
+import PartnerWithUsSection from '@/components/(LandingPage)/PartnerWithUsSection';
+import FAQsSection from '@/components/(LandingPage)/FAQsSection';
 import { motion } from 'framer-motion';
 
 // Animation variants
