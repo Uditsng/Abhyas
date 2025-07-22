@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { sendNotification, getAllNotifications } from '../../../lib/superAdminCommunicationService';
-import { Box, Button, Input, Select, Textarea, Table, Thead, Tbody, Tr, Th, Td, Spinner, Badge } from '@chakra-ui/react';
+import { Box, Button, Input, Select, Textarea, Table, Thead, Tbody, Tr, Th, Td, Spinner, Badge, useColorModeValue } from '@chakra-ui/react';
 
 export default function SuperAdminCommunicationPage() {
   const [message, setMessage] = useState('');
@@ -11,6 +11,11 @@ export default function SuperAdminCommunicationPage() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+
+  // Add color mode values
+  const cardBg = useColorModeValue('blue.100', 'blue.700'); //'white', 'gray.800'
+  const textColor = useColorModeValue('gray.900', 'gray.100');
+  const tableBg = useColorModeValue('blue.200', 'blue.800'); //white, gray.800
 
   useEffect(() => {
     async function fetchNotifications() {
@@ -38,21 +43,21 @@ export default function SuperAdminCommunicationPage() {
   };
 
   return (
-    <Box p={6} mt={8}>
+    <Box p={6} mt={8} color={textColor} borderWidth="1px" shadow="md" borderRadius="md" bg={tableBg}>
       <h2 className="text-2xl font-bold mb-4">Communication & Announcements</h2>
-      <form onSubmit={handleSend} className="mb-8 bg-white p-4 rounded shadow">
+      <form onSubmit={handleSend} className="mb-8" >
         <div className="flex flex-col md:flex-row gap-4 mb-4">
-          <Select value={type} onChange={e => setType(e.target.value)} maxW="200px">
+          <Select value={type} onChange={e => setType(e.target.value)} maxW="200px" bg={cardBg} color={textColor}>
             <option value="announcement">Announcement (Broadcast)</option>
             <option value="direct">Direct Message</option>
           </Select>
-          <Select value={role} onChange={e => setRole(e.target.value)} maxW="200px">
+          <Select value={role} onChange={e => setRole(e.target.value)} maxW="200px" bg={cardBg} color={textColor}>
             <option value="all">All Roles</option>
             <option value="admin">Admins Only</option>
             <option value="user">Users Only</option>
           </Select>
           {type === 'direct' && (
-            <Input placeholder="Recipient User/Admin ID" value={to} onChange={e => setTo(e.target.value)} maxW="300px" />
+            <Input placeholder="Recipient User/Admin ID" value={to} onChange={e => setTo(e.target.value)} maxW="300px" bg={cardBg} color={textColor} />
           )}
         </div>
         <Textarea
@@ -60,12 +65,15 @@ export default function SuperAdminCommunicationPage() {
           value={message}
           onChange={e => setMessage(e.target.value)}
           mb={4}
+          bg={cardBg}
+          color={textColor}
+          size="lg" 
         />
         <Button type="submit" colorScheme="blue" isLoading={sending}>Send</Button>
       </form>
       <h3 className="font-semibold mb-2">Sent Notifications & Announcements</h3>
       {loading ? <Spinner size="lg" /> : (
-        <Table variant="simple" className="bg-white rounded shadow">
+        <Table variant="simple" bg={tableBg} borderRadius="md" boxShadow="md">
           <Thead>
             <Tr>
               <Th>Type</Th>

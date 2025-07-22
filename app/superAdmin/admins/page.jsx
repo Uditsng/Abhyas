@@ -1,12 +1,6 @@
 "use client";
 import React, { useEffect, useState } from "react";
-import {
-  getAllAdmins,
-  validateAdmin,
-  setAdminStatus,
-  deleteAdmin,
-  getAdminStats,
-} from "../../../lib/superAdminAdminService";
+import {getAllAdmins, validateAdmin, setAdminStatus, deleteAdmin, getAdminStats,} from "../../../lib/superAdminAdminService";
 import {
   Box,
   Button,
@@ -26,8 +20,10 @@ import {
   useDisclosure,
   Spinner,
   Badge,
+  Stack, Text, Avatar,
+  useColorModeValue
 } from "@chakra-ui/react";
-import { FaLock, FaUnlock, FaTrash, FaCheck } from "react-icons/fa";
+import { FaLock, FaUnlock, FaTrash } from "react-icons/fa";
 
 export default function SuperAdminAdminsPage() {
   const [admins, setAdmins] = useState([]);
@@ -38,6 +34,12 @@ export default function SuperAdminAdminsPage() {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const { isOpen, onOpen, onClose } = useDisclosure();
+
+  const boxBg = useColorModeValue("white", "gray.800");
+  const textColor = useColorModeValue("gray.800", "white");
+  const modalBg = useColorModeValue("white", "gray.800");
+  const tableBg = useColorModeValue("white", "gray.700");
+  const borderColor = useColorModeValue("gray.200", "gray.700");
 
   useEffect(() => {
     async function fetchAdmins() {
@@ -107,7 +109,7 @@ export default function SuperAdminAdminsPage() {
   };
 
   return (
-    <Box p={6} mt={8}>
+    <Box p={6} mt={8} bg={boxBg} color={textColor} borderRadius="md" boxShadow="md">
       <h2 className="text-2xl font-bold mb-4">Manage Admins</h2>
       <Input
         placeholder="Search by name or email"
@@ -115,12 +117,15 @@ export default function SuperAdminAdminsPage() {
         onChange={(e) => setSearch(e.target.value)}
         mb={4}
         maxW="400px"
+        bg={boxBg}
+        color={textColor}
+        borderColor={borderColor}
       />
       {loading ? (
         <Spinner size="lg" />
       ) : (
-        <Table variant="simple" className="bg-white rounded shadow">
-          <Thead>
+        <Table variant="simple" bg={tableBg} borderColor={borderColor} className="rounded shadow">
+          <Thead bg={boxBg}>
             <Tr>
               <Th>Name</Th>
               <Th>Email</Th>
@@ -134,7 +139,7 @@ export default function SuperAdminAdminsPage() {
             {filtered.map((admin) => (
               <Tr
                 key={admin.id}
-                className="cursor-pointer hover:bg-gray-50"
+                className="cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700"
                 onClick={() => handleRowClick(admin)}
               >
                 <Td>{admin.displayName || admin.name}</Td>
@@ -161,7 +166,7 @@ export default function SuperAdminAdminsPage() {
                       isLoading={actionLoading}
                       onClick={() => handleValidate(admin)}
                     >
-                      <FaTrash/>
+                      <FaTrash />
                     </Button>
                   )}
                   <Button
@@ -179,7 +184,7 @@ export default function SuperAdminAdminsPage() {
                     isLoading={actionLoading}
                     onClick={() => handleDelete(admin)}
                   >
-                    <FaTrash/>
+                    <FaTrash />
                   </Button>
                 </Td>
               </Tr>
@@ -190,64 +195,80 @@ export default function SuperAdminAdminsPage() {
       {/* Admin Detail Modal */}
       <Modal isOpen={isOpen} onClose={onClose} size="lg">
         <ModalOverlay />
-        <ModalContent>
+        <ModalContent bg={modalBg} color={textColor}>
           <ModalHeader>Admin Details</ModalHeader>
           <ModalBody>
             {selectedAdmin && (
-              <Box>
-                <p>
-                  <b>Name:</b> {selectedAdmin.displayName || selectedAdmin.name}
-                </p>
-                <p>
-                  <b>Email:</b> {selectedAdmin.email}
-                </p>
-                <p>
-                  <b>Validated:</b> {selectedAdmin.validated ? "Yes" : "No"}
-                </p>
-                <p>
-                  <b>Status:</b> {selectedAdmin.status || "active"}
-                </p>
-                <p>
-                  <b>Joined:</b>{" "}
-                  {selectedAdmin.createdAt && selectedAdmin.createdAt.toDate
-                    ? selectedAdmin.createdAt.toDate().toLocaleString()
-                    : ""}
-                </p>
-                <p>
-                  <b>Qualifications:</b> {selectedAdmin.qualifications}
-                </p>
-                <p>
-                  <b>Subjects/Exams Taught:</b>{" "}
-                  {Array.isArray(selectedAdmin.subjects)
-                    ? selectedAdmin.subjects.join(", ")
-                    : selectedAdmin.subjects}
-                </p>
-                <p>
-                  <b>Teaching Experience:</b> {selectedAdmin.experience}
-                </p>
-                <p>
-                  <b>Phone Number:</b> {selectedAdmin.phone}
-                </p>
-                <p>
-                  <b>Profile Picture:</b>{" "}
-                  <span>{selectedAdmin.profilePic}</span>
-                </p>
-                {adminStats ? (
-                  <>
-                    <p>
-                      <b>Bundles Created:</b> {adminStats.bundlesCreated}
-                    </p>
-                    <p>
-                      <b>Revenue:</b> ₹{adminStats.revenue}
-                    </p>
-                    <p>
-                      <b>Engagement (Bundle Purchases):</b>{" "}
-                      {adminStats.engagement}
-                    </p>
-                  </>
-                ) : (
-                  <Spinner size="sm" />
-                )}
+              <Box
+                bg={boxBg}
+                p={6}
+                borderRadius="md"
+                boxShadow="md"
+                color={textColor}
+              >
+                <Stack spacing={3}>
+                  <Text>
+                    <b>Name:</b> {selectedAdmin.displayName || selectedAdmin.name}
+                  </Text>
+                  <Text>
+                    <b>Email:</b> {selectedAdmin.email}
+                  </Text>
+                  <Text>
+                    <b>Validated:</b> {selectedAdmin.validated ? "Yes" : "No"}
+                  </Text>
+                  <Text>
+                    <b>Status:</b> {selectedAdmin.status || "active"}
+                  </Text>
+                  <Text>
+                    <b>Joined:</b>{" "}
+                    {selectedAdmin.createdAt && selectedAdmin.createdAt.toDate
+                      ? selectedAdmin.createdAt.toDate().toLocaleString()
+                      : ""}
+                  </Text>
+                  <Text>
+                    <b>Qualifications:</b> {selectedAdmin.qualifications}
+                  </Text>
+                  <Text>
+                    <b>Subjects/Exams Taught:</b>{" "}
+                    {Array.isArray(selectedAdmin.subjects)
+                      ? selectedAdmin.subjects.join(", ")
+                      : selectedAdmin.subjects}
+                  </Text>
+                  <Text>
+                    <b>Teaching Experience:</b> {selectedAdmin.experience}
+                  </Text>
+                  <Text>
+                    <b>Phone Number:</b> {selectedAdmin.phone}
+                  </Text>
+                  <Box>
+                    <b>Profile Picture:</b>{" "}
+                    {selectedAdmin.profilePic ? (
+                      <Avatar
+                        src={selectedAdmin.profilePic}
+                        name={selectedAdmin.displayName || selectedAdmin.name}
+                        size="md"
+                        ml={2}
+                      />
+                    ) : (
+                      <span>No picture</span>
+                    )}
+                  </Box>
+                  {adminStats ? (
+                    <>
+                      <Text>
+                        <b>Bundles Created:</b> {adminStats.bundlesCreated}
+                      </Text>
+                      <Text>
+                        <b>Revenue:</b> ₹{adminStats.revenue}
+                      </Text>
+                      <Text>
+                        <b>Engagement (Bundle Purchases):</b> {adminStats.engagement}
+                      </Text>
+                    </>
+                  ) : (
+                    <Spinner size="sm" />
+                  )}
+                </Stack>
               </Box>
             )}
           </ModalBody>

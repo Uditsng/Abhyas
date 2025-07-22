@@ -7,7 +7,7 @@ import {
   markPayoutAsPaid
 } from '../../../lib/superAdminRevenueService';
 import { getAllExpenses } from '../../../lib/superAdminExpensesService';
-import { Box, Button, Table, Thead, Tbody, Tr, Th, Td, Spinner, Badge, Flex } from '@chakra-ui/react';
+import { Box, Button, Table, Thead, Tbody, Tr, Th, Td, Spinner, Badge, Flex, useColorModeValue } from '@chakra-ui/react';
 
 export default function SuperAdminRevenuePage() {
   const [stats, setStats] = useState({ totalEarnings: 0, platformCommission: 0 });
@@ -42,22 +42,27 @@ export default function SuperAdminRevenuePage() {
     setActionLoading(false);
   };
 
+  // Add color mode values
+  const tableBg = useColorModeValue('white', 'gray.800');
+  const textColor = useColorModeValue('gray.900', 'gray.100');
+  const cardBg = useColorModeValue('white', 'gray.800');
+
   return (
-    <Box p={6} mt={8}>
+    <Box p={6} mt={8} color={textColor}>
       <h2 className="text-2xl font-bold mb-4">Revenue & Payouts</h2>
       {loading ? <Spinner size="lg" /> : (
         <>
           <Flex justify="space-between" align="flex-start" mb={6} direction={{ base: 'column', md: 'row' }}>
-            <Box className="mb-6" mb={{ base: 4, md: 0 }}>
+            <Box className="mb-6" mb={{ base: 4, md: 0 }} bg={cardBg} p={4} borderRadius="md" boxShadow="md">
               <p><b>Total Earnings:</b> ₹{stats.totalEarnings}</p>
               <p><b>Package Earnings:</b> ₹{stats.totalEarnings}</p>
               <p><b>Platform Commission (20%):</b> ₹{stats.platformCommission}</p>
             </Box>
-            <Box mb={4} fontWeight="bold" minW="220px">Total Expenses: ₹{expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0)}</Box>
+            <Box mb={4} fontWeight="bold" minW="220px" bg={cardBg} p={4} borderRadius="md" boxShadow="md">Total Expenses: ₹{expenses.reduce((sum, e) => sum + Number(e.amount || 0), 0)}</Box>
           </Flex>
-          <Box className="mb-6">
+          <Box className="mb-6" bg={cardBg} p={4} borderRadius="md" boxShadow="md">
             <h3 className="font-semibold mb-2">Monthly Revenue</h3>
-            <Table variant="simple" className="bg-white rounded shadow">
+            <Table variant="simple" bg={tableBg} borderRadius="md" boxShadow="sm">
               <Thead>
                 <Tr>
                   <Th>Month</Th>
@@ -74,9 +79,9 @@ export default function SuperAdminRevenuePage() {
               </Tbody>
             </Table>
           </Box>
-          <Box>
+          <Box bg={cardBg} p={4} borderRadius="md" boxShadow="md">
             <h3 className="font-semibold mb-2">Payout Requests</h3>
-            <Table variant="simple" className="bg-white rounded shadow">
+            <Table variant="simple" bg={tableBg} borderRadius="md" boxShadow="sm">
               <Thead>
                 <Tr>
                   <Th>Admin ID</Th>

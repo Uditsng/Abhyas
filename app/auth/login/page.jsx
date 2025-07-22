@@ -79,7 +79,11 @@ export default function LoginPage() {
       router.push('/admin')
     }
       } else {
-        router.push("/dashboard");
+        if (userData.status === 'blocked') {
+        router.push('/auth/login');
+        }else{
+            router.push("/dashboard"); 
+          }        
       }
     } catch (error) {
       console.error("Login error:", error);

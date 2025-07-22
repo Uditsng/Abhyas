@@ -1,0 +1,218 @@
+"use client";
+
+import { useCartStore } from "@/lib/cartStore";
+import { useRouter } from "next/navigation";
+import { FaTrash } from "react-icons/fa";
+import {
+  Box,
+  Flex,
+  Text,
+  Image,
+  Button,
+  VStack,
+  HStack,
+  Divider,
+  useColorModeValue,
+  Stack,
+  Spacer,
+  useDisclosure,
+  AlertDialog,
+  AlertDialogOverlay,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogBody,
+  AlertDialogFooter,
+} from "@chakra-ui/react";
+import { useRef } from "react";
+
+export default function CartPage() {
+  const { cartItems, removeFromCart, clearCart } = useCartStore();
+  const router = useRouter();
+
+  const subtotal = cartItems.reduce((sum, item) => sum + (item.price || 0), 0);
+  const tax = +(subtotal * 0.18).toFixed(2);
+  const discount = 0;
+  const total = subtotal + tax - discount;
+
+  const cardBg = useColorModeValue("white", "gray.800");
+  const borderColor = useColorModeValue("gray.200", "whiteAlpha.200");
+  const shadow = useColorModeValue("md", "dark-lg");
+
+  // Remove All Dialog
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const cancelRef = useRef();
+  const handleRemoveAll = () => {
+    clearCart();
+    onClose();
+  };
+
+  const handleCheckout = () => {
+    if (cartItems.length === 0) return;
+    router.push("/checkout");
+  };
+
+  return (
+    <Flex minH="100vh" align="center" justify="center" bg={useColorModeValue("gray.50", "gray.900")}
+      py={{ base: 8, md: 16 }} px={4}>
+      <Box
+        w="full"
+        maxW="5xl"
+        bg={cardBg}
+        borderRadius="xl"
+        boxShadow={shadow}
+        borderWidth={1}
+        borderColor={borderColor}
+        p={{ base: 4, md: 8 }}
+      >
+        <Text fontSize="2xl" fontWeight="bold" mb={6}>
+          🛒 Your Cart
+        </Text>
+        {cartItems.length === 0 ? (
+          <Box textAlign="center" color={useColorModeValue("gray.500", "gray.400")} py={20} fontSize="lg">
+            Your cart is empty 😢
+          </Box>
+        ) : (
+          <Stack direction={{ base: "column", md: "row" }} spacing={8} align="flex-start">
+            {/* Cart Items */}
+            <VStack align="stretch" flex={2} spacing={4}>
+              {cartItems.map((bundle, index) => (
+                <Flex
+                  key={bundle.id}
+                  align="center"
+                  borderRadius="none"
+                  borderWidth={0}
+                  p={2}
+                  gap={4}
+                  direction={{ base: "column", sm: "row" }}
+                >
+     
+                  <Image
+                    src={bundle.imageUrl}
+                    alt={bundle.title}
+                    objectFit="contain"
+                    borderRadius="md"
+                    borderWidth={1}
+                    borderColor={borderColor}
+                    w={{ base: "100px", sm: "140px" }}
+                    h={{ base: "60px", sm: "80px" }}
+                    bg={useColorModeValue("white", "gray.700")}
+                  />
+                  <Box flex={1} minW={0}>
+                    <Text fontWeight="semibold" fontSize={{ base: "md", sm: "lg" }} isTruncated>
+                      {bundle.title}
+                    </Text>
+                  </Box>
+                  <Text color="blue" fontWeight="bold" fontSize={{ base: "md", sm: "lg" }} minW="70px" textAlign="right">
+                    ₹{bundle.price}
+                  </Text>
+                  <Button
+                    onClick={() => removeFromCart(bundle.id)}
+                    colorScheme="red"
+                    variant="ghost"
+                    leftIcon={<FaTrash />}
+                    size="sm"
+                  >
+                    Remove
+                  </Button>
+                </Flex>
+              ))}
+              {/* Remove All Button at the bottom */}
+              {cartItems.length >= 2 && (
+                <Box mt={2} textAlign="right">
+                  <Button
+                    colorScheme="red"
+                    variant="outline"
+                    size="sm"
+                    leftIcon={<FaTrash />}
+                    onClick={onOpen}
+                  >
+                    Remove All
+                  </Button>
+                </Box>
+              )}
+            </VStack>
+            {/* Cart Summary */}
+            <Box
+              flex={1}
+              w="full"
+              maxW="340px"
+              bg={useColorModeValue("gray.50", "whiteAlpha.100")}
+              borderRadius="lg"
+              boxShadow="sm"
+              borderWidth={1}
+              borderColor={borderColor}
+              p={6}
+              mt={{ base: 4, md: 0 }}
+            >
+              <Text fontSize="xl" fontWeight="bold" mb={4} textAlign="center">
+                Summary
+              </Text>
+              <VStack align="stretch" spacing={3}>
+                <HStack justify="space-between">
+                  <Text fontWeight="medium">Subtotal:</Text>
+                  <Text fontWeight="bold">₹{subtotal}</Text>
+                </HStack>
+                <HStack justify="space-between">
+                  <Text fontWeight="medium">Tax (18%):</Text>
+                  <Text>₹{tax}</Text>
+                </HStack>
+                <HStack justify="space-between">
+                  <Text fontWeight="medium">Discount:</Text>
+                  <Text color={discount === 0 ? useColorModeValue("gray.500", "gray.400") : "green.500"}>
+                    {discount === 0 ? "No discount available" : `₹${discount}`}
+                  </Text>
+                </HStack>
+                <Divider />
+                <HStack justify="space-between">
+                  <Text fontWeight="bold" fontSize="lg">Total:</Text>
+                  <Text fontWeight="bold" fontSize="lg" color="blue">₹{total}</Text>
+                </HStack>
+                <Text fontSize="xs" color={useColorModeValue("gray.500", "gray.400")} textAlign="right">
+                  (18% tax included)
+                </Text>
+                <Button
+                  colorScheme="blue"
+                  w="full"
+                  mt={2}
+                  size="md"
+                  onClick={handleCheckout}
+                  isDisabled={cartItems.length === 0}
+                >
+                  Buy Now
+                </Button>
+              </VStack>
+            </Box>
+            {/* Remove All Confirmation Dialog */}
+            <AlertDialog
+              isOpen={isOpen}
+              leastDestructiveRef={cancelRef}
+              onClose={onClose}
+              isCentered
+            >
+              <AlertDialogOverlay> 
+                <AlertDialogContent>
+                  <AlertDialogHeader fontSize="lg" fontWeight="bold">
+                    Remove All Items
+                  </AlertDialogHeader>
+                  <AlertDialogBody>
+                    Are you sure you want to remove all items from your cart? This action cannot be undone.
+                  </AlertDialogBody>
+                  <AlertDialogFooter>
+                    <Button ref={cancelRef} onClick={onClose}>
+                      Cancel
+                    </Button>
+                    <Button colorScheme="red" onClick={handleRemoveAll} ml={3}>
+                      Remove All
+                    </Button>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialogOverlay>
+            </AlertDialog>
+          </Stack>
+        )}
+      </Box>
+    </Flex>
+  );
+}
+
+

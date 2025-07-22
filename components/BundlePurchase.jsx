@@ -26,9 +26,9 @@ export default function BundlePurchase({ bundle }) {
   const priceBg = useColorModeValue('green.50', 'green.900');
   const priceColor = useColorModeValue('green.600', 'green.200');
 
-  const handleBuyNow = () => {
-    router.push(`/checkout/${bundle.id}`);
-  };
+  // const handleBuyNow = () => {
+  //   router.push(`/checkout/${bundle.id}`);
+  // }; 
 
   return (
     <Box
@@ -112,15 +112,16 @@ export default function BundlePurchase({ bundle }) {
             </Button>
           </Link> */}
 
-          <Button
-            colorScheme="blue"
-            variant="solid"
-            w="full"
-            borderRadius="full"
-            onClick={handleBuyNow}
-          >
-            Buy Now
-          </Button>
+          <Link href={`/bundles/${bundle.id}`}>
+            <Button
+              colorScheme="blue"
+              variant="solid"
+              w="full"
+              borderRadius="full"
+            >
+              Details
+            </Button>
+          </Link>
         </Flex>
       </Stack>
     </Box>

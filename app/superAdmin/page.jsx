@@ -15,6 +15,7 @@ import {
   getTopBottomBundles
 } from '../../lib/superAdminDashboardService';
 import { FiUsers, FiUserCheck, FiDollarSign, FiPieChart } from 'react-icons/fi';
+import { Box, useColorModeValue } from '@chakra-ui/react';
 
 export default function SuperAdminDashboardPage() {
   const [stats, setStats] = useState({});
@@ -89,33 +90,36 @@ export default function SuperAdminDashboardPage() {
     ]
   } : null;
 
-  if (loading) return <div className="p-8 text-lg">Loading dashboard...</div>;
-  if (error) return <div className="p-8 text-red-500">{error}</div>;
+  const cardBg = useColorModeValue('white', 'gray.800');
+  const textColor = useColorModeValue('gray.900', 'gray.100');
+
+  if (loading) return <Box p={8} fontSize="lg">Loading dashboard...</Box>;
+  if (error) return <Box p={8} color="red.500">{error}</Box>;
 
   return (
-    <div className="mt-8">
+    <Box mt={8} color={textColor}>
       <h1 className="text-3xl font-bold mb-6">SuperAdmin Dashboard</h1>
       {/* Stats Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <Box className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <StatCard title="Total Users" value={stats.totalUsers} icon={<FiUsers size={28} />} />
         <StatCard title="Active Users" value={stats.activeUsers} icon={<FiUserCheck size={28} />} />
         <StatCard title="Total Earnings" value={`₹${stats.totalEarnings}`} icon={<FiDollarSign size={28} />} />
         <StatCard title="Platform Commission" value={`₹${stats.platformCommission}`} icon={<FiPieChart size={28} />} />
-      </div>
+      </Box>
       {/* Charts Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <div className="bg-white p-4 rounded shadow">
+      <Box className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <Box bg={cardBg} p={4} borderRadius="md" boxShadow="md">
           <h2 className="font-semibold mb-2">Growth (Users & Admins)</h2>
           {areaChartData ? <AreaChart data={areaChartData} /> : <div>No data</div>}
-        </div>
-        <div className="bg-white p-4 rounded shadow">
+        </Box>
+        <Box bg={cardBg} p={4} borderRadius="md" boxShadow="md">
           <h2 className="font-semibold mb-2">Revenue (Monthly)</h2>
           {barChartData ? <BarChart data={barChartData} /> : <div>No data</div>}
-        </div>
-      </div>
+        </Box>
+      </Box>
       {/* Top/Bottom 5 Teachers and Bundles */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white p-4 rounded shadow">
+      <Box className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <Box bg={cardBg} p={4} borderRadius="md" boxShadow="md">
           <h2 className="font-semibold mb-2">Top 5 Teachers</h2>
           <ul>
             {topTeachers.map(([adminId, revenue]) => (
@@ -128,8 +132,8 @@ export default function SuperAdminDashboardPage() {
               <li key={adminId}>{adminId}: ₹{revenue}</li>
             ))}
           </ul>
-        </div>
-        <div className="bg-white p-4 rounded shadow">
+        </Box>
+        <Box bg={cardBg} p={4} borderRadius="md" boxShadow="md">
           <h2 className="font-semibold mb-2">Top 5 Bundles</h2>
           <ul>
             {topBundles.map(([bundleId, sales]) => (
@@ -142,8 +146,8 @@ export default function SuperAdminDashboardPage() {
               <li key={bundleId}>{bundleId}: ₹{sales}</li>
             ))}
           </ul>
-        </div>
-      </div>
-    </div>
+        </Box>
+      </Box>
+    </Box>
   );
 } 
