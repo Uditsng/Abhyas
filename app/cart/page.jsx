@@ -1,7 +1,6 @@
 "use client";
 
 import { useCartStore } from "@/lib/cartStore";
-import { useRouter } from "next/navigation";
 import { FaTrash } from "react-icons/fa";
 import {
   Box,
@@ -14,7 +13,6 @@ import {
   Divider,
   useColorModeValue,
   Stack,
-  Spacer,
   useDisclosure,
   AlertDialog,
   AlertDialogOverlay,
@@ -22,35 +20,109 @@ import {
   AlertDialogHeader,
   AlertDialogBody,
   AlertDialogFooter,
+  Input
 } from "@chakra-ui/react";
-import { useRef } from "react";
+import { useRef, useEffect } from "react";
+import useRealtimeUserData from "@/hooks/useRealtimeUserData";
+import { useAuthState } from "react-firebase-hooks/auth"
+import { auth } from "@/lib/firebaseConfig";
+
 
 export default function CartPage() {
+  const [user] = useAuthState(auth);
   const { cartItems, removeFromCart, clearCart } = useCartStore();
-  const router = useRouter();
-
+  const syncCartFromFirestore = useCartStore(state => state.syncCartFromFirestore);
   const subtotal = cartItems.reduce((sum, item) => sum + (item.price || 0), 0);
   const tax = +(subtotal * 0.18).toFixed(2);
   const discount = 0;
   const total = subtotal + tax - discount;
-
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const cancelRef = useRef();
   const cardBg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "whiteAlpha.200");
   const shadow = useColorModeValue("md", "dark-lg");
+ 
 
-  // Remove All Dialog
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const cancelRef = useRef();
+
+
+    useEffect(() => {
+    if (user?.uid) {
+      syncCartFromFirestore(user.uid);
+    }
+  }, [user]);
+
+  useEffect(()=>{
+    const script = document.createElement("script")
+    script.src = "https://checkout.razorpay.com/v1/checkout.js"
+    script.async = true
+    document.body.appendChild(script)
+    return() =>{
+      document.body.removeChild(script)
+    }
+  }, [])
+
   const handleRemoveAll = () => {
     clearCart();
     onClose();
   };
 
-  const handleCheckout = () => {
-    if (cartItems.length === 0) return;
-    router.push("/checkout");
-  };
+const { users, loading } = useRealtimeUserData();
 
+if (loading) {
+  return <p>Loading user info...</p>;
+}
+
+  const handleCheckout = async () => {
+    if (cartItems.length === 0) return;
+
+    const bundle = cartItems[0]
+    const amount = Math.round(total * 100)
+
+    try{
+      const res = await fetch("/api/razorpay/order",{
+        method:"POST",
+        headers:{"Content-Type":"application/JSON"},
+        body:JSON.stringify({amount}),
+      })
+      const order = await res.json()
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: order.amount,
+        currency: "INR",
+        name:"ABHYAS",
+        description: bundle.title,
+        order_id: order.id,
+        handler: async function (response){
+          await fetch("/api/razorpay/verify",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body: JSON.stringify({
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_signature: response.razorpay_signature,
+              user,
+              bundle,
+              amount,
+            })
+          })
+        },
+        prefill:{
+          name: user?.displayName || "Guest",
+          email:user?.email || "",
+          contact: user?.phone || "",
+        },
+        theme:{
+          color:"#3085d6",
+        }
+      }
+      const rzp = new Razorpay(options)
+      rzp.open()
+    }catch(error){
+      console.error("Payment error:", error)
+    } 
+  };
+console.log("User in Razorpay checkout:", user);
   return (
     <Flex minH="100vh" align="center" justify="center" bg={useColorModeValue("gray.50", "gray.900")}
       py={{ base: 8, md: 16 }} px={4}>
@@ -102,7 +174,7 @@ export default function CartPage() {
                       {bundle.title}
                     </Text>
                   </Box>
-                  <Text color="blue" fontWeight="bold" fontSize={{ base: "md", sm: "lg" }} minW="70px" textAlign="right">
+                  <Text color={useColorModeValue("green.500", "green.400")} fontWeight="bold" fontSize={{ base: "md", sm: "lg" }} minW="70px" textAlign="right">
                     ₹{bundle.price}
                   </Text>
                   <Button
@@ -157,15 +229,22 @@ export default function CartPage() {
                   <Text>₹{tax}</Text>
                 </HStack>
                 <HStack justify="space-between">
-                  <Text fontWeight="medium">Discount:</Text>
+                  <Text fontWeight="medium" color="yellow.400">Coupon:</Text>
                   <Text color={discount === 0 ? useColorModeValue("gray.500", "gray.400") : "green.500"}>
-                    {discount === 0 ? "No discount available" : `₹${discount}`}
+                  <Input size="sm" placeholder= "Coupon Expired"/>
+                  </Text>
+                </HStack>  
+                <HStack justify="space-between">
+                  <Text fontWeight="medium">Discount:</Text>
+                  
+                  <Text color={discount === 0 ? useColorModeValue("gray.500", "gray.400") : "green.500"}>
+                    {discount === 0 ? "No coupon applied" : `₹${discount}`}
                   </Text>
                 </HStack>
                 <Divider />
                 <HStack justify="space-between">
                   <Text fontWeight="bold" fontSize="lg">Total:</Text>
-                  <Text fontWeight="bold" fontSize="lg" color="blue">₹{total}</Text>
+                  <Text fontWeight="bold" fontSize="lg" color={useColorModeValue("green.500", "green.400")}>₹{total}</Text>
                 </HStack>
                 <Text fontSize="xs" color={useColorModeValue("gray.500", "gray.400")} textAlign="right">
                   (18% tax included)

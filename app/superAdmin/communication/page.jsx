@@ -1,16 +1,19 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { sendNotification, getAllNotifications } from '../../../lib/superAdminCommunicationService';
-import { Box, Button, Input, Select, Textarea, Table, Thead, Tbody, Tr, Th, Td, Spinner, Badge, useColorModeValue } from '@chakra-ui/react';
+import { Box, Button, Input, Select, Textarea, Table, Thead, Tbody, Tr, Th, Td, Spinner, Badge, useColorModeValue, Checkbox, useToast } from '@chakra-ui/react';
 
 export default function SuperAdminCommunicationPage() {
   const [message, setMessage] = useState('');
   const [role, setRole] = useState('all');
   const [to, setTo] = useState('all');
   const [type, setType] = useState('announcement');
+  const [emailSubject, setEmailSubject] = useState('');
+  const [sendEmail, setSendEmail] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const toast = useToast();
 
   // Add color mode values
   const cardBg = useColorModeValue('blue.100', 'blue.700'); //'white', 'gray.800'
@@ -30,15 +33,82 @@ export default function SuperAdminCommunicationPage() {
   const handleSend = async (e) => {
     e.preventDefault();
     if (!message.trim()) return;
+    
+    // Validate email subject if email is enabled
+    if (sendEmail && !emailSubject.trim()) {
+      toast({
+        title: 'Email Subject Required',
+        description: 'Please enter an email subject when sending emails.',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+    //Extra added
+    if (type === 'direct' && (!to || to === 'all')) {
+  toast({
+    title: 'Recipient Required',
+    description: 'Please provide a valid user ID for direct messages.',
+    status: 'error',
+    duration: 3000,
+    isClosable: true,
+  });
+  return;
+}
+
     setSending(true);
-    await sendNotification({ to, role, message, type });
-    setMessage('');
-    setTo('all');
-    setRole('all');
-    setType('announcement');
-    // Refresh notifications
-    const all = await getAllNotifications();
-    setNotifications(all);
+    
+    
+    try {
+      const result = await sendNotification({ 
+        to, 
+        role, 
+        message, 
+        type, 
+        emailSubject: sendEmail ? emailSubject : '',
+        sendEmail 
+      });
+      
+      // Show success message
+      let successMessage = 'Notification sent successfully!';
+      if (sendEmail) {
+        if (result.emailResult) {
+          successMessage += ` Email sent to ${result.emailResult.recipientCount} recipients.`;
+        } else if (result.emailError) {
+          successMessage += ` Note: Email failed to send - ${result.emailError}`;
+        }
+      }
+      
+      toast({
+        title: 'Success',
+        description: successMessage,
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+      
+      // Reset form
+      setMessage('');
+      setTo('all');
+      setRole('all');
+      setType('announcement');
+      setEmailSubject('');
+      setSendEmail(false);
+      
+      // Refresh notifications
+      const all = await getAllNotifications();
+      setNotifications(all);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to send notification. Please try again.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+    }
+    
     setSending(false);
   };
 
@@ -69,7 +139,38 @@ export default function SuperAdminCommunicationPage() {
           color={textColor}
           size="lg" 
         />
-        <Button type="submit" colorScheme="blue" isLoading={sending}>Send</Button>
+        
+        {/* Email Options */}
+        <div className="mb-4">
+          <Checkbox 
+            isChecked={sendEmail} 
+            onChange={e => setSendEmail(e.target.checked)}
+            colorScheme="blue"
+            mb={3}
+          >
+            Also send via email
+          </Checkbox>
+          
+          {sendEmail && (
+            <Input
+              placeholder="Email subject..."
+              value={emailSubject}
+              onChange={e => setEmailSubject(e.target.value)}
+              bg={cardBg}
+              color={textColor}
+              size="md"
+            />
+          )}
+        </div>
+        
+        <Button 
+          type="submit" 
+          colorScheme="blue" 
+          isLoading={sending}
+          loadingText={sendEmail ? "Sending notification & email..." : "Sending notification..."}
+        >
+          {sendEmail ? "Send Notification & Email" : "Send Notification"}
+        </Button>
       </form>
       <h3 className="font-semibold mb-2">Sent Notifications & Announcements</h3>
       {loading ? <Spinner size="lg" /> : (
@@ -80,6 +181,7 @@ export default function SuperAdminCommunicationPage() {
               <Th>Role</Th>
               <Th>To</Th>
               <Th>Message</Th>
+              <Th>Email Status</Th>
               <Th>Sent At</Th>
             </Tr>
           </Thead>
@@ -90,6 +192,22 @@ export default function SuperAdminCommunicationPage() {
                 <Td>{n.role}</Td>
                 <Td>{n.to}</Td>
                 <Td>{n.message}</Td>
+                <Td>
+                  {n.emailSent ? (
+                    <div>
+                      {n.emailStatus === 'sent' && <Badge colorScheme="green">Email Sent</Badge>}
+                      {n.emailStatus === 'failed' && <Badge colorScheme="red">Email Failed</Badge>}
+                      {n.emailStatus === 'pending' && <Badge colorScheme="yellow">Email Pending</Badge>}
+                      {n.emailSubject && (
+                        <div className="text-xs text-gray-500 mt-1">
+                          Subject: {n.emailSubject}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <Badge variant="outline">Platform Only</Badge>
+                  )}
+                </Td>
                 <Td>{n.createdAt && n.createdAt.toDate ? n.createdAt.toDate().toLocaleString() : ''}</Td>
               </Tr>
             ))}
@@ -98,4 +216,4 @@ export default function SuperAdminCommunicationPage() {
       )}
     </Box>
   );
-} 
+}

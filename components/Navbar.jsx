@@ -84,7 +84,7 @@ if (/^\/tests(\/[^\/]+){1,2}$/.test(pathname)) {
           <div className="block md:hidden">
             <button
               onClick={toggleMenu}
-              className="md:hidden p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+              className="md:hidden p-2 transition"
             >
               {menuOpen ? (
                 <span className="text-2xl">✕</span> // X icon when menu is open

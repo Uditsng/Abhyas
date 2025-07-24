@@ -7,11 +7,10 @@ export default function TestResultsList({ results, loading, error }) {
 
   return (
     <div className="test-results-list">
-      <h3>Your Test Results</h3>
       <ul>
         {results.map(result => (
           <li key={result.id}>
-            <strong>{result.testId}</strong> - Score: {result.score}/{result.totalQuestions} ({((result.score/result.totalQuestions)*100).toFixed(1)}%)
+            <strong>{result.title}</strong> - Score: {result.score}/{result.totalQuestions} ({((result.score/result.totalQuestions)*100).toFixed(1)}%)
             <br />
             Date: {result.createdAt?.toDate ? result.createdAt.toDate().toLocaleString() : 'N/A'}
           </li>

@@ -1,9 +1,27 @@
-import { useEffect, useRef, useState } from 'react';
-import { Box, IconButton, Badge, Menu, MenuButton, MenuList, MenuItem, Text, Spinner, useColorModeValue } from '@chakra-ui/react';
-import { FaBell } from 'react-icons/fa';
-import { collection, query, where, orderBy, getDocs, onSnapshot } from 'firebase/firestore';
-import { db } from '@/lib/firebaseConfig';
-import { useAuth } from './AuthContext';
+import { useEffect, useRef, useState } from "react";
+import {
+  Box,
+  IconButton,
+  Badge,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  Text,
+  Spinner,
+  useColorModeValue,
+} from "@chakra-ui/react";
+import { FaBell } from "react-icons/fa";
+import {
+  collection,
+  query,
+  where,
+  orderBy,
+  getDocs,
+  onSnapshot,
+} from "firebase/firestore";
+import { db } from "@/lib/firebaseConfig";
+import { useAuth } from "./AuthContext";
 
 export default function NotificationBell() {
   const { user } = useAuth();
@@ -12,9 +30,9 @@ export default function NotificationBell() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [lastSeen, setLastSeen] = useState(null);
   const audioRef = useRef(null);
- 
-  const menuBg = useColorModeValue('white', 'gray.800');
-  const menuColor = useColorModeValue('gray.900', 'gray.100');
+
+  const menuBg = useColorModeValue("white", "gray.800");
+  const menuColor = useColorModeValue("gray.900", "gray.100");
 
   // Fetch notifications
   useEffect(() => {
@@ -22,36 +40,56 @@ export default function NotificationBell() {
     setLoading(true);
     // Announcements for all or for this role
     const q1 = query(
-      collection(db, 'notifications'),
-      where('role', 'in', ['all', user.role]),
-      orderBy('createdAt', 'desc')
+      collection(db, "notifications"),
+      where("role", "in", ["all", user.role]),
+      orderBy("createdAt", "desc")
     );
     // Direct messages to this user
     const q2 = query(
-      collection(db, 'notifications'),
-      where('to', '==', user.email),
-      orderBy('createdAt', 'desc')
+      collection(db, "notifications"),
+      where("to", "==", user.email),
+      orderBy("createdAt", "desc")
     );
+
+    let announcements = [];
+    let directMessages = [];
     // Listen for real-time updates
     const unsub1 = onSnapshot(q1, (snap1) => {
-      const ann = snap1.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setNotifications(prev => {
-        // Merge with direct messages if already loaded
-        if (prev.some(n => n.direct)) return [...ann, ...prev.filter(n => n.direct)].sort((a, b) => b.createdAt?.toDate?.() - a.createdAt?.toDate?.());
-        return ann;
-      });
-      setLoading(false);
+      announcements = snap1.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      updateCombinedNotifications();
     });
+
     const unsub2 = onSnapshot(q2, (snap2) => {
-      const direct = snap2.docs.map(doc => ({ id: doc.id, ...doc.data(), direct: true }));
-      setNotifications(prev => {
-        // Merge with announcements if already loaded
-        if (prev.some(n => !n.direct)) return [...prev.filter(n => !n.direct), ...direct].sort((a, b) => b.createdAt?.toDate?.() - a.createdAt?.toDate?.());
-        return direct;
-      });
-      setLoading(false);
+      directMessages = snap2.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+        direct: true,
+      }));
+      updateCombinedNotifications();
     });
-    return () => { unsub1(); unsub2(); };
+
+    const updateCombinedNotifications = () => {
+      const all = [...announcements, ...directMessages];
+
+      // Deduplicate by ID
+      const unique = Array.from(
+        new Map(all.map((item) => [item.id, item])).values()
+      );
+
+      const sorted = unique.sort((a, b) => {
+        const aDate = a.createdAt?.toDate?.() || new Date();
+        const bDate = b.createdAt?.toDate?.() || new Date();
+        return bDate - aDate;
+      });
+
+      setNotifications(sorted);
+      setLoading(false);
+    };
+
+    return () => {
+      unsub1();
+      unsub2();
+    };
   }, [user]);
 
   // Play sound on new notification
@@ -73,31 +111,61 @@ export default function NotificationBell() {
 
   return (
     <Menu>
-      <MenuButton as={IconButton} icon={<FaBell />} variant="ghost" size="lg" position="relative">
+      <MenuButton
+        as={IconButton}
+        icon={<FaBell />}
+        variant="ghost"
+        size="lg"
+        position="relative"
+      >
         {unreadCount > 0 && (
-          <Badge colorScheme="red" position="absolute" top="1" right="1" borderRadius="full" fontSize="0.7em">
+          <Badge
+            colorScheme="red"
+            position="absolute"
+            top="1"
+            right="1"
+            borderRadius="full"
+            fontSize="0.7em"
+          >
             {unreadCount}
           </Badge>
         )}
       </MenuButton>
-      <MenuList bg={menuBg} color={menuColor} maxH="350px" overflowY="auto" minW="340px">
-        <Box px={4} py={2} borderBottom="1px solid" borderColor={useColorModeValue('gray.200', 'gray.700')}>
+      <MenuList
+        bg={menuBg}
+        color={menuColor}
+        maxH="350px"
+        overflowY="auto"
+        minW="340px"
+      >
+        <Box
+          px={4}
+          py={2}
+          borderBottom="1px solid"
+          borderColor={useColorModeValue("gray.200", "gray.700")}
+        >
           <Text fontWeight="bold">Notifications</Text>
         </Box>
         {loading ? (
-          <Box p={4} textAlign="center"><Spinner size="sm" /></Box>
+          <Box p={4} textAlign="center">
+            <Spinner size="sm" />
+          </Box>
         ) : notifications.length === 0 ? (
-          <Box p={4} textAlign="center" color="gray.500">No notifications</Box>
+          <Box p={4} textAlign="center" color="gray.500">
+            No notifications
+          </Box>
         ) : (
-          notifications.map(n => (
+          notifications.map((n) => (
             <MenuItem key={n.id}>
               <Box>
                 <Text fontSize="sm" fontWeight="bold">
-                  {n.type === 'announcement' ? 'Announcement' : 'Direct'}
+                  {n.type === "announcement" ? "Announcement" : "Direct"}
                 </Text>
                 <Text fontSize="sm">{n.message}</Text>
                 <Text fontSize="xs" color="gray.500">
-                  {n.createdAt && n.createdAt.toDate ? n.createdAt.toDate().toLocaleString() : ''}
+                  {n.createdAt && n.createdAt.toDate
+                    ? n.createdAt.toDate().toLocaleString()
+                    : ""}
                 </Text>
               </Box>
             </MenuItem>
@@ -108,4 +176,4 @@ export default function NotificationBell() {
       <audio ref={audioRef} src="/notification.mp3" preload="auto" />
     </Menu>
   );
-} 
+}

@@ -13,7 +13,6 @@ import { db } from '@/lib/firebaseConfig';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import PieChart from '@/components/admin/PieChart';
-import { motion } from 'framer-motion';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebaseConfig';
 import { getAllTests } from '@/lib/tests';
@@ -187,7 +186,7 @@ export default function AdminDashboard() {
 
   return (
     <Box p={0}>
-      <div className="container mx-auto px-4 pt-16 md:px-8 lg:px-12 xl:px-24 w-full">
+      <div className="container mx-auto px-4 pt-12 md:px-8 lg:px-12 xl:px-24 w-full">
         {/* Welcome header */}
         <Box mb={12} textAlign="center">
           <Heading size="lg" mb={2}>Welcome to the Admin Dashboard</Heading>

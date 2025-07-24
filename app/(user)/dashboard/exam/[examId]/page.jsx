@@ -4,7 +4,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Box, Heading, SimpleGrid, Spinner, Text, Container } from "@chakra-ui/react";
 import { getAllBundles } from "@/lib/bundleService";
-import { collection, getDoc, doc, getDocs } from "firebase/firestore";
+import { getDoc, doc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 import BundlePurchase from "@/components/BundlePurchase";
 

@@ -7,8 +7,6 @@ import Link from 'next/link';
 import { auth } from '@/lib/firebaseConfig';
 import { useAuth } from '@/components/AuthContext';
 import { saveUserProfile, getUserProfile } from '@/lib/userService';
-import { getDoc, doc } from 'firebase/firestore';
-import { db } from '@/lib/firebaseConfig';
 
 function UserRegister({ onRegister, isLoading, error }) {
   const [name, setName] = useState('');
