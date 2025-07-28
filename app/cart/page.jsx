@@ -20,7 +20,9 @@ import {
   AlertDialogHeader,
   AlertDialogBody,
   AlertDialogFooter,
-  Input
+  Input,
+  Center,
+  Spinner
 } from "@chakra-ui/react";
 import { useRef, useEffect } from "react";
 import useRealtimeUserData from "@/hooks/useRealtimeUserData";
@@ -38,18 +40,22 @@ export default function CartPage() {
   const total = subtotal + tax - discount;
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef();
+  const bg = useColorModeValue('gray.50', "gray.900")
   const cardBg = useColorModeValue("white", "gray.800");
   const borderColor = useColorModeValue("gray.200", "whiteAlpha.200");
   const shadow = useColorModeValue("md", "dark-lg");
+  const emptyTextColor = useColorModeValue("gray.500", "gray.400")
+  const priceColor = useColorModeValue("green.500", "green.400")
+  const summaryBg = useColorModeValue("gray.50", "whiteAlpha.100")
+  const disabledCouponColor = useColorModeValue("gray.500", "gray.400")
  
 
 
 
-    useEffect(() => {
-    if (user?.uid) {
-      syncCartFromFirestore(user.uid);
-    }
-  }, [user]);
+useEffect(() => {
+  if (!user?.uid) return;
+  syncCartFromFirestore(user.uid);
+}, [user?.uid]);
 
   useEffect(()=>{
     const script = document.createElement("script")
@@ -66,11 +72,18 @@ export default function CartPage() {
     onClose();
   };
 
+
 const { users, loading } = useRealtimeUserData();
 
-if (loading) {
-  return <p>Loading user info...</p>;
+if ( loading) {
+  return (
+    <Center minH="300px">
+      <Spinner mr={2} />
+      <Text>Loading user info...</Text>
+    </Center>
+  );
 }
+
 
   const handleCheckout = async () => {
     if (cartItems.length === 0) return;
@@ -122,9 +135,9 @@ if (loading) {
       console.error("Payment error:", error)
     } 
   };
-console.log("User in Razorpay checkout:", user);
+
   return (
-    <Flex minH="100vh" align="center" justify="center" bg={useColorModeValue("gray.50", "gray.900")}
+    <Flex minH="100vh" align="center" justify="center" bg={bg}
       py={{ base: 8, md: 16 }} px={4}>
       <Box
         w="full"
@@ -140,7 +153,7 @@ console.log("User in Razorpay checkout:", user);
           🛒 Your Cart
         </Text>
         {cartItems.length === 0 ? (
-          <Box textAlign="center" color={useColorModeValue("gray.500", "gray.400")} py={20} fontSize="lg">
+          <Box textAlign="center" color={priceColor} py={20} fontSize="lg">
             Your cart is empty 😢
           </Box>
         ) : (
@@ -167,14 +180,14 @@ console.log("User in Razorpay checkout:", user);
                     borderColor={borderColor}
                     w={{ base: "100px", sm: "140px" }}
                     h={{ base: "60px", sm: "80px" }}
-                    bg={useColorModeValue("white", "gray.700")}
+                    bg={bg}
                   />
                   <Box flex={1} minW={0}>
                     <Text fontWeight="semibold" fontSize={{ base: "md", sm: "lg" }} isTruncated>
                       {bundle.title}
                     </Text>
                   </Box>
-                  <Text color={useColorModeValue("green.500", "green.400")} fontWeight="bold" fontSize={{ base: "md", sm: "lg" }} minW="70px" textAlign="right">
+                  <Text color={priceColor} fontWeight="bold" fontSize={{ base: "md", sm: "lg" }} minW="70px" textAlign="right">
                     ₹{bundle.price}
                   </Text>
                   <Button
@@ -208,7 +221,7 @@ console.log("User in Razorpay checkout:", user);
               flex={1}
               w="full"
               maxW="340px"
-              bg={useColorModeValue("gray.50", "whiteAlpha.100")}
+              bg={bg}
               borderRadius="lg"
               boxShadow="sm"
               borderWidth={1}
@@ -216,37 +229,37 @@ console.log("User in Razorpay checkout:", user);
               p={6}
               mt={{ base: 4, md: 0 }}
             >
-              <Text fontSize="xl" fontWeight="bold" mb={4} textAlign="center">
+              <Text fontSize="xl" fontWeight="bold" mb={4} textAlign="center" bg={summaryBg}>
                 Summary
               </Text>
               <VStack align="stretch" spacing={3}>
                 <HStack justify="space-between">
                   <Text fontWeight="medium">Subtotal:</Text>
-                  <Text fontWeight="bold">₹{subtotal}</Text>
+                  <Text fontWeight="bold" color={priceColor}>₹{subtotal}</Text>
                 </HStack>
                 <HStack justify="space-between">
                   <Text fontWeight="medium">Tax (18%):</Text>
-                  <Text>₹{tax}</Text>
+                  <Text color="red.300">₹{tax}</Text>
                 </HStack>
                 <HStack justify="space-between">
                   <Text fontWeight="medium" color="yellow.400">Coupon:</Text>
-                  <Text color={discount === 0 ? useColorModeValue("gray.500", "gray.400") : "green.500"}>
+                  <Text color={discount === 0 ? {disabledCouponColor} : "green.500"}>
                   <Input size="sm" placeholder= "Coupon Expired"/>
                   </Text>
                 </HStack>  
                 <HStack justify="space-between">
                   <Text fontWeight="medium">Discount:</Text>
                   
-                  <Text color={discount === 0 ? useColorModeValue("gray.500", "gray.400") : "green.500"}>
+                  <Text color={discount === 0 ? disabledCouponColor : "green.500"}>
                     {discount === 0 ? "No coupon applied" : `₹${discount}`}
                   </Text>
                 </HStack>
                 <Divider />
                 <HStack justify="space-between">
                   <Text fontWeight="bold" fontSize="lg">Total:</Text>
-                  <Text fontWeight="bold" fontSize="lg" color={useColorModeValue("green.500", "green.400")}>₹{total}</Text>
+                  <Text fontWeight="bold" fontSize="lg" color={priceColor}>₹{total}</Text>
                 </HStack>
-                <Text fontSize="xs" color={useColorModeValue("gray.500", "gray.400")} textAlign="right">
+                <Text fontSize="xs" color={emptyTextColor} textAlign="right">
                   (18% tax included)
                 </Text>
                 <Button
@@ -255,7 +268,7 @@ console.log("User in Razorpay checkout:", user);
                   mt={2}
                   size="md"
                   onClick={handleCheckout}
-                  isDisabled={cartItems.length === 0}
+                  isDisabled={!user || cartItems.length === 0}
                 >
                   Buy Now
                 </Button>

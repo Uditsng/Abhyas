@@ -228,36 +228,39 @@ export default function CommunicationPage() {
   const [mode, setMode] = useState('announcement');
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <h1 className="text-4xl font-extrabold text-center mb-8">Communication Center</h1>
-
+  <div className="min-h-screen flex items-center justify-center" >
+  <div className="w-full max-w-2xl bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6 sm:p-8 transition-colors duration-300">
+    <h1 className="text-3xl sm:text-4xl font-extrabold text-center mb-6 sm:mb-8 text-gray-900 dark:text-white">Communication Center</h1>
 
       {/* Radio button selection */}
-      <div className="flex gap-6 mb-6">
-        <label className="flex items-center gap-2">
+      <div className="flex items-center justify-center mb-6 space-x-6">
+      <label className="flex items-center mr-6 cursor-pointer">
           <input
             type="radio"
             name="communicationMode"
             value="announcement"
             checked={mode === 'announcement'}
             onChange={() => setMode('announcement')}
+            className="form-radio text-blue-600 dark:text-blue-400 mr-2"
           />
-          Announcement
+          <span className="font-medium text-gray-800 dark:text-gray-100">Announcement</span>
         </label>
-        <label className="flex items-center gap-2">
+        <label className="flex items-center cursor-pointer">
           <input
             type="radio"
             name="communicationMode"
             value="direct"
             checked={mode === 'direct'}
             onChange={() => setMode('direct')}
+            className="form-radio text-blue-600 dark:text-blue-400 mr-2"
           />
-          Direct Message
+          <span className="fint-meium text-gray-800 dark:text-gray-100">Direct Mailing</span>
         </label>
       </div>
 
       {/* Conditional form rendering */}
       {mode === 'announcement' ? <AnnouncementForm /> : <DirectMessageForm />}
+    </div>
     </div>
   );
 }

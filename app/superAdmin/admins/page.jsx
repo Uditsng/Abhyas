@@ -23,7 +23,7 @@ import {
   Stack, Text, Avatar,
   useColorModeValue
 } from "@chakra-ui/react";
-import { FaLock, FaUnlock, FaTrash } from "react-icons/fa";
+import { FaLock, FaUnlock, FaTrash, FaCheck } from "react-icons/fa";
 
 export default function SuperAdminAdminsPage() {
   const [admins, setAdmins] = useState([]);
@@ -166,7 +166,7 @@ export default function SuperAdminAdminsPage() {
                       isLoading={actionLoading}
                       onClick={() => handleValidate(admin)}
                     >
-                      <FaTrash />
+                      <FaCheck />
                     </Button>
                   )}
                   <Button

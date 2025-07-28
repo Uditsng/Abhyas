@@ -145,6 +145,8 @@ import { useCartStore } from "@/lib/cartStore";
 import FloatingCartIcon from "@/components/FloatingCartIcon";
 import { motion } from "framer-motion";
 import { FaCartPlus, FaShoppingBag } from "react-icons/fa";
+import { auth } from "@/lib/firebaseConfig";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 
 export default function BundleDescriptionPage() {
@@ -154,6 +156,7 @@ export default function BundleDescriptionPage() {
   const [bundle, setBundle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showToast, setShowToast] = useState(false);
+  const [user] = useAuthState(auth);
 
   useEffect(() => {
     const fetchBundle = async () => {
@@ -170,8 +173,8 @@ export default function BundleDescriptionPage() {
   }, [bundleId]);
 
   const handleAddToCart = () => {
-    if (!bundle) return;
-    addToCart(bundle);
+    if (!bundle || !user) return;
+    addToCart(bundle, user.uid);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000); 
   };

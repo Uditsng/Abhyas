@@ -301,7 +301,7 @@ export default function DirectMessageForm() {
       <h2 className="text-2xl font-bold mb-6">Send Direct Mail</h2>
 
       <div className="flex space-x-6 mb-4">
-        <label className="flex items-center space-x-2">
+        <label className="flex items-center text-sm space-x-2">
           <input
             type="radio"
             name="mode"
@@ -312,7 +312,7 @@ export default function DirectMessageForm() {
           <span>Select Saved User</span>
         </label>
 
-        <label className="flex items-center space-x-2">
+        <label className="flex items-center text-sm space-x-2">
           <input
             type="radio"
             name="mode"
@@ -343,10 +343,10 @@ export default function DirectMessageForm() {
           </div>
         ) : (
           <div>
-            <label className="block font-medium mb-1">Enter Email</label>
+            <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Enter Email</label>
             <input
               type="email"
-              className="w-full p-2 border rounded-md"
+              className="w-full p-2 border border-gray-300 dark:border-gray-700 rounded-md focus:outline-none focus:ring-blue-500 dark:bg-gray-700"
               placeholder="someone@example.com"
               value={manualEmail}
               onChange={(e) => setManualEmail(e.target.value)}
@@ -355,32 +355,32 @@ export default function DirectMessageForm() {
         )}
 
         <div>
-          <label className="block font-medium mb-1">Subject</label>
+          <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Subject</label>
           <input
             type="text"
-            className="w-full p-2 border rounded-md"
-            placeholder="Subject line"
+            className="w-full p-2 border border-gray-300 dark:border-gray-700 focus:outline-none focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 rounded-md"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
           />
         </div>
 
-        <div>
-          <label className="block font-medium mb-1">Message</label>
-          <textarea
-            className="w-full p-2 border rounded-md h-32"
-            placeholder="Write your message..."
+        <div className="mb-6">
+          <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Message</label>
+          <textarea          
             value={message}
             onChange={(e) => setMessage(e.target.value)}
+            className="w-full border border-gray-300 dark:border-gray-700 px-3 py-2 h-28 resize-none focus:outline-none focus:ring-blue-500 dark:bg-gray-700 dark:text-gray-100 rounded-md"
           />
         </div>
-
+        
+        <div className="flex justify-end">
         <button
           type="submit"
-          className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+        className="bg-blue-600 text-white px-5 sm:px-6 py-2 rounded-lg shadow hover:bg-blue-700 transition dark:bg-blue-500 dark:hover:bg-blue-600"
         >
           Send Message
         </button>
+        </div>
       </form>
     </div>
   );

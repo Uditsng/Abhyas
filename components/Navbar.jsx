@@ -8,7 +8,7 @@ import NotificationBell from "./NotificationBell";
 
 export default function Navbar() {
   const router = useRouter();
-  const pathname = usePathname()
+  const pathname = usePathname();
   const [username, setUsername] = useState("");
   const { user, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -35,7 +35,6 @@ export default function Navbar() {
       console.error("Error loading user data:", error);
     }
   }, [user]);
-  
 
   const handleLogout = async () => {
     try {
@@ -59,15 +58,14 @@ export default function Navbar() {
     setMenuOpen(!menuOpen);
   };
 
-
   // Don't render anything until client-side hydration is complete
   if (!mounted) return null;
 
-    // Hide Navbar on test-taking page
-    //ToDo: regex study about that
-if (/^\/tests(\/[^\/]+){1,2}$/.test(pathname)) {
-  return null;
-}
+  // Hide Navbar on test-taking page
+  //ToDo: regex study about that
+  if (/^\/tests(\/[^\/]+){1,2}$/.test(pathname)) {
+    return null;
+  }
 
   return (
     <nav className="bg-white/70 dark:bg-gray-900/70 backdrop-blur-md shadow-xl fixed w-full z-50 p-4">
@@ -75,17 +73,23 @@ if (/^\/tests(\/[^\/]+){1,2}$/.test(pathname)) {
         {/* Navbar content */}
         <div className="flex justify-between items-center mx-10">
           {/* Logo */}
-         <div className="flex items-center space-x-2 cursor-pointer" onClick={() => router.push("/")}>
-           <img src="/favicon.ico" alt="Logo" className="h-8 w-8 rounded-full shadow" />
-           <span className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">ABHYAS</span>
-         </div>
+          <div
+            className="flex items-center space-x-2 cursor-pointer"
+            onClick={() => router.push("/")}
+          >
+            <img
+              src="/favicon.ico"
+              alt="Logo"
+              className="h-8 w-8 rounded-full shadow"
+            />
+            <span className="text-2xl font-extrabold text-gray-900 dark:text-white tracking-tight">
+              ABHYAS
+            </span>
+          </div>
 
           {/* Hamburger menu for mobile */}
           <div className="block md:hidden">
-            <button
-              onClick={toggleMenu}
-              className="md:hidden p-2 transition"
-            >
+            <button onClick={toggleMenu} className="md:hidden p-2 transition">
               {menuOpen ? (
                 <span className="text-2xl">✕</span> // X icon when menu is open
               ) : (
@@ -99,7 +103,20 @@ if (/^\/tests(\/[^\/]+){1,2}$/.test(pathname)) {
             {username ? (
               <>
                 <span className="flex items-center gap-2 px-4 py-1 rounded-full bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 text-white font-semibold shadow-md border border-white/30 animate-fade-in">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 text-white/80"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5.121 17.804A13.937 13.937 0 0112 15c2.5 0 4.847.655 6.879 1.804M15 10a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
                   {username}
                 </span>
                 {/* Notification Bell */}
@@ -109,7 +126,14 @@ if (/^\/tests(\/[^\/]+){1,2}$/.test(pathname)) {
                   className="text-blue-600 dark:text-blue-400 hover:text-blue-700 transition duration-500 hover:scale-125"
                 >
                   Account
-                </button>            
+                </button>
+
+                <button
+                  onClick={() => router.push("/my-purchases")}
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-700 transition duration-500 hover:scale-125"
+                >
+                  My Purchases
+                </button>
 
                 <button
                   onClick={handleLogout}
@@ -128,14 +152,14 @@ if (/^\/tests(\/[^\/]+){1,2}$/.test(pathname)) {
                 </button>
                 <button
                   onClick={() => router.push("/auth/login")}
-                  className="text-red-600 dark:text-red-400 hover:text-red-700 transition duration-500 hover:scale-125">
+                  className="text-red-600 dark:text-red-400 hover:text-red-700 transition duration-500 hover:scale-125"
+                >
                   Login
                 </button>
               </>
             )}
           </div>
         </div>
-        
 
         {/* Mobile menu - only shows when menuOpen is true */}
         {menuOpen && (
@@ -145,7 +169,7 @@ if (/^\/tests(\/[^\/]+){1,2}$/.test(pathname)) {
                 <div className="flex flex-col space-y-3">
                   <span className="text-gray-700 dark:text-gray-300">
                     Hi, {username}
-                  </span>                  
+                  </span>
                   <button
                     onClick={() => {
                       router.push("/profile");
@@ -186,7 +210,7 @@ if (/^\/tests(\/[^\/]+){1,2}$/.test(pathname)) {
               )}
             </div>
           </div>
-        )}  
+        )}
       </div>
     </nav>
   );
