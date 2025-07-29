@@ -10,9 +10,9 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 
 //import ExamCategories from '@/components/ExamCategories';
-import LiveTestsSection from '@/components/(LandingPage)/LiveTestsSection';
-import LottieSection from '@/components/(LandingPage)/LottieSection';
-import ExploreSuperCoaching from '@/components/(LandingPage)/ExploreSuperCoaching';
+//import LiveTestsSection from '@/components/(LandingPage)/LiveTestsSection';
+//import LottieSection from '@/components/(LandingPage)/LottieSection';
+//import ExploreSuperCoaching from '@/components/(LandingPage)/ExploreSuperCoaching';
 import { useAuth } from '@/components/AuthContext';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
@@ -29,7 +29,7 @@ import { FiAward, FiBookOpen, FiDollarSign, FiSmartphone, FiBarChart2 } from 're
 import { useColorModeValue } from '@chakra-ui/react';
 import TestimonialsSection from '@/components/(LandingPage)/TestimonialsSection';
 import BlogPreviewSection from '@/components/(LandingPage)/BlogPreviewSection';
-import PricingPlansSection from '@/components/(LandingPage)/PricingPlansSection';
+//import PricingPlansSection from '@/components/(LandingPage)/PricingPlansSection';
 import AppDownloadSection from '@/components/(LandingPage)/AppDownloadSection';
 import PartnerWithUsSection from '@/components/(LandingPage)/PartnerWithUsSection';
 import FAQsSection from '@/components/(LandingPage)/FAQsSection';

@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic';
 const Slider = dynamic(() => import('react-slick'), { ssr: false });
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
-import { TimeIcon } from "@chakra-ui/icons";
+//import { TimeIcon } from "@chakra-ui/icons";
 import StatCard from "@/components/StatCard";
 import ProgressBar from "@/components/ProgressBar";
 import SectionHeader from "@/components/SectionHeader";
@@ -189,13 +189,19 @@ export default function DashboardPage() {
           <StatCard title="Study Hours" value="45h" borderColor="border-purple-500" />
           <StatCard title="Rank" value="#222" borderColor="border-yellow-500" />
         </div>
+        
         {/* Recent Test Performance - use TestResultsList */}
         <div className="mb-8">
-          <SectionHeader title="Recent Test Performance" viewAllLink="/results" />
+          <SectionHeader title="Recent Test Performance" />
           <CardContainer>
-            <TestResultsList results={testResults} loading={testResultsLoading} error={testResultsError} />
+            <TestResultsList 
+              results={testResults} 
+              loading={testResultsLoading} 
+              error={testResultsError}
+            />
           </CardContainer>
         </div>
+
         {/* Quick Access: Upcoming Tests and Course Progress */}
         <div className="mb-8">
           <SectionHeader title="Quick Access" />

@@ -161,7 +161,6 @@ const handleImageChange = async (e) => {
             <Heading size="md">{authUser?.displayName || "User"}</Heading>
             <Text>{authUser?.email}</Text>
             <HStack mt={3} spacing={3} flexWrap="wrap">
-              <Button onClick={() => router.push("/subscription")}>View Subscription</Button>
               <Button onClick={() => router.push("/change-password")} colorScheme="gray">Change Password</Button>
               <Button onClick={() => { auth.signOut(); router.push("/auth/login"); }} colorScheme="red">Logout</Button>
             </HStack>

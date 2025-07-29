@@ -130,7 +130,7 @@ export default function changePasswordPages() {
   }
 
   return (
-    <Container maxW="container.sm" py={10} className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+    <Container maxW="container.sm" pt={24} className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
       <Box
         bg="white"
         _dark={{ bg: "gray.800" }}

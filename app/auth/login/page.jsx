@@ -6,55 +6,56 @@ import {
   signInWithEmailAndPassword,
   GoogleAuthProvider,
   signInWithPopup,
+  sendPasswordResetEmail,
 } from "firebase/auth";
 import { auth, db } from "@/lib/firebaseConfig";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthContext";
 import { doc, getDoc } from "firebase/firestore";
+import {
+  Box,
+  Flex,
+  Text,
+  Input,
+  Button,
+  useDisclosure,
+  useToast,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalCloseButton,
+  ModalBody,
+  ModalFooter,
+} from "@chakra-ui/react";
 
 export default function LoginPage() {
   const router = useRouter();
   const { user } = useAuth();
+  const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [userData, setUserData] = useState(null);
+  const [emailLoading, setEmailLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false)
+  const [resetEmail, setResetEmail] = useState("");
 
-  // useEffect(() => {
-  //   const fetchUserData = async () => {
-  //     if (user) {
-  //       //This function gets the user's document from the Firestore database using their unique ID (user.uid).
-  //       const userDoc = await getDoc(doc(db, 'users', user.uid));
-  //       setUserData(userDoc.exists() ? userDoc.data() : null);
-  //     }
-  //   };
-  //   fetchUserData();
-  // }, [user]);
+  const {
+    isOpen: isResetOpen,
+    onOpen: openReset,
+    onClose: closeReset,
+  } = useDisclosure();
 
-  // useEffect(() => {
-  //   if (user && userData) {
-  //     // Redirect based on user role
-  //     if (userData.role === "superAdmin") {
-  //       router.push("/superAdmin");
-  //     } else if (userData.role === "admin") {
-  //       // if (userData.status === "blocked") {
-  //       //   router.push("/login");
-  //       // } else {
-  //       //   router.push("/admin");
-  //       // }
-  //       console.log(user)
-  //     } else {
-  //       router.push("/dashboard");
-  //     }
-  //   }
-  // }, [user, userData, router]);
-  
   const handleLogin = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
+    setEmailLoading(true);
 
     if (!email || !password) {
-      setIsLoading(false);
+      setEmailLoading(false);
+      toast({
+        title: "Please fill all fields",
+        status: "warning",
+        isClosable: true,
+      });
       return;
     }
 
@@ -73,109 +74,208 @@ export default function LoginPage() {
       if (userData?.role === "superAdmin") {
         router.push("/superAdmin");
       } else if (userData?.role === "admin") {
-        if (userData.status === 'blocked') {
-        router.push('/auth/login');
-    } else{
-      router.push('/admin')
-    }
+        if (userData.status === "blocked") {
+          toast({
+            title: "Your admin account is blocked.",
+            status: "error",
+            isClosable: true,
+          });
+          router.push("/auth/login");
+        } else {
+          router.push("/admin");
+        }
       } else {
-        if (userData.status === 'blocked') {
-        router.push('/auth/login');
-        }else{
-            router.push("/dashboard"); 
-          }        
+        if (userData.status === "blocked") {
+          toast({
+            title: "Your account is blocked.",
+            status: "error",
+            isClosable: true,
+          });
+          router.push("/auth/login");
+        } else {
+          router.push("/dashboard");
+        }
       }
     } catch (error) {
       console.error("Login error:", error);
-      alert(
-        "Login failed: " + (error.message || "Please check your credentials")
-      );
+            toast({
+        title: "Login failed",
+        description: error.message || "Please check your credentials.",
+        status: "error",
+        isClosable: true,
+      });
     } finally {
-      setIsLoading(false);
+      setEmailLoading(false);
     }
   };
 
+  const handlePasswordReset = async () => {
+    if (!resetEmail) {
+      toast({
+        title: " Please enter your email. ",
+        status: "warning",
+        isClosable: true,
+      })
+      return;
+    }
+    try {
+      await sendPasswordResetEmail(auth, resetEmail);
+      toast({
+        title: "Reset link sent",
+        description:" If your email exists, a reset link has been sent to your inbox",
+        status: "success",
+        isClosable: true,
+      })      
+      setResetEmail("");
+      closeReset();
+    } catch (error) {
+      toast({
+        title: "Error sending reset email",
+        description: error.message,
+        status: "error",
+        isClosable: true,
+      });
+    }
+  };
+
+  const handleGoogleLogin = async () =>{
+    try{
+      setGoogleLoading(true);
+      const provider = new GoogleAuthProvider()
+      const result = await signInWithPopup(auth, provider)
+      const userId = result.user.uid;
+      const userDoc = await getDoc(doc(db, "users", userId))
+      const userData = userDoc.exists() ? userDoc.data() : null;
+
+      if (userData?.role === "superAdmin"){
+        router.push("/superAdmin");
+      }else if(userData?.role === "admin"){
+        router.push("/admin")
+      } else {
+        router.push("/dashboard")
+      }
+    } catch (error){
+      console.error("Google sign-in error:", error);
+      toast({
+        title: "Google sign-in failed",
+        description: error.message || "Please try again",
+        status:"error",
+        isClosable: true,
+      })
+    } finally{
+      setGoogleLoading(false);
+    }
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      <div className="max-w-md w-full bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg shadow-blue-500/50 dark:shadow-blue-500/50 transition-colors duration-200">
-        <h2 className="text-2xl text-center font-bold mb-6 text-blue-500 dark:text-cyan-100">
+ <Flex
+      minH="100vh"
+      align="center"
+      justify="center"
+      bg="gray.50"
+      _dark={{ bg: "gray.900" }}
+      px={4}
+    >
+      <Box
+        bg="white"
+        _dark={{ bg: "gray.800" }}
+        p={6}
+        rounded="lg"
+        shadow="lg"
+        w="full"
+        maxW="md"
+      >
+        <Text
+          fontSize="2xl"
+          fontWeight="bold"
+          textAlign="center"
+          color="blue.500"
+          _dark={{ color: "cyan.100" }}
+          mb={6}
+        >
           Login
-        </h2>
+        </Text>
+
+
 
         <form onSubmit={handleLogin}>
-          <input
+          <Input
             type="email"
-            className="w-full border border-gray-300 dark:border-gray-700 rounded-2xl mb-4 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200"
             placeholder="Email"
+            mb={4}
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-          <input
+          <Input
             type="password"
-            className="w-full border border-gray-300 dark:border-gray-700 rounded-2xl mb-4 p-3 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 transition-colors duration-200"
             placeholder="Password"
+            mb={4}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          <button
-            type="submit"
-            className="w-full bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800
-                     text-white py-2 rounded-md transition-colors duration-200"
-            disabled={isLoading}
+          <Button
+            type="submit" 
+            colorScheme="blue"   
+            w="full"                
+            isLoading={emailLoading}
+            mb={4}
           >
-            {isLoading ? "Logging in..." : "Login with Email"}
-          </button>
+          Login with Email
+          </Button>
         </form>
 
-        <div className="mt-4">
-          <button
-            onClick={async () => {
-              try {
-                setIsLoading(true);
-                const provider = new GoogleAuthProvider();
-                const result = await signInWithPopup(auth, provider);
-                const userId = result.user.uid;
-                // Fetch user profile from Firestore
-                const userDoc = await getDoc(doc(db, "users", userId));
-                const userData = userDoc.exists() ? userDoc.data() : null;
-                // Redirect based on role
-                if (userData?.role === "superAdmin") {
-                  router.push("/superAdmin");
-                } else if (userData?.role === "admin") {
-                  router.push("/admin");
-                } else {
-                  router.push("/dashboard");
-                }
-              } catch (error) {
-                console.error("Google sign-in error:", error);
-                alert(
-                  "Google sign-in failed: " +
-                    (error.message || "Please try again")
-                );
-              } finally {
-                setIsLoading(false);
-              }
-            }}
-            className="w-full bg-red-600 hover:bg-red-700 dark:bg-red-700 dark:hover:bg-red-800
-                     text-white py-2 rounded-md transition-colors duration-200"
-            disabled={isLoading}
-          >
-            {isLoading ? "Signing in..." : "Sign in with Google"}
-          </button>
-        </div>
+          <Button
+          onClick={handleGoogleLogin}
+          colorScheme="red"
+          w="full"
+          isLoading={googleLoading}
+          mb={4}
+        >
+          Sign in with Google
+        </Button>
 
-        <div className="mt-4 text-center text-gray-600 dark:text-gray-400">
-          Don't have an account?{" "}
-          <Link
-            href="/auth/register"
-            className="text-blue-600 dark:text-blue-400 hover:underline"
-          >
-            Register
-          </Link>
-        </div>
-      </div>
-    </div>
+        <Flex justify="space-between" align="center" fontSize="sm" mb={2}>
+          <Text color="gray.600" _dark={{ color: "gray.400" }}>
+            Don't have an account?{" "}
+            <Link
+              href="/auth/register"
+              className="text-blue-600 dark:text-blue-400 hover:underline"
+            >
+              Register
+            </Link>
+          </Text>
+          <Button variant="link" colorScheme="blue" onClick={openReset}>
+            Forgot password?
+          </Button>
+        </Flex>
+      </Box>
+
+      {/** Reset Password Modal */}
+      <Modal isOpen={isResetOpen} onClose={closeReset} isCentered>
+        <ModalOverlay>
+          <ModalContent>
+            <ModalHeader>Reset Password</ModalHeader>
+            <ModalCloseButton/>
+            <ModalBody>
+              <Input
+                type="email"
+                placeholder="Enter your email"
+                value={resetEmail}
+                onChange={(e) => setResetEmail(e.target.value)}
+                required
+              />
+            </ModalBody>
+            <ModalFooter>
+              <Button colorScheme="blue" mr={3} onClick={handlePasswordReset}>
+                Send Email
+              </Button>
+              <Button onClick={closeReset}>Cancel</Button>
+            </ModalFooter>
+          </ModalContent>
+        </ModalOverlay>
+      </Modal>
+    </Flex>
   );
 }
