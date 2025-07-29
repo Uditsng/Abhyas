@@ -51,7 +51,6 @@ export default function AdminLayout({ children }) {
             setIsAdmin(false);
           }
         } else {
-          // Not an admin, redirect to dashboard
           toast({
             title: "Access Denied",
             description: "You don't have permission to access the admin area.",

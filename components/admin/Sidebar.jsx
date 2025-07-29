@@ -1,33 +1,32 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Box, Flex, IconButton, Text, useColorModeValue, VStack, Icon} from '@chakra-ui/react';
-import { FiHome, FiFileText, FiUsers, FiChevronLeft, FiChevronRight, FiAlertTriangle, FiDollarSign, FiList} from 'react-icons/fi';
-import { useBreakpointValue } from '@chakra-ui/react';
+import { Box, Flex, IconButton, Text, useColorModeValue, VStack, Icon, useBreakpointValue} from '@chakra-ui/react';
+import { FiHome, FiFileText, FiUser,FiFilePlus, FiChevronLeft, FiChevronRight, FiAlertTriangle, FiDollarSign, FiList} from 'react-icons/fi';
+
+  const navItems = [
+    { name: 'Dashboard', path: '/admin', icon: FiHome },
+    { name: 'Tests', path: '/admin/tests', icon: FiFileText },
+    { name: 'Create-Bundle', path: '/admin/create-bundle', icon: FiFilePlus },
+    { name: 'Users', path: '/admin/users', icon: FiUser, icon: FiUser },
+    //{ name: 'FeedBack', path: '/admin/announcements', icon: FiAlertTriangle },
+    { name: 'Sales Revenue', path: '/admin/sales-revenue', icon: FiDollarSign }
+  ];
 
 export default function AdminSidebar() {
-  const [manualToggle, setManualToggle] = useState(false);
-  const isMobile = useBreakpointValue({ base: true, md: false });
-  const isCollapsed = isMobile || manualToggle;
-
-  // Get current path to highlight active link
   const pathname = usePathname();
-  
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const textColor = useColorModeValue('gray.800', 'white');
 
-  // Simple nav items 
-  const navItems = [
-    { name: 'Dashboard', path: '/admin', icon: FiHome },
-    { name: 'Tests', path: '/admin/tests', icon: FiFileText },
-    { name: 'Create-Bundle', path: '/admin/create-bundle', icon: FiFileText },
-    { name: 'Users', path: '/admin/users', icon: FiUsers, icon: FiUsers },
-    { name: 'FeedBack', path: '/admin/announcements', icon: FiAlertTriangle },
-    { name: 'Sales Revenue', path: '/admin/sales-revenue', icon: FiDollarSign }
-  ];
+  const isMobile = useBreakpointValue({ base: true, md: false });
+  const [isCollapsed, setIsCollapsed] = useState(false);
+
+  useEffect(() => {
+    if (isMobile) setIsCollapsed(true);
+  }, [isMobile]);
 
   return (
     <Box
@@ -48,7 +47,8 @@ export default function AdminSidebar() {
     >
       {/* Header with toggle button */}
       <Flex 
-        p={4}
+        px={8}
+        pt={12}
         justifyContent={isCollapsed ? 'center' : 'space-between'}
         alignItems='center'
       >
@@ -58,7 +58,7 @@ export default function AdminSidebar() {
           icon={isCollapsed ? <FiChevronRight /> : <FiChevronLeft />}
           size='sm'
           variant='ghost'
-          onClick={() => setManualToggle((prev) => !prev)}
+          onClick={() => setIsCollapsed(!isCollapsed)}
         />
       </Flex>
 
@@ -74,6 +74,7 @@ export default function AdminSidebar() {
               color={pathname === item.path ? 'white' : textColor}
               _hover={{ bg: pathname === item.path ? 'blue.600' : useColorModeValue('gray.100', 'gray.700') }}
               alignItems="center"
+              cursor="pointer"
             >
               <Icon as={item.icon} boxSize={5} />
               {!isCollapsed && <Text ml={4}>{item.name}</Text>}

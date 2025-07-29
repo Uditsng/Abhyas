@@ -72,6 +72,7 @@ const theme = extendTheme({
 // Memoize the Providers component to prevent unnecessary re-renders
 function Providers({ children }) {
   const [mounted, setMounted] = useState(false);
+  
 
   useEffect(() => {
     setMounted(true);

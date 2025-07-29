@@ -20,6 +20,7 @@
     "@tiptap/react": "^2.22.0",
     "@tiptap/starter-kit": "^2.22.0",
     "chart.js": "^4.4.9",
+    "date-fns": "^4.1.0",
     "firebase": "^11.6.0",
     "firebase-admin": "^13.4.0",
     "framer-motion": "^10.18.0",

@@ -9,7 +9,7 @@
 
 /* Base styles */
 body {
-  @apply bg-gray-100 text-gray-900 transition-colors duration-200;
+  @apply bg-gray-100 text-gray-900 transition duration-200;
 }
 
 /* Dark mode styles */

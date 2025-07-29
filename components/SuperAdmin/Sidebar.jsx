@@ -3,17 +3,12 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  Box, Flex, IconButton, Text, useColorModeValue, VStack, Icon, useBreakpointValue
-} from '@chakra-ui/react';
-import {
-  FiHome, FiUsers, FiDollarSign, FiChevronLeft, FiChevronRight,
-  FiMessageSquare, FiPackage, FiBookOpen, FiPieChart,FiUserPlus
-} from 'react-icons/fi';
+import {Box, Flex, IconButton, Text, useColorModeValue, VStack, Icon, useBreakpointValue} from '@chakra-ui/react';
+import { FiHome, FiUser, FiDollarSign, FiChevronLeft, FiChevronRight, FiMessageSquare, FiPackage, FiBookOpen, FiPieChart,FiUserPlus} from 'react-icons/fi';
 
 const navItems = [
   { name: 'Dashboard', path: '/superAdmin', icon: FiHome },
-  { name: 'Users', path: '/superAdmin/users', icon: FiUsers },
+  { name: 'Users', path: '/superAdmin/users', icon: FiUser },
   { name: 'Admins', path: '/superAdmin/admins', icon: FiUserPlus },
   { name: 'Revenue', path: '/superAdmin/revenue', icon: FiDollarSign },
   { name: 'Communication', path: '/superAdmin/communication', icon: FiMessageSquare },
@@ -55,7 +50,8 @@ export default function Sidebar() {
     >
       {/* Header with toggle button */}
       <Flex
-        p={4}
+        px={8}
+        pt={12}
         justifyContent={isCollapsed ? 'center' : 'space-between'}
         alignItems='center'
       >

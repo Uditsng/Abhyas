@@ -1,175 +1,185 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
-  Box,
-  Heading,
-  SimpleGrid,
-  Card,
-  CardBody,
-  Text,
-  Avatar,
-  Stack,
-  Badge,
-  Spinner,
-  Center,
-  Button,
-  useDisclosure,
-  useToast,
-  IconButton,
-  Flex
-} from '@chakra-ui/react';
-import { EditIcon } from '@chakra-ui/icons';
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebaseConfig';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '@/lib/firebaseConfig';
-import { useRouter } from 'next/navigation';
-import ManageRoleModal from './manage-role';
-import { getUserProfile } from '@/lib/userService';
+  getBundlesByAdmin,
+  getOrdersForBundle,
+  getUserInfo,
+} from "@/lib/salesService";
+import { useAuth } from "@/components/AuthContext";
+import { Spinner } from "@chakra-ui/react";
+import { format } from "date-fns";
 
-export default function UsersPage() {
-  const [users, setUsers] = useState([]);
+const ITEMS_PER_PAGE = 10;
+
+export default function AdminUserPurchases() {
+  const { user } = useAuth();
+  const [bundles, setBundles] = useState([]);
+  const [salesList, setSalesList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [currentUser, authLoading] = useAuthState(auth);
-  const [selectedUser, setSelectedUser] = useState(null);
-  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const router = useRouter();
-  const toast = useToast();
 
-  // Check if current user is a superAdmin
+  const [selectedBundle, setSelectedBundle] = useState("all");
+  const [currentPage, setCurrentPage] = useState(1);
+
   useEffect(() => {
-    async function checkSuperAdminStatus() {
-      if (!currentUser) return;
+    if (!user?.uid) return;
 
+    const fetchData = async () => {
       try {
-        const userProfile = await getUserProfile(currentUser.uid);
-        setIsSuperAdmin(userProfile?.role === 'superAdmin');
+        const fetchedBundles = await getBundlesByAdmin(user.uid);
+        setBundles(fetchedBundles);
+
+        const allSales = [];
+
+        for (const bundle of fetchedBundles) {
+          const orders = await getOrdersForBundle(bundle.id);
+
+          for (const order of orders) {
+            const userProfile = await getUserInfo(order.userId);
+            if (!userProfile) continue;
+
+            allSales.push({
+              userName: userProfile.displayName || "No name",
+              userEmail: userProfile.email || "No email",
+              purchaseDate: format(order.date.toDate(), "yyyy-MM-dd"),
+              bundleName: bundle.title || "Unknown bundle",
+              bundleId: bundle.id,
+              amount: (order.amount || 0) / 100,
+            });
+          }
+        }
+
+        setSalesList(allSales);
       } catch (error) {
-        console.error('Error checking superAdmin status:', error);
+        console.error("Error fetching sales:", error);
+      } finally {
+        setLoading(false);
       }
-    }
+    };
 
-    if (currentUser) {
-      checkSuperAdminStatus();
-    }
-  }, [currentUser]);
+    fetchData();
+  }, [user]);
 
-  // Fetch users from Firebase
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const usersCollection = collection(db, 'users');
-      const userSnapshot = await getDocs(usersCollection);
-      const userList = userSnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      setUsers(userList);
-    } catch (error) {
-      console.error('Error fetching users:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load users',
-        status: 'error',
-        duration: 5000,
-        isClosable: true,
-      });
-    } finally {
-      setLoading(false);
-    }
+    useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedBundle]);
+
+  const filteredSales = selectedBundle === "all"
+    ? salesList
+    : salesList.filter((sale) => sale.bundleId === selectedBundle);
+
+  const totalPages = Math.ceil(filteredSales.length / ITEMS_PER_PAGE);
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
+  const currentPageSales = filteredSales.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+
+  const handleCSVDownload = () => {
+    const csvHeader = ["User Name", "Email", "Bundle Name", "Amount", "Purchase Date"];
+    const csvRows = filteredSales.map((s) => [
+      s.userName,
+      s.userEmail,
+      s.bundleName,
+      `₹${s.amount}`,
+      s.purchaseDate,
+    ]);
+
+    const csvContent =
+      [csvHeader, ...csvRows].map((row) => row.join(",")).join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "bundle-purchases.csv";
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
-  useEffect(() => {
-    // Check if user is authenticated and redirect if not
-    if (!authLoading && !currentUser) {
-      router.push('/auth/login');
-      return;
-    }
-
-    if (currentUser) {
-      fetchUsers();
-    }
-  }, [currentUser, authLoading, router]);
-
-  const handleEditRole = (user) => {
-    setSelectedUser(user);
-    onOpen();
-  };
-
-  if (authLoading || loading) {
-    return (
-      <Center h="200px">
-        <Spinner size="xl" />
-      </Center>
-    );
-  }
-
-  // Check if there's at least one superAdmin
-  const hasSuperAdmin = users.some(user => user.role === 'superAdmin');
+  if (loading) return <Spinner size="xl" />;
 
   return (
-    <Box>
-      <Heading mb={6}>Users ({users.length})</Heading>
+    <div className="p-6 bg-gray-50 dark:bg-gray-900 min-h-screen text-gray-800 dark:text-gray-200">
+      <h2 className="text-2xl font-semibold mb-4">Users Who Bought My Bundles</h2>
 
-      {!hasSuperAdmin && (
-        <Box mb={6} p={4} borderRadius="md" bg="yellow.100" color="yellow.800">
-          <Text fontWeight="bold">Warning: No SuperAdmin Found</Text>
-          <Text>
-            There is no SuperAdmin in the system. The first user who registers will automatically become a SuperAdmin.
-          </Text>
-        </Box>
-      )}
+      {/* Filter + Download Row */}
+      <div className="flex items-center gap-4 mb-6">
+        <div>
+          <label className="block font-medium mb-1">Filter by Bundle</label>
+          <select
+            className="border px-4 py-2 rounded w-64 bg-white text-black dark:bg-fray-800 dark:text-white dark:border-gray-600"
+            value={selectedBundle}
+            onChange={(e) => setSelectedBundle(e.target.value)}
+          >
+            <option value="all">All Bundles</option>
+            {bundles.map((bundle) => (
+              <option key={bundle.id} value={bundle.id}>
+                {bundle.title}
+              </option>
+            ))}
+          </select>
+        </div>
 
-      {users.length === 0 ? (
-        <Text>No users found.</Text>
+        <button
+          className="ml-auto bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+          onClick={handleCSVDownload}
+        >
+          Download CSV
+        </button>
+      </div>
+
+      {/* Sales Table */}
+      {filteredSales.length === 0 ? (
+        <p>No purchases for the selected bundle.</p>
       ) : (
-        <SimpleGrid columns={{ base: 1, md: 2, lg: 3 }} spacing={6}>
-          {users.map(user => (
-            <Card key={user.id}>
-              <CardBody>
-                <Stack direction="row" spacing={4} align="center" mb={4}>
-                  <Avatar name={user.name || user.displayName} src={user.photoURL} />
-                  <Box flex="1">
-                    <Text fontWeight="bold">{user.name || user.displayName}</Text>
-                    <Text fontSize="sm" color="gray.500">{user.email}</Text>
-                  </Box>
-                  {isSuperAdmin && (
-                    <IconButton
-                      size="sm"
-                      icon={<EditIcon />}
-                      aria-label="Edit role"
-                      onClick={() => handleEditRole(user)}
-                    />
-                  )}
-                </Stack>
+        <>
+        <div className="overflow-x-auto">
+          <table className="min-w-full text-sm border border-gray-300">
+            <thead className="bg-gray-100">
+              <tr>
+                <th className="px-4 py-2 border">User Name</th>
+                <th className="px-4 py-2 border">Email</th>
+                <th className="px-4 py-2 border">Bundle Name</th>
+                <th className="px-4 py-2 border">Amount</th>
+                <th className="px-4 py-2 border">Purchase Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredSales.map((entry, index) => (
+                <tr key={index} className="even:bg-gray-50">
+                  <td className="px-4 py-2 border">{entry.userName}</td>
+                  <td className="px-4 py-2 border">{entry.userEmail}</td>
+                  <td className="px-4 py-2 border">{entry.bundleName}</td>
+                  <td className="px-4 py-2 border">₹{entry.amount}</td>
+                  <td className="px-4 py-2 border">{entry.purchaseDate}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
 
-                <Flex justify="space-between" align="center">
-                  <Badge colorScheme={user.role === 'admin' ? 'green' : user.role === 'superAdmin' ? 'purple' : 'blue'}>
-                    {user.role || 'User'}
-                  </Badge>
-                  <Text fontSize="sm" color="gray.500">
-                    Joined: {user.createdAt ? new Date(user.createdAt.toDate()).toLocaleDateString() : 'N/A'}
-                  </Text>
-                </Flex>
+        {/* Pagination Control */}
+        <div className="flex justify-between items-center mt-4">
+            <button
+              className="bg-gray-300 px-3 rounded disabled:opacity-50"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((prev)=> prev-1)}
+              >
+                Previous
+            </button>
 
-                <Box mt={2}>
-                  <Text fontSize="sm" color="gray.500">Subscription Plan: <b>{user.plan || 'No Plan'}</b></Text>
-                </Box>
-              </CardBody>
-            </Card>
-          ))}
-        </SimpleGrid>
+            <span className="text-sm">
+                Page {currentPage} of {totalPages}
+            </span>
+
+            <button
+              className="bg-gray-300 px-3 py-1 rounded disabled:opacity-50"
+              disabled={currentPage === totalPages}
+              onClick={()=> setCurrentPage((perv) => prev + 1)}>
+                Next
+            </button>
+        </div>
+        </>
       )}
-
-      {/* Role management modal */}
-      <ManageRoleModal
-        isOpen={isOpen}
-        onClose={onClose}
-        user={selectedUser}
-        onRoleUpdate={fetchUsers}
-      />
-    </Box>
+    </div>
   );
 }

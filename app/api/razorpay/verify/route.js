@@ -31,7 +31,7 @@ export async function POST(req) {
   await setDoc(orderRef, {
     userId: user.uid,
     bundleId: bundle.id,
-    amount,
+    amount: amount / 100,
     status: "paid",
     paymentID: razorpay_payment_id,
     orderId: razorpay_order_id,

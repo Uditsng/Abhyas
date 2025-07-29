@@ -2,11 +2,11 @@
 
 //Admin Panel: page.jsx and subfolders for managing users and tests.
 
-import { Box, Heading, SimpleGrid, Icon, Text, HStack, useColorModeValue } from '@chakra-ui/react';
-import StatCard, { adminStats } from '@/components/admin/StatCard';
+import { Box, Heading, SimpleGrid, Text,useColorModeValue } from '@chakra-ui/react';
+//import StatCard, { adminStats } from '@/components/admin/StatCard';
 import dynamic from 'next/dynamic';
 const AreaChart = dynamic(() => import('@/components/admin/AreaChart'), { ssr: false });
-const BarChart = dynamic(() => import('@/components/admin/BarChart'), { ssr: false });
+//const BarChart = dynamic(() => import('@/components/admin/BarChart'), { ssr: false });
 import { FiUsers, FiFileText, FiPackage, FiDollarSign } from 'react-icons/fi';
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
@@ -54,7 +54,7 @@ export default function AdminDashboard() {
     totalUsers: 0,
     totalTests: 0,
     totalBundles: 0,
-    earnings: 3500, // mock
+    earnings: 0, // mock
   });
   // Area chart state
   const [userGrowthData, setUserGrowthData] = useState({ labels: [], datasets: [] });

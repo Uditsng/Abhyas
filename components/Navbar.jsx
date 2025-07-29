@@ -134,13 +134,6 @@ export default function Navbar() {
                 >
                   My Purchases
                 </button>
-
-                <button
-                  onClick={handleLogout}
-                  className="text-red-600 dark:text-red-400 hover:text-red-700 transition duration-500 hover:scale-125"
-                >
-                  Logout
-                </button>
               </>
             ) : (
               <>
