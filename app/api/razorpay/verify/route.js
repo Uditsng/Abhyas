@@ -26,21 +26,38 @@ export async function POST(req) {
     );
   }
 
-  // 2. Save payment and order to Firestore
+  
+  // 2. Get commission rate from platformSettings
+  const commissionSnap = await getDoc(doc(db, "platformSettings", "commission"));
+  const commissionRate = commissionSnap.exists() ? commissionSnap.data().rate : 20;
+
+  const actualAmount = amount / 100; // Convert to INR
+  const commissionAmount = (commissionRate / 100) * actualAmount;
+  const adminEarning = actualAmount - commissionAmount;
+
+// 3. Save payment and order to Firestore
+  const bundleRef = doc(db, "bundles", bundle.id);
+  const bundleSnap = await getDoc(bundleRef);
+  const createdBy = bundleSnap.exists() ? bundleSnap.data().createdBy : null;
   const orderRef = doc(db, "orders", razorpay_payment_id);
   await setDoc(orderRef, {
     userId: user.uid,
     bundleId: bundle.id,
-    amount: amount / 100,
+    createdBy,
+    amount: actualAmount,
     status: "paid",
     paymentID: razorpay_payment_id,
     orderId: razorpay_order_id,
     date: new Date(),
+    commissionRate,
+    commissionAmount,
+    adminEarning,
   });
 
-  // 3. Add bundleId to user's purchasedBundles array
+  // 4. Add bundleId to user's purchasedBundles array
   const userRef = doc(db, "users", user.uid);
   const userSnap = await getDoc(userRef);
+
   if (userSnap.exists()){
     await updateDoc(userRef,
       {purchasedBundles:arrayUnion(bundle.id),
@@ -50,5 +67,6 @@ export async function POST(req) {
       purchasedBundles:[bundle.id]
     });
   }
+
   return NextResponse.json({ success: true });
 }

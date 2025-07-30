@@ -184,6 +184,7 @@ export default function AdminDashboard() {
     },
   };
 
+  
   return (
     <Box p={0}>
       <div className="container mx-auto px-4 pt-12 md:px-8 lg:px-12 xl:px-24 w-full">

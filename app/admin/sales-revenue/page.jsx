@@ -117,7 +117,6 @@
 //   );
 // }
 
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -152,23 +151,34 @@ export default function SalesRevenuePage() {
         const buyers = [];
 
         for (const order of orders) {
-          totalRevenue += order.amount / 100;
+        
           const userData = await getUserInfo(order.userId);
+          const buyerAmount = order.amount;
+          const platformFee = order.commissionAmount || 0;
+          const netEarning = order.adminEarning || buyerAmount - platformFee;
+          totalRevenue += buyerAmount
           if (userData) {
             buyers.push({
               name: userData.displayName,
               email: userData.email,
               date: order.date.toDate(),
-              amount: order.amount / 100,
+              amount: buyerAmount,
+              commission: platformFee,
+              earning: netEarning,
             });
           }
         }
+
+        const platformCommission = buyers.reduce((sum, b) => sum + (b.commission || 0), 0);
+        const adminEarning = buyers.reduce((sum, b) => sum + (b.earning || 0), 0);
 
         result.push({
           bundleTitle: bundle.title,
           price: bundle.price,
           sold: buyers.length,
           totalRevenue,
+          platformCommission,
+          adminEarning,
           buyers,
         });
       }
@@ -221,9 +231,11 @@ export default function SalesRevenuePage() {
         >
           <h2 className="text-xl font-semibold mb-2">{bundle.bundleTitle}</h2>
           <div className="flex space-x-6 text-sm text-gray-500 mt-1">
-          <span>Price: ₹{bundle.price}</span>
-          <span>Units Sold: {bundle.sold}</span>
-          <span>Total Revenue: ₹{bundle.totalRevenue.toFixed(2)}</span>
+            <span>Price: ₹{bundle.price}</span>
+            <span>Units Sold: {bundle.sold}</span>
+            <span>Total Revenue: ₹{bundle.totalRevenue.toFixed(2)}</span>
+            <span>Platform Fee: ₹{bundle.platformCommission.toFixed(2)}</span>
+            <span>Admin Earning: ₹{bundle.adminEarning.toFixed(2)}</span>
           </div>
 
           {/* Buyers Table */}
