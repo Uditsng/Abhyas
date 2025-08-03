@@ -6,7 +6,7 @@ import {
   editExam,
   deleteExam
 } from '../../../lib/superAdminExamsService';
-import { Box, Button, Input, Table, Thead, Tbody, Tr, Th, Td, Spinner } from '@chakra-ui/react';
+import {FiEdit, FiDelete} from "react-icons/fi";
 
 export default function SuperAdminExamsPage() {
   const [exams, setExams] = useState([]);
@@ -14,6 +14,13 @@ export default function SuperAdminExamsPage() {
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const examsPerPage = 10;
+  const totalPages = Math.ceil(exams.length / examsPerPage);
+  const indexOfLastExam = currentPage * examsPerPage;
+  const indexOfFirstExam = indexOfLastExam - examsPerPage;
+  const currentExams = exams.slice(indexOfFirstExam, indexOfLastExam);
 
   useEffect(() => {
     async function fetchExams() {
@@ -57,41 +64,130 @@ export default function SuperAdminExamsPage() {
     setActionLoading(false);
   };
 
-  return (
-    <Box p={6} mt={8}>
-      <h2 className="text-2xl font-bold mb-4">Manage Exams</h2>
-      <form onSubmit={handleCreateOrEdit} className="mb-8 bg-white p-4 rounded shadow flex flex-col md:flex-row gap-4">
-        <Input name="name" placeholder="Sub Exam Name (e.g. SBI PO)" value={form.name} onChange={handleFormChange} maxW="300px" required />
-        <Input name="category" placeholder="Main Exam Category (e.g. Banking Exams)" value={form.category} onChange={handleFormChange} maxW="300px" required />
-        <Input name="subCategory" placeholder="Sub Exam Category (e.g. SBI PO)" value={form.subCategory} onChange={handleFormChange} maxW="300px" required />
-        <Button type="submit" colorScheme="blue" isLoading={actionLoading}>{editingId ? 'Update' : 'Create'} Exam</Button>
-        {editingId && <Button ml={2} onClick={() => { setForm({ name: '', category: '', subCategory: '' }); setEditingId(null); }}>Cancel</Button>}
+ return (
+    <div className="p-4 mt-4">
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-center mb-6 sm:mb-8 text-blue-600 dark:text-blue-400">
+        Manage Exams
+      </h1>
+
+      <form
+        onSubmit={handleCreateOrEdit}
+        className="mb-8 bg-white dark:bg-gray-800 p-4 rounded-lg shadow-sm flex flex-col md:flex-row flex-wrap gap-4"
+      >
+        <input
+          type="text"
+          name="name"
+          placeholder="Sub Exam Name (e.g. SBI PO)"
+          value={form.name}
+          onChange={handleFormChange}
+          required
+          className="px-4 py-2 rounded-md border w-full md:w-[300px] focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+        />
+        <input
+          type="text"
+          name="category"
+          placeholder="Main Exam Category (e.g. Banking Exams)"
+          value={form.category}
+          onChange={handleFormChange}
+          required
+          className="px-4 py-2 rounded-md border w-full md:w-[300px] focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+        />
+        <input
+          type="text"
+          name="subCategory"
+          placeholder="Sub Exam Category (e.g. SBI PO)"
+          value={form.subCategory}
+          onChange={handleFormChange}
+          required
+          className="px-4 py-2 rounded-md border w-full md:w-[300px] focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:text-white"
+        />
+        <button
+          type="submit"
+          disabled={actionLoading}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-2 rounded-md transition disabled:opacity-50"
+        >
+          {editingId ? "Update" : "Create"} Exam
+        </button>
+        {editingId && (
+          <button
+            type="button"
+            onClick={() => {
+              setForm({ name: "", category: "", subCategory: "" });
+              setEditingId(null);
+            }}
+            className="bg-gray-400 hover:bg-gray-500 text-white font-semibold px-6 py-2 rounded-md transition"
+          >
+            Cancel
+          </button>
+        )}
       </form>
-      {loading ? <Spinner size="lg" /> : (
-        <Table variant="simple" className="bg-white rounded shadow">
-          <Thead>
-            <Tr>
-              <Th>Name</Th>
-              <Th>Main Exam</Th>
-              <Th>Sub Exam</Th>
-              <Th>Actions</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {exams.map(exam => (
-              <Tr key={exam.id}>
-                <Td>{exam.name}</Td>
-                <Td>{exam.category}</Td>
-                <Td>{exam.subCategory}</Td>
-                <Td>
-                  <Button size="sm" colorScheme="blue" mr={2} onClick={() => handleEdit(exam)}>Edit</Button>
-                  <Button size="sm" colorScheme="red" onClick={() => handleDelete(exam.id)} isLoading={actionLoading}>Delete</Button>
-                </Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
+
+      {loading ? (
+        <div className="flex justify-center">
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      ) : (
+        <div className="overflow-x-auto bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+          <table className="w-full text-sm text-left text-gray-700 dark:text-gray-200">
+            <thead className="text-xs uppercase bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300">
+              <tr>
+                <th className="px-4 py-3">Name</th>
+                <th className="px-4 py-3">Main Exam</th>
+                <th className="px-4 py-3">Sub Exam</th>
+                <th className="px-4 py-3">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {currentExams.map((exam) => (
+                <tr
+                  key={exam.id}
+                  className="border-t border-gray-200 dark:border-gray-600"
+                >
+                  <td className="px-4 py-3">{exam.name}</td>
+                  <td className="px-4 py-3">{exam.category}</td>
+                  <td className="px-4 py-3">{exam.subCategory}</td>
+                  <td className="px-4 py-3 flex justify-end">
+                    <div className="flex flex-col sm:flex-row gap-2">
+                    <button
+                      onClick={() => handleEdit(exam)}
+                      className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                    >
+                      <FiEdit/>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(exam.id)}
+                      disabled={actionLoading}
+                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
+                    >
+                      <FiDelete/>
+                    </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
       )}
-    </Box>
+
+      {/* Pagination Controls */}
+      {!loading && totalPages > 1 && (
+        <div className="flex justify-center mt-6 gap-2 flex-wrap">
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            <button
+              key={page}
+              onClick={() => setCurrentPage(page)}
+              className={`px-3 py-1 rounded-md text-sm font-medium ${
+                currentPage === page
+                  ? "bg-blue-600 text-white"
+                  : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600"
+              }`}
+            >
+              {page}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
-} 
+}

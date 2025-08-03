@@ -5,31 +5,30 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {Box, Flex, IconButton, Text, useColorModeValue, VStack, Icon, useBreakpointValue} from '@chakra-ui/react';
 import { FiHome, FiUser, FiDollarSign, FiChevronLeft, FiChevronRight, FiMessageSquare, FiPackage, FiBookOpen, FiPieChart,FiUserPlus} from 'react-icons/fi';
-
+import { FaRupeeSign } from "react-icons/fa";
 const navItems = [
   { name: 'Dashboard', path: '/superAdmin', icon: FiHome },
   { name: 'Users', path: '/superAdmin/users', icon: FiUser },
   { name: 'Admins', path: '/superAdmin/admins', icon: FiUserPlus },
-  { name: 'Revenue', path: '/superAdmin/revenue', icon: FiDollarSign },
+  { name: 'Revenue', path: '/superAdmin/revenue', icon: FaRupeeSign },
   { name: 'Communication', path: '/superAdmin/communication', icon: FiMessageSquare },
-  { name: 'Packages', path: '/superAdmin/packages', icon: FiPackage },
+  // { name: 'Packages', path: '/superAdmin/packages', icon: FiPackage },
   { name: 'Exams', path: '/superAdmin/exams', icon: FiBookOpen },
   { name: 'Expenses', path: '/superAdmin/expenses', icon: FiPieChart },
 ];
 
-export default function Sidebar() {
+export default function Sidebar({ isCollapsed, setIsCollapsed }) {
   const pathname = usePathname();
   const bgColor = useColorModeValue('white', 'gray.800');
   const borderColor = useColorModeValue('gray.200', 'gray.700');
   const textColor = useColorModeValue('gray.800', 'white');
-
   const isMobile = useBreakpointValue({ base: true, md: false });
-  const [isCollapsed, setIsCollapsed] = useState(false);
 
-  useEffect(() => {
-    // Auto-collapse on mobile screens
-    if (isMobile) setIsCollapsed(true);
-  }, [isMobile]);
+useEffect(() => {
+  if (isMobile !== undefined) {
+    setIsCollapsed(isMobile);
+  }
+}, [isMobile, setIsCollapsed]);
 
   return (
     <Box

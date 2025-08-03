@@ -9,6 +9,8 @@ import { useRouter } from 'next/navigation';
 export default function SuperDashboardLayout({ children }) {
   const { user, loading } = useAuth();
   const router = useRouter();
+  const [isCollapsed, setIsCollapsed] = useState(false); 
+
 
   useEffect(() => {
     if (!loading) {
@@ -36,14 +38,15 @@ export default function SuperDashboardLayout({ children }) {
   }
 
   return (
-    <Box position="relative" minH="100vh" pt="64px">
-      <Sidebar/>
+    <Box position="relative" minH="100vh" pt="64px" >
+      <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed}/>
       {/* Main content */}
       <Box 
         flex={1} 
-        p={6} 
-        ml={{base: '60px', md: '240px'}} 
-        transition='margin-left 0.3s ease'>
+        p={6}
+        minH="100vh" 
+        className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-[240px]'}`}
+      >
         {children}
       </Box>
     </Box>

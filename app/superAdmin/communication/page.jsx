@@ -221,8 +221,8 @@
 'use client';
 
 import { useState } from 'react';
-import AnnouncementForm from '@/components/SuperAdmin/AnnouncementForm';
-import DirectMessageForm from '@/components/SuperAdmin/DirectMessageForm';
+import AnnouncementForm from '@/components/AnnouncementForm';
+import DirectMessageForm from '@/components/DirectMessageForm';
 
 export default function CommunicationPage() {
   const [mode, setMode] = useState('announcement');
@@ -230,7 +230,7 @@ export default function CommunicationPage() {
   return (
   <div className="min-h-screen flex items-center justify-center" >
   <div className="w-full max-w-2xl bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6 sm:p-8 transition-colors duration-300">
-    <h1 className="text-3xl sm:text-4xl font-extrabold text-center mb-6 sm:mb-8 text-gray-900 dark:text-white">Communication Center</h1>
+    <h1 className="text-3xl sm:text-4xl font-extrabold text-center mb-6 sm:mb-8 text-blue-600 dark:text-blue-400">Communication Center</h1>
 
       {/* Radio button selection */}
       <div className="flex items-center justify-center mb-6 space-x-6">
