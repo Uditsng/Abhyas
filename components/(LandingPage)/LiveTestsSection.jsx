@@ -5,7 +5,7 @@ import Slider from 'react-slick';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Link from 'next/link';
-import { getTestsForCourse } from '@/lib/tests';
+import { getTestsForCourse } from '@/lib/adminTestsService';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthContext';
 import { liveTestsCarouselSettings } from '@/app/config/carouselSettings';

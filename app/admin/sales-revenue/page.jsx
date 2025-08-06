@@ -1,121 +1,4 @@
-// "use client";
-
-// import { useEffect, useState } from "react";
-// import { getBundlesByAdmin, getOrdersForBundle, getUserInfo,} from "@/lib/salesService";
-// import { Box, Heading, Table, Thead, Tbody, Tr, Th, Td, Spinner, Input, Text,} from "@chakra-ui/react";
-// import { useAuth } from "@/components/AuthContext";
-
-// export default function SalesRevenuePage() {
-//   const { user } = useAuth();
-//   const [salesData, setSalesData] = useState([]);
-//   const [loading, setLoading] = useState(true);
-
-//   const [startDate, setStartDate] = useState(
-//     () => new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-//   );
-//   const [endDate, setEndDate] = useState(() => new Date());
-
-//   useEffect(() => {
-//     if (!user?.uid) return;
-
-//     const fetchData = async () => {
-//       setLoading(true);
-//       const bundles = await getBundlesByAdmin(user.uid);
-//       const result = [];
-
-//       for (const bundle of bundles) {
-//         const orders = await getOrdersForBundle(bundle.id, startDate, endDate);
-//         let totalRevenue = 0;
-//         const buyers = [];
-
-//         for (const order of orders) {
-//           totalRevenue += order.amount / 100;
-//           const userData = await getUserInfo(order.userId);
-//           if (userData) {
-//             buyers.push({
-//               name: userData.displayName,
-//               email: userData.email,
-//               date: order.date.toDate(),
-//               amount: order.amount / 100,
-//             });
-//           }
-//         }
-
-//         result.push({
-//           bundleTitle: bundle.title,
-//           price: bundle.price,
-//           sold: buyers.length,
-//           totalRevenue,
-//           buyers,
-//         });
-//       }
-
-//       setSalesData(result);
-//       setLoading(false);
-//     };
-
-//     fetchData();
-//   }, [user, startDate, endDate]);
-
-//   if (loading) return <Spinner size="xl" mt={10} />;
-
-//   return (
-//     <Box p={6}>
-//       <Heading mb={4}>Sales Revenue</Heading>
-
-//       <Box mb={6} display="flex" gap={4}>
-//         <Box>
-//           <Text fontWeight="medium">Start Date</Text>
-//           <Input
-//             type="date"
-//             value={startDate.toISOString().split("T")[0]}
-//             onChange={(e) => setStartDate(new Date(e.target.value))}
-//           />
-//         </Box>
-//         <Box>
-//           <Text fontWeight="medium">End Date</Text>
-//           <Input
-//             type="date"
-//             value={endDate.toISOString().split("T")[0]}
-//             onChange={(e) => setEndDate(new Date(e.target.value))}
-//           />
-//         </Box>
-//       </Box>
-
-//       {salesData.map((bundle, idx) => (
-//         <Box key={idx} mb={10} p={5} border="1px solid #ddd" borderRadius="lg">
-//           <Heading size="md" mb={2}>
-//             {bundle.bundleTitle}
-//           </Heading>
-//           <Text>Price: ₹{bundle.price}</Text>
-//           <Text>Units Sold: {bundle.sold}</Text>
-//           <Text>Total Revenue: ₹{bundle.totalRevenue.toFixed(2)}</Text>
-
-//           <Table mt={4} variant="simple">
-//             <Thead>
-//               <Tr>
-//                 <Th>User</Th>
-//                 <Th>Email</Th>
-//                 <Th>Purchase Date</Th>
-//                 <Th>Amount</Th>
-//               </Tr>
-//             </Thead>
-//             <Tbody>
-//               {bundle.buyers.map((buyer, i) => (
-//                 <Tr key={i}>
-//                   <Td>{buyer.name}</Td>
-//                   <Td>{buyer.email}</Td>
-//                   <Td>{buyer.date.toLocaleDateString()}</Td>
-//                   <Td>₹{buyer.amount}</Td>
-//                 </Tr>
-//               ))}
-//             </Tbody>
-//           </Table>
-//         </Box>
-//       ))}
-//     </Box>
-//   );
-// }
+//admin/sales-revenue
 
 "use client";
 
@@ -127,15 +10,17 @@ import {
 } from "@/lib/salesService";
 import { useAuth } from "@/components/AuthContext";
 
+const BUNDLES_PER_PAGE = 5;
+const BUYERS_PER_PAGE = 5;
+
 export default function SalesRevenuePage() {
   const { user } = useAuth();
   const [salesData, setSalesData] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const [startDate, setStartDate] = useState(
-    () => new Date(Date.now() - 30 * 24 * 60 * 60 * 1000)
-  );
-  const [endDate, setEndDate] = useState(() => new Date());
+  const [selectedBundleTitle, setSelectedBundleTitle] = useState("All");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [buyerPages, setBuyerPages] = useState({});
 
   useEffect(() => {
     if (!user?.uid) return;
@@ -146,37 +31,55 @@ export default function SalesRevenuePage() {
       const result = [];
 
       for (const bundle of bundles) {
-        const orders = await getOrdersForBundle(bundle.id, startDate, endDate);
+        const orders = await getOrdersForBundle(bundle.id);
         let totalRevenue = 0;
         const buyers = [];
 
         for (const order of orders) {
-        
           const userData = await getUserInfo(order.userId);
+          // const buyerAmount = order.amount;
+          // const platformFee = order.commissionAmount || 0;
+          // const netEarning = order.adminEarning || buyerAmount - platformFee;
+          // totalRevenue += buyerAmount;
           const buyerAmount = order.amount;
           const platformFee = order.commissionAmount || 0;
-          const netEarning = order.adminEarning || buyerAmount - platformFee;
-          totalRevenue += buyerAmount
+          const taxAmount = order.taxAmount || 0;
+          const netEarning =
+            order.adminEarning || buyerAmount - taxAmount - platformFee;
+          totalRevenue += buyerAmount;
+
           if (userData) {
             buyers.push({
               name: userData.displayName,
               email: userData.email,
               date: order.date.toDate(),
               amount: buyerAmount,
+              tax: taxAmount,
               commission: platformFee,
               earning: netEarning,
             });
           }
         }
 
-        const platformCommission = buyers.reduce((sum, b) => sum + (b.commission || 0), 0);
-        const adminEarning = buyers.reduce((sum, b) => sum + (b.earning || 0), 0);
+        const platformCommission = buyers.reduce(
+          (sum, b) => sum + (b.commission || 0),
+          0
+        );
+        const adminEarning = buyers.reduce(
+          (sum, b) => sum + (b.earning || 0),
+          0
+        );
+        const totalTaxCollected = buyers.reduce(
+          (sum, b) => sum + (b.tax || 0),
+          0
+        );
 
         result.push({
           bundleTitle: bundle.title,
           price: bundle.price,
           sold: buyers.length,
           totalRevenue,
+          totalTaxCollected,
           platformCommission,
           adminEarning,
           buyers,
@@ -188,7 +91,20 @@ export default function SalesRevenuePage() {
     };
 
     fetchData();
-  }, [user, startDate, endDate]);
+  }, [user]);
+
+  const filteredBundles =
+    selectedBundleTitle === "All"
+      ? salesData
+      : salesData.filter((b) => b.bundleTitle === selectedBundleTitle);
+
+  const totalPages = Math.ceil(filteredBundles.length / BUNDLES_PER_PAGE);
+  const paginatedBundles = filteredBundles.slice(
+    (currentPage - 1) * BUNDLES_PER_PAGE,
+    currentPage * BUNDLES_PER_PAGE
+  );
+
+  const bundleTitles = ["All", ...new Set(salesData.map((b) => b.bundleTitle))];
 
   if (loading)
     return (
@@ -199,72 +115,144 @@ export default function SalesRevenuePage() {
 
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold mb-4">Sales Revenue</h1>
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-center mb-6 sm:mb-8 text-blue-600 dark:text-blue-400">
+        Sales Revenue
+      </h1>
 
-      {/* Date Filters */}
-      <div className="flex gap-4 mb-6">
-        <div>
-          <label className="block font-medium mb-1">Start Date</label>
-          <input
-            type="date"
-            className="border rounded px-3 py-2"
-            value={startDate.toISOString().split("T")[0]}
-            onChange={(e) => setStartDate(new Date(e.target.value))}
-          />
-        </div>
-        <div>
-          <label className="block font-medium mb-1">End Date</label>
-          <input
-            type="date"
-            className="border rounded px-3 py-2"
-            value={endDate.toISOString().split("T")[0]}
-            onChange={(e) => setEndDate(new Date(e.target.value))}
-          />
-        </div>
+      {/* Filter by Bundle Title */}
+      <div className="mb-6">
+        <label className="block mb-2 font-semibold">
+          Filter by Bundle Title
+        </label>
+        <select
+          className="border rounded px-3 py-2 w-full sm:w-64 bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100"
+          value={selectedBundleTitle}
+          onChange={(e) => {
+            setSelectedBundleTitle(e.target.value);
+            setCurrentPage(1);
+          }}
+        >
+          {bundleTitles.map((title, i) => (
+            <option key={i} value={title}>
+              {title}
+            </option>
+          ))}
+        </select>
       </div>
 
-      {/* Revenue Sections */}
-      {salesData.map((bundle, idx) => (
-        <div
-          key={idx}
-          className="mb-10 p-5 border border-gray-300 rounded-lg shadow-sm"
-        >
-          <h2 className="text-xl font-semibold mb-2">{bundle.bundleTitle}</h2>
-          <div className="flex space-x-6 text-sm text-gray-500 mt-1">
-            <span>Price: ₹{bundle.price}</span>
-            <span>Units Sold: {bundle.sold}</span>
-            <span>Total Revenue: ₹{bundle.totalRevenue.toFixed(2)}</span>
-            <span>Platform Fee: ₹{bundle.platformCommission.toFixed(2)}</span>
-            <span>Admin Earning: ₹{bundle.adminEarning.toFixed(2)}</span>
-          </div>
+      <p className="text-xs text-gray-500 mb-2 italic">
+        Note: 18% GST and 20% platform fee are deducted from each bundle sale.
+      </p>
 
-          {/* Buyers Table */}
-          <div className="overflow-x-auto mt-4">
-            <table className="min-w-full border border-gray-200 text-sm">
-              <thead className="bg-gray-100">
-                <tr>
-                  <th className="text-left px-4 py-2 border">User</th>
-                  <th className="text-left px-4 py-2 border">Email</th>
-                  <th className="text-left px-4 py-2 border">Purchase Date</th>
-                  <th className="text-left px-4 py-2 border">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {bundle.buyers.map((buyer, i) => (
-                  <tr key={i} className="even:bg-gray-50">
-                    <td className="px-4 py-2 border">{buyer.name}</td>
-                    <td className="px-4 py-2 border">{buyer.email}</td>
-                    <td className="px-4 py-2 border">
-                      {buyer.date.toLocaleDateString()}
-                    </td>
-                    <td className="px-4 py-2 border">₹{buyer.amount}</td>
+      {/* Revenue Sections */}
+      {paginatedBundles.map((bundle, idx) => {
+        const currentBuyerPage = buyerPages[idx] || 1;
+        const totalBuyerPages = Math.ceil(
+          bundle.buyers.length / BUYERS_PER_PAGE
+        );
+        const buyerSlice = bundle.buyers.slice(
+          (currentBuyerPage - 1) * BUYERS_PER_PAGE,
+          currentBuyerPage * BUYERS_PER_PAGE
+        );
+
+        return (
+          <div
+            key={idx}
+            className="mb-10 p-5 border border-gray-300 rounded-lg shadow-sm overflow-x-auto"
+          >
+            <h2 className="text-xl font-semibold mb-2">{bundle.bundleTitle}</h2>
+            <div className="flex space-x-6 text-sm text-gray-500 mt-1 ">
+              <span className="border border-gray-200 rounded-lg px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-red-200">
+                Price: ₹{bundle.price}
+              </span>
+              <span className="border border-gray-200 rounded-lg px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-red-200">
+                Units Sold: {bundle.sold}
+              </span>
+              <span className="border border-gray-200 rounded-lg px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-red-200">
+                Total Paid by Users: ₹{bundle.totalRevenue.toFixed(2)}
+              </span>
+              {/* <span className="border border-gray-200 rounded-lg px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-red-200">
+                GST (18%): ₹{bundle.totalTaxCollected.toFixed(2)}
+              </span>
+              <span className="border border-gray-200 rounded-lg px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-red-200">
+                Platform Fee (20%): ₹{bundle.platformCommission.toFixed(2)}
+              </span> */}
+              <span className="border border-gray-200 rounded-lg px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-red-200">
+                Your Earning (after all deductions): ₹
+                {bundle.adminEarning.toFixed(2)}
+              </span>
+            </div>
+
+            {/* Buyers Table */}
+            <div className=" mt-4">
+              <table className="min-w-full border border-gray-200 text-sm">
+                <thead className="bg-gray-100 dark:bg-gray-700">
+                  <tr>
+                    <th className="text-left px-4 py-2 border">User</th>
+                    <th className="text-left px-4 py-2 border">Email</th>
+                    <th className="text-left px-4 py-2 border">
+                      Purchase Date
+                    </th>
+                    <th className="text-left px-4 py-2 border">Amount</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {bundle.buyers.map((buyer, i) => (
+                    <tr key={i} className="even:bg-gray-50">
+                      <td className="px-4 py-2 border">{buyer.name}</td>
+                      <td className="px-4 py-2 border">{buyer.email}</td>
+                      <td className="px-4 py-2 border">
+                        {buyer.date.toLocaleDateString()}
+                      </td>
+                      <td className="px-4 py-2 border">₹{buyer.amount}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+
+              {/* Buyer Pagination */}
+              {totalBuyerPages > 1 && (
+                <div className="flex justify-end gap-2 mt-3">
+                  {Array.from({ length: totalBuyerPages }, (_, i) => (
+                    <button
+                      key={i}
+                      className={`px-3 py-1 rounded border ${
+                        currentBuyerPage === i + 1
+                          ? "bg-blue-500 text-white"
+                          : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200"
+                      }`}
+                      onClick={() =>
+                        setBuyerPages((prev) => ({ ...prev, [idx]: i + 1 }))
+                      }
+                    >
+                      {i + 1}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
+        );
+      })}
+
+      {/* Page Pagination */}
+      {totalPages > 1 && (
+        <div className="flex justify-center mt-6 gap-2">
+          {Array.from({ length: totalPages }, (_, i) => (
+            <button
+              key={i}
+              className={`px-4 py-2 rounded border ${
+                currentPage === i + 1
+                  ? "bg-blue-500 text-white"
+                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200"
+              }`}
+              onClick={() => setCurrentPage(i + 1)}
+            >
+              {i + 1}
+            </button>
+          ))}
         </div>
-      ))}
+      )}
     </div>
   );
 }

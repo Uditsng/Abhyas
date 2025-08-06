@@ -3,18 +3,36 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {Box, Flex, IconButton, Text, useColorModeValue, VStack, Icon, useBreakpointValue} from '@chakra-ui/react';
-import { FiHome, FiUser, FiDollarSign, FiChevronLeft, FiChevronRight, FiMessageSquare, FiPackage, FiBookOpen, FiPieChart,FiUserPlus} from 'react-icons/fi';
-import { FaRupeeSign } from "react-icons/fa";
+import {
+  Box,
+  Flex,
+  IconButton,
+  Text,
+  useColorModeValue,
+  VStack,
+  Icon,
+  useBreakpointValue
+} from '@chakra-ui/react';
+import {
+  FiHome,
+  FiUser,
+  FiChevronLeft,
+  FiChevronRight,
+  FiMessageSquare,
+  FiBookOpen,
+  FiPieChart,
+  FiUserPlus
+} from 'react-icons/fi';
+import { FaRupeeSign } from 'react-icons/fa';
+
 const navItems = [
   { name: 'Dashboard', path: '/superAdmin', icon: FiHome },
   { name: 'Users', path: '/superAdmin/users', icon: FiUser },
   { name: 'Admins', path: '/superAdmin/admins', icon: FiUserPlus },
   { name: 'Revenue', path: '/superAdmin/revenue', icon: FaRupeeSign },
   { name: 'Communication', path: '/superAdmin/communication', icon: FiMessageSquare },
-  // { name: 'Packages', path: '/superAdmin/packages', icon: FiPackage },
   { name: 'Exams', path: '/superAdmin/exams', icon: FiBookOpen },
-  { name: 'Expenses', path: '/superAdmin/expenses', icon: FiPieChart },
+  { name: 'Expenses', path: '/superAdmin/expenses', icon: FiPieChart }
 ];
 
 export default function Sidebar({ isCollapsed, setIsCollapsed }) {
@@ -24,11 +42,11 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
   const textColor = useColorModeValue('gray.800', 'white');
   const isMobile = useBreakpointValue({ base: true, md: false });
 
-useEffect(() => {
-  if (isMobile !== undefined) {
-    setIsCollapsed(isMobile);
-  }
-}, [isMobile, setIsCollapsed]);
+  useEffect(() => {
+    if (isMobile !== undefined) {
+      setIsCollapsed(isMobile);
+    }
+  }, [isMobile, setIsCollapsed]);
 
   return (
     <Box
@@ -43,11 +61,10 @@ useEffect(() => {
       position='fixed'
       left={0}
       top='64px'
-      bottom="0"
+      bottom='0'
       zIndex={10}
       pb='96px'
     >
-      {/* Header with toggle button */}
       <Flex
         px={8}
         pt={12}
@@ -64,8 +81,7 @@ useEffect(() => {
         />
       </Flex>
 
-      {/* Nav Links */}
-      <VStack align="stretch" spacing={1} mt={4}>
+      <VStack align='stretch' spacing={1} mt={4}>
         {navItems.map((item) => (
           <Link href={item.path} key={item.name} passHref>
             <Flex
@@ -75,12 +91,13 @@ useEffect(() => {
               bg={pathname === item.path ? 'blue.500' : 'transparent'}
               color={pathname === item.path ? 'white' : textColor}
               _hover={{
-                bg: pathname === item.path
-                  ? 'blue.600'
-                  : useColorModeValue('gray.100', 'gray.700'),
+                bg:
+                  pathname === item.path
+                    ? 'blue.600'
+                    : useColorModeValue('gray.100', 'gray.700')
               }}
-              alignItems="center"
-              cursor="pointer"
+              alignItems='center'
+              cursor='pointer'
             >
               <Icon as={item.icon} boxSize={5} />
               {!isCollapsed && <Text ml={4}>{item.name}</Text>}

@@ -1,87 +1,77 @@
+
+
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Box, Flex, IconButton, Text, useColorModeValue, VStack, Icon, useBreakpointValue} from '@chakra-ui/react';
-import { FiHome, FiFileText, FiUser,FiFilePlus, FiChevronLeft, FiChevronRight, FiAlertTriangle, FiDollarSign, FiList} from 'react-icons/fi';
+import { FiHome, FiFileText, FiUsers, FiFilePlus, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FaRupeeSign } from 'react-icons/fa';
 
-  const navItems = [
-    { name: 'Dashboard', path: '/admin', icon: FiHome },
-    { name: 'Tests', path: '/admin/tests', icon: FiFileText },
-    { name: 'Create-Bundle', path: '/admin/create-bundle', icon: FiFilePlus },
-    { name: 'Users', path: '/admin/users', icon: FiUser, icon: FiUser },
-    //{ name: 'FeedBack', path: '/admin/announcements', icon: FiAlertTriangle },
-    { name: 'Sales Revenue', path: '/admin/sales-revenue', icon: FiDollarSign }
-  ];
+const navItems = [
+  { name: 'Dashboard', path: '/admin', icon: FiHome },
+  { name: 'Tests', path: '/admin/tests', icon: FiFileText },
+  { name: 'Create-Bundle', path: '/admin/create-bundle', icon: FiFilePlus },
+  { name: 'Users', path: '/admin/users', icon: FiUsers },
+  { name: 'Sales Revenue', path: '/admin/sales-revenue', icon: FaRupeeSign },
+];
 
-export default function AdminSidebar() {
+export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
   const pathname = usePathname();
-  const bgColor = useColorModeValue('white', 'gray.800');
-  const borderColor = useColorModeValue('gray.200', 'gray.700');
-  const textColor = useColorModeValue('gray.800', 'white');
 
-  const isMobile = useBreakpointValue({ base: true, md: false });
-  const [isCollapsed, setIsCollapsed] = useState(false);
-
+  // Auto collapse sidebar on small screens
   useEffect(() => {
-    if (isMobile) setIsCollapsed(true);
-  }, [isMobile]);
+    const handleResize = () => {
+      if (typeof window !== 'undefined') {
+        const isMobile = window.innerWidth < 768;
+        setIsCollapsed(isMobile);
+      }
+    };
+    handleResize(); // initial
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [setIsCollapsed]);
 
   return (
-    <Box
-      as='nav'
-      h='calc(100vh - 64px)'
-      bg={bgColor}
-      borderRight='1px'
-      borderColor={borderColor}
-      color={textColor}
-      w={isCollapsed ? '60px' : '240px'}
-      transition='width 0.3s ease'
-      position='fixed'
-      left={0}
-      top='64px'
-      bottom="0"
-      zIndex={10}
-      pb='96px'
+    <aside
+      className={`fixed top-[64px] left-0 h-[calc(100vh-64px)] z-10 transition-all duration-300 border-r
+        dark:border-gray-700 ${isCollapsed ? 'w-[60px]' : 'w-[240px]'} 
+        bg-white dark:bg-gray-900 border-gray-200 pb-24`}
     >
-      {/* Header with toggle button */}
-      <Flex 
-        px={8}
-        pt={12}
-        justifyContent={isCollapsed ? 'center' : 'space-between'}
-        alignItems='center'
-      >
-        {!isCollapsed && <Text fontWeight='bold'>Admin Panel</Text>}
-        <IconButton
-          aria-label={isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-          icon={isCollapsed ? <FiChevronRight /> : <FiChevronLeft />}
-          size='sm'
-          variant='ghost'
+      {/* Sidebar header with toggle */}
+      <div className={`flex items-center px-4 pt-8 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
+        {!isCollapsed && <span className="text-lg font-semibold text-gray-800 dark:text-white">Admin Panel</span>}
+        <button
           onClick={() => setIsCollapsed(!isCollapsed)}
-        />
-      </Flex>
+          className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+          aria-label="Toggle Sidebar"
+        >
+          {isCollapsed ? <FiChevronRight className="text-xl" /> : <FiChevronLeft className="text-xl" />}
+        </button>
+      </div>
 
-      {/* Nav links */}
-      <VStack align="stretch" spacing={1} mt={4}>
-        {navItems.map((item) => (
-          <Link href={item.path} key={item.name} passHref>
-            <Flex
-              p={3}
-              mx={2}
-              borderRadius='md'
-              bg={pathname === item.path ? 'blue.500' : 'transparent'}
-              color={pathname === item.path ? 'white' : textColor}
-              _hover={{ bg: pathname === item.path ? 'blue.600' : useColorModeValue('gray.100', 'gray.700') }}
-              alignItems="center"
-              cursor="pointer"
-            >
-              <Icon as={item.icon} boxSize={5} />
-              {!isCollapsed && <Text ml={4}>{item.name}</Text>}
-            </Flex>
-          </Link>
-        ))}
-      </VStack>
-    </Box>
+      {/* Navigation Items */}
+      <div className="mt-6 flex flex-col space-y-1">
+        {navItems.map((item) => {
+          const isActive = pathname === item.path;
+          return (
+            <Link href={item.path} key={item.name}>
+              <div
+                className={`flex items-center mx-2 px-3 py-2 rounded-md cursor-pointer group transition
+                ${isActive
+                    ? 'bg-blue-600 text-white'
+                    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800'}
+                `}
+              >
+                <item.icon className="text-xl shrink-0" />
+                {!isCollapsed && (
+                  <span className="ml-4 text-sm font-medium">{item.name}</span>
+                )}
+              </div>
+            </Link>
+          );
+        })}
+      </div>
+    </aside>
   );
 }

@@ -1,4 +1,6 @@
-'use client';
+//components/AnnouncementForm/page.jsx
+
+'use client'
 
 import { useState } from 'react';
 import { sendNotification } from '@/lib/superAdminCommunicationService';

@@ -5,7 +5,7 @@ import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import {Box,Heading,Text,Badge,Button,Flex,Progress,Card,CardBody,Stack,StackDivider,Radio,RadioGroup,Tooltip,IconButton,useToast,Spinner,Center} from '@chakra-ui/react';
 import { CheckCircleIcon, WarningIcon, InfoIcon, StarIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
-import { getTestDetails } from '@/lib/tests';
+import { getTestDetails } from '@/lib/adminTestsService';
 import { useAuth } from '@/components/AuthContext';
 import { saveBookmark, removeBookmark } from '@/lib/bookmarkService';
 import { getTestResult } from '@/lib/testResultService';
@@ -223,40 +223,6 @@ export default function TestReviewPage() {
     <Box px={4} py={24} maxW="800px" mx="auto" className="min-h-screen">
       <Heading size="lg" mb={4}>{testData.title}Review</Heading>
 
-      {/* Score summary */}
-      {/* <Card mb={6}>
-        <CardBody>
-          <Stack divider={<StackDivider />} spacing={4}>
-            <Box>
-              <Flex justify="space-between" align="center">
-                <Heading size="md">Your Score: {score}/{testData.questions.length}</Heading>
-                <Badge
-                  colorScheme={scorePercentage >= 70 ? "green" : scorePercentage >= 40 ? "yellow" : "red"}
-                  fontSize="lg"
-                  py={1}
-                  px={3}
-                  borderRadius="full"
-                >
-                  {scorePercentage}%
-                </Badge>
-              </Flex>
-              <Progress
-                value={scorePercentage}
-                colorScheme={scorePercentage >= 70 ? "green" : scorePercentage >= 40 ? "yellow" : "red"}
-                mt={2}
-                borderRadius="full"
-                size="sm"
-              />
-            </Box>
-
-            <Flex justify="space-between">
-              <Text>Total Questions: {testData.questions.length}</Text>
-              <Text>Correct Answers: {score}</Text>
-              <Text>Wrong Answers: {testData.questions.length - score}</Text>
-            </Flex>
-          </Stack>
-        </CardBody>
-      </Card> */}
 
       {/* Question navigation */}
       <Flex justify="space-between" mb={4} align="center">

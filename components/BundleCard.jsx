@@ -1,80 +1,53 @@
-import { Box, Image, Text, Button, Flex, Badge, Stack, useColorModeValue } from "@chakra-ui/react";
+"use client";
+
 import Link from "next/link";
 
 export default function BundleCard({ bundle }) {
-  const cardBg = useColorModeValue('white', 'whiteAlpha.100');
-  const border = useColorModeValue('gray.200', 'whiteAlpha.200');
-  const textColor = useColorModeValue('gray.800', 'gray.100');
-  const subTextColor = useColorModeValue('gray.600', 'gray.300');
-  const badgeBg = useColorModeValue('blue.50', 'blue.900');
-  const badgeColor = useColorModeValue('blue.600', 'blue.200');
-  const priceBg = useColorModeValue('green.50', 'green.900');
-  const priceColor = useColorModeValue('green.600', 'green.200');
-
   return (
-    <Link href={`/testList/${bundle.id}`} style={{ textDecoration: 'none' }}>
-      <Box
-        bg={cardBg}
-        borderRadius="2xl"
-        boxShadow="md"
-        overflow="hidden"
-        transition="box-shadow 0.2s, transform 0.2s"
-        _hover={{ boxShadow: "xl", transform: 'translateY(-2px) scale(1.03)' }}
-        maxW="360px"
-        w="100%"
-        mx="auto"
-        display="flex"
-        flexDirection="column"
-        borderWidth="1px"
-        borderColor={border}
-        className="backdrop-blur-lg border border-white/20 shadow-md"
-        cursor="pointer"
-      >
-        {/* 4:3 Image */}
-        <Box
-          pos="relative"
-          w="100%"
-          pt="50%" // 2:1 aspect ratio
-          bg="gray.100"
-          _dark={{ bg: 'gray.800' }}
-        >
-          <Image
-            src={bundle.imageUrl }
+    <Link href={`/testList/${bundle.id}`} className="no-underline">
+      <div className="max-w-sm w-full mx-auto bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden shadow hover:shadow-lg transition-all duration-200 flex flex-col backdrop-blur-md cursor-pointer">
+        {/* Image (16:9) */}
+        <div className="aspect-video bg-gray-100 dark:bg-gray-800">
+          <img
+            src={bundle.imageUrl}
             alt={bundle.title}
-            objectFit="cover"
-            position="absolute"
-            top={0}
-            left={0}
-            w="100%"
-            h="100%"
+            className="w-full h-full object-contain"
           />
-        </Box>
-        <Stack spacing={2} p={4} flex="1 1 auto">
-          <Text fontWeight="bold" fontSize="lg" noOfLines={1} color={textColor}>
-            {bundle.title}
-          </Text>
-          <Text color={subTextColor} fontSize="sm" noOfLines={1}>
-            Subject: <b>{bundle.subject}</b>
-          </Text>
-          <Flex align="center" gap={2}>
-            <Badge bg={priceBg} color={priceColor} fontSize="0.9em" px={2} py={1} borderRadius="md">
+        </div>
+
+        {/* Content */}
+        <div className="p-4 flex flex-col justify-between h-full">
+          {/* Title & Subject */}
+          <div className="mb-2">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white truncate">
+              {bundle.title}
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
+              Subject: <b>{bundle.subject}</b>
+            </p>
+          </div>
+
+          {/* Price & Test Count */}
+          <div className="flex flex-wrap gap-2 items-center mb-4">
+            {bundle.originalPrice && (
+              <span className="text-sm line-through text-gray-500 dark:text-gray-400">
+                ₹{bundle.originalPrice}
+              </span>
+            )}
+            <span className="text-sm px-2 py-1 bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 rounded-md font-medium">
               ₹{bundle.price}
-            </Badge>
-            <Badge bg={badgeBg} color={badgeColor} fontSize="0.9em" px={2} py={1} borderRadius="md">
+            </span>
+            <span className="text-sm px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-blue-300 rounded-md font-medium">
               {bundle.testIds?.length || 0} Tests
-            </Badge>
-          </Flex>
-          <Button
-            colorScheme="blue"
-            variant="solid"
-            mt={2}
-            borderRadius="full"
-            w="full"
-          >
+            </span>
+          </div>
+
+          {/* Button */}
+          <button className="w-full py-2 px-4 mt-auto rounded-full text-sm font-medium bg-blue-600 hover:bg-blue-700 text-white transition">
             View Bundle
-          </Button>
-        </Stack>
-      </Box>
+          </button>
+        </div>
+      </div>
     </Link>
   );
 }

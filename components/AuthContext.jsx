@@ -47,7 +47,7 @@ export function AuthProvider({ children }) {
                 email: firebaseUser.email,
                 displayName: firebaseUser.displayName,
                 photoURL: firebaseUser.photoURL,
-                role: userData?.role || "student",
+                role: userData?.role || "user",
                 isAdmin: userData?.isAdmin || false
               };
 
@@ -115,7 +115,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, signIn, logout, loading }}>
+    <AuthContext.Provider value={{ user, role: user?.role || "student", signIn, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );

@@ -15,6 +15,7 @@ export default function AdminLayout({ children }) {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isPending, setIsPending] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isCollapsed, setIsCollapsed] = useState(false); 
   const pathname = usePathname();
 
   useEffect(() => {
@@ -115,15 +116,15 @@ export default function AdminLayout({ children }) {
   }
 
   return (
-    <Box position="relative" minH="100vh" pt="64px">
-      <AdminSidebar />
+    <Box position="relative" minH="100vh" pt="64px" overflowX="hidden">
+      <AdminSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
 
       {/* Main content */}
       <Box 
+      minH='100vh'
       flex={1} 
       p={6} 
-      ml={{ base: '60px', md: '240px' }}
-      transition='margin-left 0.3s ease'
+      className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-[240px]'} `}
       >
         {children}
       </Box>

@@ -4,7 +4,7 @@ export default function ProgressBar({ percentage, height = "h-2", colorClass = "
   // Determine color based on percentage if not provided
   let barColor = colorClass;
   if (!colorClass) {
-    barColor = percentage >= 70 ? 'bg-green-500' : 
+    barColor = percentage >= 70 ? 'bg-blue-500' : 
               percentage >= 40 ? 'bg-yellow-500' : 
               'bg-red-500';
   }

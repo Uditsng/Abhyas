@@ -43,10 +43,11 @@ import {
   ArrowBackIcon,
   DownloadIcon,
 } from "@chakra-ui/icons";
-import { useRouter, useParams, useSearchParams } from "next/navigation"; // Import useSearchParams
+import { FaArrowAltCircleLeft } from "react-icons/fa";
+import { useRouter, useParams } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/lib/firebaseConfig";
-import { getTestDetails } from "@/lib/tests";
+import { getTestDetails } from "@/lib/adminTestsService";
 import {
   collection,
   doc,
@@ -57,6 +58,7 @@ import {
 } from "firebase/firestore";
 import Papa from "papaparse";
 import { downloadCSVTemplate } from "@/utils/downloadTemplate";
+import { uploadToCloudinary } from "@/utils/uploadToCloudinary";
 
 export default function QuestionsPage() {
   const [questions, setQuestions] = useState([]);
@@ -67,6 +69,10 @@ export default function QuestionsPage() {
   const testId = params.testId;
   const { isOpen, onOpen, onClose } = useDisclosure();
   const toast = useToast();
+  const [questionImageUrl, setQuestionImageUrl] = useState("");
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const [newQuestion, setNewQuestion] = useState({
     question: "",
@@ -190,6 +196,7 @@ export default function QuestionsPage() {
       const docRef = await addDoc(questionsCollectionRef, {
         ...newQuestion,
         correctAnswer: parseInt(newQuestion.correctAnswer),
+        questionImageUrl: questionImageUrl || "",
         createdAt: new Date().toISOString(),
       });
 
@@ -347,6 +354,60 @@ export default function QuestionsPage() {
     }
   };
 
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      toast({
+        title: "Invalid file",
+        description: "Please select a valid image.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (file.size > 1024 * 1024) {
+      toast({
+        title: "File too large",
+        description: "Image must be under 1MB.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    try {
+      const url = await uploadToCloudinary(file); // your existing util
+      setQuestionImageUrl(url);
+      setPreviewUrl(URL.createObjectURL(file));
+      toast({
+        title: "Image Uploaded",
+        status: "success",
+        duration: 2000,
+        isClosable: true,
+      });
+    } catch (err) {
+      toast({
+        title: "Upload Failed",
+        description: "Try again later.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const paginatedQuestions = questions.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
+  const totalPages = Math.ceil(questions.length / itemsPerPage);
+
   if (authLoading || loading) {
     return (
       <Center h="200px">
@@ -356,445 +417,521 @@ export default function QuestionsPage() {
   }
 
   return (
-    <Box>
-      {/* Header with back button */}
-      <Card mb={6} variant="outline">
-        <CardBody>
-          <Flex align="center" mb={4}>
-            <Button
-              leftIcon={<ArrowBackIcon />}
-              variant="ghost"
-              onClick={() => router.push("/admin/tests")}
-              mr={4}
-            >
-              Back to Tests
-            </Button>
-            <Box>
-              <Heading size="lg">Manage Questions</Heading>
-              <Text color="gray.600">{testInfo?.title}</Text>
-            </Box>
-          </Flex>
-
-          <Flex justify="space-between" align="center">
-            <Text color="gray.600">Total Questions: {questions.length}</Text>
-            <Button leftIcon={<AddIcon />} colorScheme="blue" onClick={onOpen}>
-              Add Question
-            </Button>
-          </Flex>
-        </CardBody>
-      </Card>
-
-      {questions.length === 0 ? (
-        <Card p={6} textAlign="center" variant="outline">
+    <div className="p-4 bg-gray-100 dark:bg-gray-900 min-h-screen">
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl sm:text-4xl font-extrabold text-center mb-6 sm:mb-8 text-blue-600 dark:text-blue-400">
+          Manage Questions
+        </h1>
+        {/* Header with back button */}
+        <Card mb={6} variant="outline">
           <CardBody>
-            <Heading size="md" mb={2}>
-              No questions found
-            </Heading>
-            <Text mb={4}>Start building your test by adding questions.</Text>
-            <VStack>
-              <Button colorScheme="blue" onClick={onOpen}>
-                Add your first question
-              </Button>
+            <Flex align="center" mb={4}>
+              <Box>
+                <Text color="gray.600">{testInfo?.title}</Text>
+              </Box>
+            </Flex>
+
+            <Flex 
+              direction={{ base: "column", md: "row" }}
+              justify="space-between" 
+              align={{ base: "flex-start", md: "center" }}
+              gap={4}
+              >
+      <Button
+        onClick={() => router.push("/admin/tests")}
+        leftIcon={<FaArrowAltCircleLeft />}
+        colorScheme="red"
+        variant="solid"
+        size="sm"
+      >
+        Back
+      </Button>
+              <Text 
+                color="gray.600"
+                fontSize={{ base: "sm", md: "md" }}
+                alignSelf={{ base: "flex-start", md: "center" }}              
+              >Total Questions: {questions.length}
+              </Text>
               <Button
                 leftIcon={<AddIcon />}
-                colorScheme="green"
-                onClick={() => setCsvModalOpen(true)}
+                colorScheme="blue"
+                onClick={onOpen}
+                size="sm"
               >
-                Bulk Upload CSV
+                Add Question
               </Button>
-            </VStack>
+            </Flex>
           </CardBody>
         </Card>
-      ) : (
-        <Card variant="outline">
-          <CardBody p={0}>
-            <Box overflowX="auto">
-              <Table variant="simple">
-                <Thead bg="gray.50">
-                  <Tr>
-                    <Th>Question</Th>
-                    <Th>Correct Answer</Th>
-                    <Th>Marks</Th>
-                    <Th>Actions</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {questions.map((question, index) => (
-                    <Tr key={question.id} _hover={{ bg: "gray.50" }}>
-                      <Td maxW="400px">
-                        <Text fontWeight="medium" noOfLines={2}>
-                          {index + 1}. {question.question}
-                        </Text>
-                        <Text fontSize="sm" color="gray.500" mt={1}>
-                          Options: {question.options.join(" | ")}
-                        </Text>
-                      </Td>
-                      <Td>
-                        <Badge colorScheme="green">
-                          {question.options[question.correctAnswer]}
-                        </Badge>
-                      </Td>
-                      <Td>{question.marks}</Td>
-                      <Td>
-                        <HStack spacing={2}>
-                          <IconButton
-                            aria-label="Edit question"
-                            icon={<EditIcon />}
-                            size="sm"
-                            colorScheme="blue"
-                            onClick={() => handleEditClick(question)}
-                          />
-                          {/* <IconButton
+
+        {questions.length === 0 ? (
+          <Card p={6} textAlign="center" variant="outline">
+            <CardBody>
+              <Heading size="md" mb={2}>
+                No questions found
+              </Heading>
+              <Text mb={4}>Start building your test by adding questions.</Text>
+              <VStack>
+                <Button colorScheme="blue" onClick={onOpen}>
+                  Add your first question
+                </Button>
+                <Button
+                  leftIcon={<AddIcon />}
+                  colorScheme="green"
+                  onClick={() => setCsvModalOpen(true)}
+                >
+                  Bulk Upload CSV
+                </Button>
+              </VStack>
+            </CardBody>
+          </Card>
+        ) : (
+          <Card variant="outline">
+            <CardBody p={0}>
+              <Box overflowX="auto">
+                <Table variant="simple">
+                  <Thead bg="gray-200">
+                    <Tr>
+                      <Th>Question</Th>
+                      <Th>Correct Answer</Th>
+                      <Th>Marks</Th>
+                      <Th>Actions</Th>
+                    </Tr>
+                  </Thead>
+                  <Tbody>
+                    {paginatedQuestions.map((question, index) => (
+                      <Tr key={question.id}>
+                        <Td maxW="400px">
+                          <Text fontWeight="medium" noOfLines={2}>
+                            {index + 1 + (currentPage - 1) * itemsPerPage}.{" "}
+                            {question.question}
+                          </Text>
+                          {question.questionImageUrl && (
+                            <img
+                              src={question.questionImageUrl}
+                              alt="Question visual"
+                              style={{
+                                marginTop: "8px",
+                                width: "180px",
+                                borderRadius: "8px",
+                                border: "1px solid #ddd",
+                              }}
+                            />
+                          )}
+                          <Text fontSize="sm" color="gray.500" mt={1}>
+                            Options: {question.options.join(" | ")}
+                          </Text>
+                        </Td>
+                        <Td>
+                          <Badge colorScheme="green">
+                            {question.options[question.correctAnswer]}
+                          </Badge>
+                        </Td>
+                        <Td>{question.marks}</Td>
+                        <Td>
+                          <HStack spacing={2}>
+                            <IconButton
+                              aria-label="Edit question"
+                              icon={<EditIcon />}
+                              size="sm"
+                              colorScheme="blue"
+                              onClick={() => handleEditClick(question)}
+                            />
+                            {/* <IconButton
                             aria-label="Delete question"
                             icon={<DeleteIcon />}
                             size="sm"
                             colorScheme="red"
                             onClick={() => handleDeleteQuestion(question.id)}
                           /> */}
-                        </HStack>
-                      </Td>
-                    </Tr>
-                  ))}
-                </Tbody>
-              </Table>
-            </Box>
-          </CardBody>
-        </Card>
-      )}
+                          </HStack>
+                        </Td>
+                      </Tr>
+                    ))}
+                  </Tbody>
+                </Table>
+              </Box>
+            </CardBody>
+          </Card>
+        )}
 
-      {/* Add Question Modal */}
-      <Modal
-        isOpen={isOpen}
-        onClose={onClose}
-        size="xl"
-        className="ModelSizeForTest"
-      >
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Add New Question</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={6}>
-            <FormControl mb={4} isRequired>
-              <FormLabel>Question</FormLabel>
-              <Textarea
-                name="question"
-                value={newQuestion.question}
-                onChange={handleInputChange}
-                placeholder="Enter your question here..."
-                rows={3}
-              />
-            </FormControl>
-
-            <FormControl mb={4} isRequired>
-              <FormLabel>Options</FormLabel>
-              <VStack spacing={3} align="stretch">
-                {newQuestion.options.map((option, index) => (
-                  <Input
-                    key={index}
-                    name={`option-${index}`}
-                    value={option}
-                    onChange={handleInputChange}
-                    placeholder={`Option ${index + 1}`}
-                  />
-                ))}
-              </VStack>
-            </FormControl>
-
-            <FormControl mb={4} isRequired>
-              <FormLabel>Correct Answer</FormLabel>
-              <RadioGroup
-                name="correctAnswer"
-                value={newQuestion.correctAnswer}
-                onChange={(value) =>
-                  setNewQuestion({ ...newQuestion, correctAnswer: value })
-                }
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="mt-6 flex justify-center space-x-2">
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setCurrentPage(i + 1)}
+                className={`px-3 py-1 border rounded ${
+                  currentPage === i + 1
+                    ? "bg-blue-600 text-white"
+                    : "hover:bg-gray-200 dark:hover:bg-gray-700"
+                }`}
               >
-                <HStack direction="column">
+                {i + 1}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Add Question Modal */}
+        <Modal
+          isOpen={isOpen}
+          onClose={onClose}
+          size="xl"
+          className="ModelSizeForTest"
+        >
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Add New Question</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody pb={6}>
+              <FormControl mb={4} isRequired>
+                <FormLabel>Question</FormLabel>
+                <Textarea
+                  name="question"
+                  value={newQuestion.question}
+                  onChange={handleInputChange}
+                  placeholder="Enter your question here..."
+                  rows={3}
+                />
+              </FormControl>
+
+              <FormControl mb={4}>
+                <FormLabel>Upload Image (optional)</FormLabel>
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleImageUpload}
+                />
+                {previewUrl && (
+                  <img
+                    src={previewUrl}
+                    alt="Preview"
+                    style={{
+                      marginTop: "10px",
+                      maxHeight: "160px",
+                      borderRadius: "6px",
+                      border: "1px solid #ccc",
+                    }}
+                  />
+                )}
+              </FormControl>
+
+              <FormControl mb={4} isRequired>
+                <FormLabel>Options</FormLabel>
+                <VStack spacing={3} align="stretch">
                   {newQuestion.options.map((option, index) => (
-                    <Radio key={index} value={index.toString()}>
-                      Option {index + 1}
-                    </Radio>
+                    <Input
+                      key={index}
+                      name={`option-${index}`}
+                      value={option}
+                      onChange={handleInputChange}
+                      placeholder={`Option ${index + 1}`}
+                    />
                   ))}
-                </HStack>
-              </RadioGroup>
-            </FormControl>
+                </VStack>
+              </FormControl>
 
-            <FormControl mb={4}>
-              <FormLabel>Explanation (Optional)</FormLabel>
-              <Textarea
-                name="explanation"
-                value={newQuestion.explanation}
-                onChange={handleInputChange}
-                placeholder="Explain why this is the correct answer..."
-                rows={2}
-              />
-            </FormControl>
+              <FormControl mb={4} isRequired>
+                <FormLabel>Correct Answer</FormLabel>
+                <RadioGroup
+                  name="correctAnswer"
+                  value={newQuestion.correctAnswer}
+                  onChange={(value) =>
+                    setNewQuestion({ ...newQuestion, correctAnswer: value })
+                  }
+                >
+                  <HStack direction="column">
+                    {newQuestion.options.map((option, index) => (
+                      <Radio key={index} value={index.toString()}>
+                        Option {index + 1}
+                      </Radio>
+                    ))}
+                  </HStack>
+                </RadioGroup>
+              </FormControl>
 
-            <FormControl>
-              <FormLabel>Marks</FormLabel>
-              <Input
-                name="marks"
-                type="number"
-                value={newQuestion.marks}
-                onChange={handleInputChange}
-                min={1}
-                max={10}
-              />
-            </FormControl>
-          </ModalBody>
+              <FormControl mb={4}>
+                <FormLabel>Explanation (Optional)</FormLabel>
+                <Textarea
+                  name="explanation"
+                  value={newQuestion.explanation}
+                  onChange={handleInputChange}
+                  placeholder="Explain why this is the correct answer..."
+                  rows={2}
+                />
+              </FormControl>
 
-          <ModalFooter>
-            <Button
-              colorScheme="blue"
-              mr={3}
-              onClick={handleCreateQuestion}
-              isDisabled={
-                !newQuestion.question.trim() ||
-                newQuestion.options.some((opt) => !opt.trim())
-              }
-            >
-              Add Question
-            </Button>
-            <Button onClick={onClose}>Cancel</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
+              <FormControl>
+                <FormLabel>Marks</FormLabel>
+                <Input
+                  name="marks"
+                  type="number"
+                  value={newQuestion.marks}
+                  onChange={handleInputChange}
+                  min={1}
+                  max={10}
+                />
+              </FormControl>
+            </ModalBody>
 
-      {/* Edit Question Modal */}
-      <Modal
-        isOpen={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
-        size="xl"
-      >
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Edit Question</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody pb={6}>
-            <FormControl mb={4} isRequired>
-              <FormLabel>Question</FormLabel>
-              <Textarea
-                name="question"
-                value={editQuestion?.question || ""}
-                onChange={handleEditInputChange}
-                placeholder="Enter your question here..."
-                rows={6}
-              />
-            </FormControl>
-            <FormControl mb={4} isRequired>
-              <FormLabel>Options</FormLabel>
-              <VStack spacing={3} align="stretch">
-                {editQuestion?.options.map((option, idx) => (
-                  <Input
-                    key={idx}
-                    name={`option-${idx}`}
-                    value={option}
-                    onChange={handleEditInputChange}
-                    placeholder={`Option ${idx + 1}`}
-                  />
-                ))}
-              </VStack>
-            </FormControl>
-            <FormControl mb={4} isRequired>
-              <FormLabel>Correct Answer</FormLabel>
-              <RadioGroup
-                name="correctAnswer"
-                value={editQuestion?.correctAnswer}
-                onChange={(val) =>
-                  setEditQuestion((q) => ({ ...q, correctAnswer: val }))
+            <ModalFooter>
+              <Button
+                colorScheme="blue"
+                mr={3}
+                onClick={handleCreateQuestion}
+                isDisabled={
+                  !newQuestion.question.trim() ||
+                  newQuestion.options.some((opt) => !opt.trim())
                 }
               >
-                <HStack>
-                  {editQuestion?.options.map((option, idx) => (
-                    <Radio key={idx} value={idx.toString()}>
-                      Option {idx + 1}
-                    </Radio>
-                  ))}
-                </HStack>
-              </RadioGroup>
-            </FormControl>
-            <FormControl mb={4}>
-              <FormLabel>Explanation (Optional)</FormLabel>
-              <Textarea
-                name="explanation"
-                value={editQuestion?.explanation || ""}
-                onChange={handleEditInputChange}
-                placeholder="Explain why this is the correct answer..."
-                rows={6}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Marks</FormLabel>
-              <Input
-                name="marks"
-                type="number"
-                value={editQuestion?.marks || 1}
-                onChange={handleEditInputChange}
-                min={1}
-                max={10}
-              />
-            </FormControl>
-          </ModalBody>
-          <ModalFooter>
-            <Button colorScheme="blue" mr={3} onClick={handleUpdateQuestion}>
-              Save
-            </Button>
-            <Button onClick={() => setEditModalOpen(false)}>Cancel</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-
-      {/* CSV Upload Modal */}
-      <Modal
-        isOpen={csvModalOpen}
-        onClose={() => setCsvModalOpen(false)}
-        size="md"
-      >
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Bulk Upload Questions (CSV)</ModalHeader>
-          <ModalCloseButton />
-          <ModalBody>
-            <FormControl>
-              <FormLabel>CSV File</FormLabel>
-              <Input
-                type="file"
-                accept=".csv"
-                onChange={(e) => setCsvFile(e.target.files[0])}
-              />
-              <Text fontSize="sm" color="gray.600" mb={2} mt={2}>
-                Please use the exact format. You can download the template
-                below:
-              </Text>
-
-              <Button
-                leftIcon={<DownloadIcon />}
-                colorScheme="teal"
-                size="sm"
-                mb={4}
-                onClick={downloadCSVTemplate}
-              >
-                Download Sample Template
+                Add Question
               </Button>
+              <Button onClick={onClose}>Cancel</Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
 
-              <Text mt={2} fontSize="sm" color="gray.500">
-                Format: question, option1, option2, option3, option4,
-                correctAnswer (1-4), explanation, marks
-              </Text>
-            </FormControl>
-          </ModalBody>
-          <ModalFooter>
-            <Button
-              colorScheme="blue"
-              mr={3}
-              onClick={async () => {
-                if (!csvFile) return;
-                setLoading(true);
+        {/* Edit Question Modal */}
+        <Modal
+          isOpen={editModalOpen}
+          onClose={() => setEditModalOpen(false)}
+          size="xl"
+        >
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Edit Question</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody pb={6}>
+              <FormControl mb={4} isRequired>
+                <FormLabel>Question</FormLabel>
+                <Textarea
+                  name="question"
+                  value={editQuestion?.question || ""}
+                  onChange={handleEditInputChange}
+                  placeholder="Enter your question here..."
+                  rows={6}
+                />
+              </FormControl>
+              <FormControl mb={4} isRequired>
+                <FormLabel>Options</FormLabel>
+                <VStack spacing={3} align="stretch">
+                  {editQuestion?.options.map((option, idx) => (
+                    <Input
+                      key={idx}
+                      name={`option-${idx}`}
+                      value={option}
+                      onChange={handleEditInputChange}
+                      placeholder={`Option ${idx + 1}`}
+                    />
+                  ))}
+                </VStack>
+              </FormControl>
+              <FormControl mb={4} isRequired>
+                <FormLabel>Correct Answer</FormLabel>
+                <RadioGroup
+                  name="correctAnswer"
+                  value={editQuestion?.correctAnswer}
+                  onChange={(val) =>
+                    setEditQuestion((q) => ({ ...q, correctAnswer: val }))
+                  }
+                >
+                  <HStack>
+                    {editQuestion?.options.map((option, idx) => (
+                      <Radio key={idx} value={idx.toString()}>
+                        Option {idx + 1}
+                      </Radio>
+                    ))}
+                  </HStack>
+                </RadioGroup>
+              </FormControl>
+              <FormControl mb={4}>
+                <FormLabel>Explanation (Optional)</FormLabel>
+                <Textarea
+                  name="explanation"
+                  value={editQuestion?.explanation || ""}
+                  onChange={handleEditInputChange}
+                  placeholder="Explain why this is the correct answer..."
+                  rows={6}
+                />
+              </FormControl>
+              <FormControl>
+                <FormLabel>Marks</FormLabel>
+                <Input
+                  name="marks"
+                  type="number"
+                  value={editQuestion?.marks || 1}
+                  onChange={handleEditInputChange}
+                  min={1}
+                  max={10}
+                />
+              </FormControl>
+            </ModalBody>
+            <ModalFooter>
+              <Button colorScheme="blue" mr={3} onClick={handleUpdateQuestion}>
+                Save
+              </Button>
+              <Button onClick={() => setEditModalOpen(false)}>Cancel</Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
 
-                const reader = new FileReader();
-                reader.onload = async (e) => {
-                  const csvText = e.target.result;
-                  Papa.parse(csvText, {
-                    header: false,
-                    skipEmptyLines: true,
-                    complete: async (results) => {
-                      const rows = results.data;
-                      let successCount = 0;
-                      for (const row of rows) {
-                        if (row.length < 8) continue; // skip invalid rows
-                        const [
-                          question,
-                          option1,
-                          option2,
-                          option3,
-                          option4,
-                          correctAnswer,
-                          explanation,
-                          marks,
-                        ] = row;
+        {/* CSV Upload Modal */}
+        <Modal
+          isOpen={csvModalOpen}
+          onClose={() => setCsvModalOpen(false)}
+          size="md"
+        >
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Bulk Upload Questions (CSV)</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <FormControl>
+                <FormLabel>CSV File</FormLabel>
+                <Input
+                  type="file"
+                  accept=".csv"
+                  onChange={(e) => setCsvFile(e.target.files[0])}
+                />
+                <Text fontSize="sm" color="gray.600" mb={2} mt={2}>
+                  Please use the exact format. You can download the template
+                  below:
+                </Text>
 
-                        // Accept correctAnswer as 1-4 or a-d/A-D, map to 0-3
-                        let correctAnswerIndex = -1;
-                        if (typeof correctAnswer === "string") {
-                          const trimmed = correctAnswer.trim().toLowerCase();
-                          if (["a", "1"].includes(trimmed))
-                            correctAnswerIndex = 0;
-                          else if (["b", "2"].includes(trimmed))
-                            correctAnswerIndex = 1;
-                          else if (["c", "3"].includes(trimmed))
-                            correctAnswerIndex = 2;
-                          else if (["d", "4"].includes(trimmed))
-                            correctAnswerIndex = 3;
-                        } else if (typeof correctAnswer === "number") {
-                          if (correctAnswer >= 1 && correctAnswer <= 4)
-                            correctAnswerIndex = correctAnswer - 1;
-                        }
+                <Button
+                  leftIcon={<DownloadIcon />}
+                  colorScheme="teal"
+                  size="sm"
+                  mb={4}
+                  onClick={downloadCSVTemplate}
+                >
+                  Download Sample Template
+                </Button>
 
-                        if (
-                          !question.trim() ||
-                          [option1, option2, option3, option4].some(
-                            (opt) => !opt.trim()
-                          ) ||
-                          isNaN(correctAnswerIndex) ||
-                          correctAnswerIndex < 0 ||
-                          correctAnswerIndex > 3 ||
-                          isNaN(parseInt(marks))
-                        )
-                          continue;
-                        try {
-                          const questionsCollectionRef = collection(
-                            db,
-                            "tests",
-                            testId,
-                            "questions"
-                          );
-                          const docRef = await addDoc(questionsCollectionRef, {
+                <Text mt={2} fontSize="sm" color="gray.500">
+                  Format: question, option1, option2, option3, option4,
+                  correctAnswer (1-4), explanation, marks
+                </Text>
+              </FormControl>
+            </ModalBody>
+            <ModalFooter>
+              <Button
+                colorScheme="blue"
+                mr={3}
+                onClick={async () => {
+                  if (!csvFile) return;
+                  setLoading(true);
+
+                  const reader = new FileReader();
+                  reader.onload = async (e) => {
+                    const csvText = e.target.result;
+                    Papa.parse(csvText, {
+                      header: false,
+                      skipEmptyLines: true,
+                      complete: async (results) => {
+                        const rows = results.data;
+                        let successCount = 0;
+                        for (const row of rows) {
+                          if (row.length < 8) continue; // skip invalid rows
+                          const [
                             question,
-                            options: [option1, option2, option3, option4],
-                            correctAnswer: correctAnswerIndex, // store as 0-3
+                            option1,
+                            option2,
+                            option3,
+                            option4,
+                            correctAnswer,
                             explanation,
-                            marks: parseInt(marks),
-                            createdAt: new Date().toISOString(),
-                          });
-                          setQuestions((prev) => [
-                            ...prev,
-                            {
-                              id: docRef.id,
-                              question,
-                              options: [option1, option2, option3, option4],
-                              correctAnswer: correctAnswerIndex,
-                              explanation,
-                              marks: parseInt(marks),
-                            },
-                          ]);
-                          successCount++;
-                        } catch (err) {
-                          // Optionally handle error per row
+                            marks,
+                          ] = row;
+
+                          // Accept correctAnswer as 1-4 or a-d/A-D, map to 0-3
+                          let correctAnswerIndex = -1;
+                          if (typeof correctAnswer === "string") {
+                            const trimmed = correctAnswer.trim().toLowerCase();
+                            if (["a", "1"].includes(trimmed))
+                              correctAnswerIndex = 0;
+                            else if (["b", "2"].includes(trimmed))
+                              correctAnswerIndex = 1;
+                            else if (["c", "3"].includes(trimmed))
+                              correctAnswerIndex = 2;
+                            else if (["d", "4"].includes(trimmed))
+                              correctAnswerIndex = 3;
+                          } else if (typeof correctAnswer === "number") {
+                            if (correctAnswer >= 1 && correctAnswer <= 4)
+                              correctAnswerIndex = correctAnswer - 1;
+                          }
+
+                          if (
+                            !question.trim() ||
+                            [option1, option2, option3, option4].some(
+                              (opt) => !opt.trim()
+                            ) ||
+                            isNaN(correctAnswerIndex) ||
+                            correctAnswerIndex < 0 ||
+                            correctAnswerIndex > 3 ||
+                            isNaN(parseInt(marks))
+                          )
+                            continue;
+                          try {
+                            const questionsCollectionRef = collection(
+                              db,
+                              "tests",
+                              testId,
+                              "questions"
+                            );
+                            const docRef = await addDoc(
+                              questionsCollectionRef,
+                              {
+                                question,
+                                options: [option1, option2, option3, option4],
+                                correctAnswer: correctAnswerIndex, // store as 0-3
+                                explanation,
+                                marks: parseInt(marks),
+                                createdAt: new Date().toISOString(),
+                              }
+                            );
+                            setQuestions((prev) => [
+                              ...prev,
+                              {
+                                id: docRef.id,
+                                question,
+                                options: [option1, option2, option3, option4],
+                                correctAnswer: correctAnswerIndex,
+                                explanation,
+                                marks: parseInt(marks),
+                              },
+                            ]);
+                            successCount++;
+                          } catch (err) {
+                            // Optionally handle error per row
+                          }
                         }
-                      }
-                      setLoading(false);
-                      setCsvModalOpen(false);
-                      setCsvFile(null);
-                      toast({
-                        title: "Bulk Upload Complete",
-                        description: `${successCount} questions added.`,
-                        status: "success",
-                        duration: 4000,
-                        isClosable: true,
-                      });
-                    },
-                  });
-                };
-                reader.readAsText(csvFile);
-              }}
-              isDisabled={!csvFile}
-            >
-              Upload
-            </Button>
-            <Button onClick={() => setCsvModalOpen(false)}>Cancel</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </Box>
+                        setLoading(false);
+                        setCsvModalOpen(false);
+                        setCsvFile(null);
+                        toast({
+                          title: "Bulk Upload Complete",
+                          description: `${successCount} questions added.`,
+                          status: "success",
+                          duration: 4000,
+                          isClosable: true,
+                        });
+                      },
+                    });
+                  };
+                  reader.readAsText(csvFile);
+                }}
+                isDisabled={!csvFile}
+              >
+                Upload
+              </Button>
+              <Button onClick={() => setCsvModalOpen(false)}>Cancel</Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
+      </div>
+    </div>
   );
 }

@@ -1,10 +1,10 @@
-"use client";
 
-import { useParams, useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { Box, Heading, SimpleGrid, Button, Spinner, Text, Card, CardBody, Stack } from "@chakra-ui/react";
-import { getAllBundles } from "@/lib/bundleService";
-import { getTestDetails } from "@/lib/tests";
+'use client';
+
+import { useParams, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { getAllBundles } from '@/lib/bundleService';
+import { getTestDetails } from '@/lib/adminTestsService';
 
 export default function BundleDetailsPage() {
   const params = useParams();
@@ -23,63 +23,85 @@ export default function BundleDetailsPage() {
     fetchBundle();
   }, [bundleId]);
 
-  if (loading) return <Spinner mt={10} />;
-  if (!bundle) return <Text mt={10}>Bundle not found.</Text>;
+ if (loading) {
+    return (
+      <div className="flex justify-center items-center mt-10">
+        <div className="w-6 h-6 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+      </div>
+    );
+  }
+
+  if (!bundle) {
+    return (
+      <div className="text-center text-gray-500 dark:text-gray-400 mt-10">
+        Bundle not found.
+      </div>
+    );
+  }
 
   return (
-    <Box maxW="900px" mx="auto" mb={32} py={8} px={8}>
-      <Heading mb={2} mt={16}>{bundle.title}</Heading>
+  <div className="min-h-screen flex flex-col max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-24 mb-20">
+      <h1 className="text-3xl font-bold mb-4 text-gray-800 dark:text-gray-100">{bundle.title}</h1>
+
       {bundle.imageUrl && (
-        <Box mb={6}>
+        <div className="mb-8">
           <img
             src={bundle.imageUrl}
             alt={bundle.title}
-            style={{ width: '100%', maxHeight: 320, objectFit: 'cover', borderRadius: 12, border: '1px solid #eee' }}
+            className="w-full max-h-[320px] object-cover rounded-xl border border-gray-200 dark:border-gray-700 shadow-md"
           />
-        </Box>
+        </div>
       )}
-      <Card mb={4} bg="gray.50" _dark={{ bg: "gray.800" }}>
-      </Card>
       {(!bundle.testIds || bundle.testIds.length === 0) ? (
-        <Text color="gray.500">No tests found in this bundle.</Text>
+        <p className="text-gray-500 dark:text-gray-400">No tests found in this bundle.</p>
       ) : (
-        <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
           {bundle.testIds.map((testId) => (
             <TestCard testId={testId} key={testId} />
           ))}
-        </SimpleGrid>
+        </div>
       )}
-    </Box>
+    </div>
   );
-
-  // Helper component to fetch and show test name
-  function TestCard({ testId }) {
-    const [test, setTest] = useState(null);
-    useEffect(() => {
-      async function fetchTest() {
-        try {
-          const t = await getTestDetails(testId);
-          setTest(t);
-        } catch (e) {
-          setTest(null);
-        }
-      }
-      fetchTest();
-    }, [testId]);
-    return (
-      <Card>
-        <CardBody>
-          <Stack spacing={2}>
-            <Text fontWeight="bold">
-              {test ? test.testName : testId}
-              {test && test.questions ? <span style={{ marginLeft: 60, fontWeight: 400, color: '#666' }}>{`ques: ${test.questions.length}`}</span> : ''}
-            </Text>
-            <Button colorScheme="blue" onClick={() => router.push(`/test/${testId}`)}>
-              Start Test
-            </Button>
-          </Stack>
-        </CardBody>
-      </Card>
-    );
-  }
 }
+
+function TestCard({ testId}) {
+  const [test, setTest] = useState(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    async function fetchTest() {
+      try {
+        const t = await getTestDetails(testId);
+        setTest(t);
+      } catch(e) {
+        setTest(null);
+      }
+    }
+    fetchTest();
+  }, [testId]);
+
+  return (
+      <div className="backdrop-blur-md bg-white/30 dark:bg-white/10 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg p-6 flex flex-col justify-between transition hover:scale-[1.01] hover:shadow-xl duration-200">
+        <div>
+          <h2 className="text-lg font-semibold text-gray-800 dark:text-gray-100 mb-2">
+            {test ? test.testName : testId}
+          </h2>
+
+          <p className="text-sm text-gray-600 dark:text-gray-400">
+            Total Questions:{" "}
+            {test?.questions?.length ?? "N/A"}
+          </p>
+      </div>
+
+        <button
+          onClick={() => router.push(`/test/${testId}`)}
+          className="mt-4 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-white dark:focus:ring-offset-gray-900"
+        >
+          Start Test
+        </button>
+    </div>
+  );
+}
+
+

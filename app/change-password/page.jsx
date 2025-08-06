@@ -1,7 +1,316 @@
+// "use client";
+
+// //Profile & Settings: profile-page.jsx and change-password-page.jsx handle user profile and password changes.
+
+
+// import { useState } from "react";
+// import { useRouter } from "next/navigation";
+// import {
+//   updatePassword,
+//   reauthenticateWithCredential,
+//   EmailAuthProvider,
+// } from "firebase/auth";
+// import { auth } from "@/lib/firebaseConfig";
+// import { useAuthState } from "react-firebase-hooks/auth";
+// import {
+//   Box,
+//   Button,
+//   FormControl,
+//   FormLabel,
+//   Input,
+//   VStack,
+//   Container,
+//   Heading,
+//   Text,
+//   useToast,
+//   FormErrorMessage,
+//   InputGroup,
+//   InputRightElement,
+//   IconButton,
+// } from "@chakra-ui/react";
+// import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
+
+// export default function changePasswordPages() {
+//   const router = useRouter();
+//   const toast = useToast();
+//   const [user, loading] = useAuthState(auth);
+
+//   //form state
+//   const [currentPassword, setCurrentPassword] = useState("");
+//   const [newPassword, setNewPassword] = useState("");
+//   const [confirmPassword, setConfirmPassword] = useState("");
+
+//   //UI state
+//   const [isSubmitting, setIsSubmitting] = useState(false);
+//   const [error, setError] = useState("");
+//   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+//   const [showNewPassword, setShowNewPassword] = useState(false);
+
+//   //validation
+//   const passwordsMatch = newPassword === confirmPassword;
+//   const isPasswordStrong = newPassword.length >= 8;
+
+//   //Handle form submission
+//   const handleSubmit = async (e) => {
+//     e.preventDefault();
+//     setError("");
+
+//     //basic validation
+//     if (!currentPassword || !newPassword || !confirmPassword) {
+//       setError("All fields are required");
+//       return;
+//     }
+
+//     if (!passwordsMatch) {
+//       setError("New passwords don't match");
+//       return;
+//     }
+
+//     if (!isPasswordStrong) {
+//       setError("New password must be at least 8 characters long");
+//       return;
+//     }
+
+//     setIsSubmitting(true);
+
+//     try {
+//       //For mock users, just show success
+//       if (localStorage.getItem("mockUser")) {
+//         toast({
+//           title: "Password Changed",
+//           description: "Password changed successfully",
+//           status: "success",
+//           duration: 3000,
+//         });
+//         router.push("/profile");
+//         return;
+//       }
+
+//       //For real users, update password in firebase auth
+//       if (user) {
+//         //1st re-authenticate the user
+//         const credential = EmailAuthProvider.credential(
+//           user.email,
+//           currentPassword
+//         );
+
+//         await reauthenticateWithCredential(user, credential);
+
+//         // then update the password
+//         await updatePassword(user, newPassword);
+
+//         toast({
+//           title: "Password Changed",
+//           description: "Password changed successfully",
+//           status: "success",
+//           duration: 3000,
+//         });
+//         router.push("/profile");
+//       }
+//     } catch (err) {
+//       console.error("Error changing password:", err);
+
+//       // Handle specific Firebase errors
+//       if (err.code === "auth/wrong-password") {
+//         setError("Current password is incorrect");
+//       } else if (err.code === "auth/weak-password") {
+//         setError("New password is too weak");
+//       } else {
+//         setError("Failed to change password. Please try again.");
+//       }
+//     } finally {
+//       setIsSubmitting(false);
+//     }
+//   };
+
+//   // redirect if not logged in
+//   if (!loading && !user && !localStorage.getItem("mockUser")) {
+//     router.push("/auth/login");
+//     return null;
+//   }
+
+//   return (
+//     <Container maxW="container.sm" pt={24} className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
+//       <Box
+//         bg="white"
+//         _dark={{ bg: "gray.800" }}
+//         shadow="md"
+//         borderRadius="lg"
+//         overflow="hidden"
+//         transition="all 0.2s"
+//       >
+//         <Box
+//           bg="yellow.500"
+//           _dark={{ bg: "yellow.600" }}
+//           p={6}
+//           color="white"
+//           transition="all 0.2s"
+//         >
+//           <Heading size="lg">Change Password</Heading>
+//           <Text color="yellow.50">Update your account password</Text>
+//         </Box>
+
+//         <Box p={6}>
+//           <form onSubmit={handleSubmit}>
+//             <VStack spacing={4} align="stretch">
+//               {/** Current Password */}
+//               <FormControl isRequired>
+//                 <FormLabel color="gray.700" _dark={{ color: "gray.300" }}>Current Password</FormLabel>
+//                 <InputGroup>
+//                   <Input
+//                     type={showCurrentPassword ? "text" : "password"}
+//                     value={currentPassword}
+//                     onChange={(e) => setCurrentPassword(e.target.value)}
+//                     bg="white"
+//                     color="gray.800"
+//                     borderColor="gray.300"
+//                     _dark={{
+//                       bg: "gray.700",
+//                       color: "gray.100",
+//                       borderColor: "gray.600"
+//                     }}
+//                   />
+
+//                   <InputRightElement>
+//                     <IconButton
+//                       icon={
+//                         showCurrentPassword ? <ViewIcon /> : <ViewOffIcon />
+//                       }
+//                       variant="ghost"
+//                       color="gray.600"
+//                       _dark={{ color: "gray.400" }}
+//                       onClick={() =>
+//                         setShowCurrentPassword(!showCurrentPassword)
+//                       }
+//                       aria-label={
+//                         showCurrentPassword ? "Hide password" : "Show password"
+//                       }
+//                     />
+//                   </InputRightElement>
+//                 </InputGroup>
+//               </FormControl>
+
+//               {/** New Password */}
+//               <FormControl
+//                 isRequired
+//                 isInvalid={!passwordsMatch || !isPasswordStrong}
+//               >
+//                 <FormLabel color="gray.700" _dark={{ color: "gray.300" }}>New Password</FormLabel>
+//                 <InputGroup>
+//                   <Input
+//                     type={showNewPassword ? "text" : "password"}
+//                     value={newPassword}
+//                     onChange={(e) => setNewPassword(e.target.value)}
+//                     placeholder="Enter your new password"
+//                     bg="white"
+//                     color="gray.800"
+//                     borderColor="gray.300"
+//                     _dark={{
+//                       bg: "gray.700",
+//                       color: "gray.100",
+//                       borderColor: "gray.600"
+//                     }}
+//                   />
+
+//                   <InputRightElement>
+//                     <IconButton
+//                       icon={showNewPassword ? <ViewIcon /> : <ViewOffIcon />}
+//                       variant="ghost"
+//                       color="gray.600"
+//                       _dark={{ color: "gray.400" }}
+//                       onClick={() => {
+//                         setShowNewPassword(!showNewPassword);
+//                       }}
+//                       aria-label={
+//                         showNewPassword ? "Hide password" : "Show password"
+//                       }
+//                     />
+//                   </InputRightElement>
+//                 </InputGroup>
+//                 {newPassword && !isPasswordStrong && (
+//                   <FormErrorMessage>
+//                     Password must be at least 8 characters
+//                   </FormErrorMessage>
+//                 )}
+//               </FormControl>
+
+//               {/* Confirm Password */}
+//               <FormControl
+//                 isRequired
+//                 isInvalid={confirmPassword && !passwordsMatch}
+//               >
+//                 <FormLabel color="gray.700" _dark={{ color: "gray.300" }}>Confirm New Password</FormLabel>
+//                 <Input
+//                   type="password"
+//                   value={confirmPassword}
+//                   onChange={(e) => setConfirmPassword(e.target.value)}
+//                   placeholder="Confirm your new password"
+//                   bg="white"
+//                   color="gray.800"
+//                   borderColor="gray.300"
+//                   _dark={{
+//                     bg: "gray.700",
+//                     color: "gray.100",
+//                     borderColor: "gray.600"
+//                   }}
+//                 />
+//                 {confirmPassword && !passwordsMatch && (
+//                   <FormErrorMessage>Passwords don't match</FormErrorMessage>
+//                 )}
+//               </FormControl>
+
+//               {/* Error message */}
+//               {error && (
+//                 <Box
+//                   p={3}
+//                   bg="red.50"
+//                   color="red.500"
+//                   borderRadius="md"
+//                   _dark={{
+//                     bg: "red.900",
+//                     color: "red.300"
+//                   }}
+//                 >
+//                   {error}
+//                 </Box>
+//               )}
+
+//               {/* Action Buttons */}
+//               <Box pt={2} display="flex" justifyContent="space-between">
+//                 <Button
+//                   variant="outline"
+//                   borderColor="gray.300"
+//                   color="gray.700"
+//                   _hover={{ bg: "gray.100" }}
+//                   _dark={{
+//                     borderColor: "gray.600",
+//                     color: "gray.300",
+//                     _hover: { bg: "gray.700" }
+//                   }}
+//                   onClick={() => router.push("/profile")}
+//                 >
+//                   Cancel
+//                 </Button>
+
+//                 <Button
+//                   colorScheme="yellow"
+//                   _dark={{ bg: "yellow.600", _hover: { bg: "yellow.700" } }}
+//                   type="submit"
+//                   isLoading={isSubmitting}
+//                 >
+//                   Update Password
+//                 </Button>
+//               </Box>
+//             </VStack>
+//           </form>
+//         </Box>
+//       </Box>
+//     </Container>
+//   );
+// }
+
+
 "use client";
-
-//Profile & Settings: profile-page.jsx and change-password-page.jsx handle user profile and password changes.
-
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -12,60 +321,38 @@ import {
 } from "firebase/auth";
 import { auth } from "@/lib/firebaseConfig";
 import { useAuthState } from "react-firebase-hooks/auth";
-import {
-  Box,
-  Button,
-  FormControl,
-  FormLabel,
-  Input,
-  VStack,
-  Container,
-  Heading,
-  Text,
-  useToast,
-  FormErrorMessage,
-  InputGroup,
-  InputRightElement,
-  IconButton,
-} from "@chakra-ui/react";
+import { useToast } from "@chakra-ui/react";
 import { ViewIcon, ViewOffIcon } from "@chakra-ui/icons";
 
-export default function changePasswordPages() {
+export default function ChangePasswordPage() {
   const router = useRouter();
   const toast = useToast();
   const [user, loading] = useAuthState(auth);
 
-  //form state
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  //UI state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
 
-  //validation
   const passwordsMatch = newPassword === confirmPassword;
   const isPasswordStrong = newPassword.length >= 8;
 
-  //Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
 
-    //basic validation
     if (!currentPassword || !newPassword || !confirmPassword) {
       setError("All fields are required");
       return;
     }
-
     if (!passwordsMatch) {
       setError("New passwords don't match");
       return;
     }
-
     if (!isPasswordStrong) {
       setError("New password must be at least 8 characters long");
       return;
@@ -74,7 +361,6 @@ export default function changePasswordPages() {
     setIsSubmitting(true);
 
     try {
-      //For mock users, just show success
       if (localStorage.getItem("mockUser")) {
         toast({
           title: "Password Changed",
@@ -86,17 +372,12 @@ export default function changePasswordPages() {
         return;
       }
 
-      //For real users, update password in firebase auth
       if (user) {
-        //1st re-authenticate the user
         const credential = EmailAuthProvider.credential(
           user.email,
           currentPassword
         );
-
         await reauthenticateWithCredential(user, credential);
-
-        // then update the password
         await updatePassword(user, newPassword);
 
         toast({
@@ -109,8 +390,6 @@ export default function changePasswordPages() {
       }
     } catch (err) {
       console.error("Error changing password:", err);
-
-      // Handle specific Firebase errors
       if (err.code === "auth/wrong-password") {
         setError("Current password is incorrect");
       } else if (err.code === "auth/weak-password") {
@@ -123,188 +402,115 @@ export default function changePasswordPages() {
     }
   };
 
-  // redirect if not logged in
   if (!loading && !user && !localStorage.getItem("mockUser")) {
     router.push("/auth/login");
     return null;
   }
 
   return (
-    <Container maxW="container.sm" pt={24} className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      <Box
-        bg="white"
-        _dark={{ bg: "gray.800" }}
-        shadow="md"
-        borderRadius="lg"
-        overflow="hidden"
-        transition="all 0.2s"
-      >
-        <Box
-          bg="yellow.500"
-          _dark={{ bg: "yellow.600" }}
-          p={6}
-          color="white"
-          transition="all 0.2s"
-        >
-          <Heading size="lg">Change Password</Heading>
-          <Text color="yellow.50">Update your account password</Text>
-        </Box>
+    <main className="min-h-screen bg-gray-100 dark:bg-[#0d1117] flex items-center justify-center p-4">
+      <div className="w-full max-w-md backdrop-blur-lg bg-white/80 dark:bg-white/10 border border-white/30 dark:border-white/20 rounded-xl shadow-lg p-6 space-y-6 transition-colors duration-300">
+        <div>
+          <h2 className="text-2xl font-semibold text-blue-800 dark:text-blue-300">Change Password</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400">Update your account password</p>
+        </div>
 
-        <Box p={6}>
-          <form onSubmit={handleSubmit}>
-            <VStack spacing={4} align="stretch">
-              {/** Current Password */}
-              <FormControl isRequired>
-                <FormLabel color="gray.700" _dark={{ color: "gray.300" }}>Current Password</FormLabel>
-                <InputGroup>
-                  <Input
-                    type={showCurrentPassword ? "text" : "password"}
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    bg="white"
-                    color="gray.800"
-                    borderColor="gray.300"
-                    _dark={{
-                      bg: "gray.700",
-                      color: "gray.100",
-                      borderColor: "gray.600"
-                    }}
-                  />
-
-                  <InputRightElement>
-                    <IconButton
-                      icon={
-                        showCurrentPassword ? <ViewIcon /> : <ViewOffIcon />
-                      }
-                      variant="ghost"
-                      color="gray.600"
-                      _dark={{ color: "gray.400" }}
-                      onClick={() =>
-                        setShowCurrentPassword(!showCurrentPassword)
-                      }
-                      aria-label={
-                        showCurrentPassword ? "Hide password" : "Show password"
-                      }
-                    />
-                  </InputRightElement>
-                </InputGroup>
-              </FormControl>
-
-              {/** New Password */}
-              <FormControl
-                isRequired
-                isInvalid={!passwordsMatch || !isPasswordStrong}
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Current Password */}
+          <div className="flex flex-col gap-1">
+            <label className="text-gray-700 dark:text-gray-300 text-sm font-medium">
+              Current Password
+            </label>
+            <div className="relative">
+              <input
+                type={showCurrentPassword ? "text" : "password"}
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                className="w-full px-4 py-2 rounded-md border bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              <button
+                type="button"
+                onClick={() => setShowCurrentPassword((prev) => !prev)}
+                className="absolute right-2 top-2 text-gray-500 dark:text-gray-300"
               >
-                <FormLabel color="gray.700" _dark={{ color: "gray.300" }}>New Password</FormLabel>
-                <InputGroup>
-                  <Input
-                    type={showNewPassword ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Enter your new password"
-                    bg="white"
-                    color="gray.800"
-                    borderColor="gray.300"
-                    _dark={{
-                      bg: "gray.700",
-                      color: "gray.100",
-                      borderColor: "gray.600"
-                    }}
-                  />
+                {showCurrentPassword ? <ViewOffIcon /> : <ViewIcon />}
+              </button>
+            </div>
+          </div>
 
-                  <InputRightElement>
-                    <IconButton
-                      icon={showNewPassword ? <ViewIcon /> : <ViewOffIcon />}
-                      variant="ghost"
-                      color="gray.600"
-                      _dark={{ color: "gray.400" }}
-                      onClick={() => {
-                        setShowNewPassword(!showNewPassword);
-                      }}
-                      aria-label={
-                        showNewPassword ? "Hide password" : "Show password"
-                      }
-                    />
-                  </InputRightElement>
-                </InputGroup>
-                {newPassword && !isPasswordStrong && (
-                  <FormErrorMessage>
-                    Password must be at least 8 characters
-                  </FormErrorMessage>
-                )}
-              </FormControl>
-
-              {/* Confirm Password */}
-              <FormControl
-                isRequired
-                isInvalid={confirmPassword && !passwordsMatch}
+          {/* New Password */}
+          <div className="flex flex-col gap-1">
+            <label className="text-gray-700 dark:text-gray-300 text-sm font-medium">
+              New Password
+            </label>
+            <div className="relative">
+              <input
+                type={showNewPassword ? "text" : "password"}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="Enter your new password"
+                className="w-full px-4 py-2 rounded-md border bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+              />
+              <button
+                type="button"
+                onClick={() => setShowNewPassword((prev) => !prev)}
+                className="absolute right-2 top-2 text-gray-500 dark:text-gray-300"
               >
-                <FormLabel color="gray.700" _dark={{ color: "gray.300" }}>Confirm New Password</FormLabel>
-                <Input
-                  type="password"
-                  value={confirmPassword}
-                  onChange={(e) => setConfirmPassword(e.target.value)}
-                  placeholder="Confirm your new password"
-                  bg="white"
-                  color="gray.800"
-                  borderColor="gray.300"
-                  _dark={{
-                    bg: "gray.700",
-                    color: "gray.100",
-                    borderColor: "gray.600"
-                  }}
-                />
-                {confirmPassword && !passwordsMatch && (
-                  <FormErrorMessage>Passwords don't match</FormErrorMessage>
-                )}
-              </FormControl>
+                {showNewPassword ? <ViewOffIcon /> : <ViewIcon />}
+              </button>
+            </div>
+            {newPassword && !isPasswordStrong && (
+              <span className="text-sm text-red-500 mt-1">
+                Password must be at least 8 characters
+              </span>
+            )}
+          </div>
 
-              {/* Error message */}
-              {error && (
-                <Box
-                  p={3}
-                  bg="red.50"
-                  color="red.500"
-                  borderRadius="md"
-                  _dark={{
-                    bg: "red.900",
-                    color: "red.300"
-                  }}
-                >
-                  {error}
-                </Box>
-              )}
+          {/* Confirm Password */}
+          <div className="flex flex-col gap-1">
+            <label className="text-gray-700 dark:text-gray-300 text-sm font-medium">
+              Confirm New Password
+            </label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Confirm your new password"
+              className="w-full px-4 py-2 rounded-md border bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-100 border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-400"
+            />
+            {confirmPassword && !passwordsMatch && (
+              <span className="text-sm text-red-500 mt-1">
+                Passwords don't match
+              </span>
+            )}
+          </div>
 
-              {/* Action Buttons */}
-              <Box pt={2} display="flex" justifyContent="space-between">
-                <Button
-                  variant="outline"
-                  borderColor="gray.300"
-                  color="gray.700"
-                  _hover={{ bg: "gray.100" }}
-                  _dark={{
-                    borderColor: "gray.600",
-                    color: "gray.300",
-                    _hover: { bg: "gray.700" }
-                  }}
-                  onClick={() => router.push("/profile")}
-                >
-                  Cancel
-                </Button>
+          {/* Error Box */}
+          {error && (
+            <div className="bg-red-100 dark:bg-red-900 text-red-600 dark:text-red-300 p-2 rounded-md text-sm">
+              {error}
+            </div>
+          )}
 
-                <Button
-                  colorScheme="yellow"
-                  _dark={{ bg: "yellow.600", _hover: { bg: "yellow.700" } }}
-                  type="submit"
-                  isLoading={isSubmitting}
-                >
-                  Update Password
-                </Button>
-              </Box>
-            </VStack>
-          </form>
-        </Box>
-      </Box>
-    </Container>
+          {/* Action Buttons */}
+          <div className="flex justify-between items-center pt-2">
+            <button
+              type="button"
+              onClick={() => router.push("/profile")}
+              className="px-4 py-2 text-sm rounded-md border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={isSubmitting}
+              className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 transition"
+            >
+              {isSubmitting ? "Updating..." : "Update Password"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
   );
 }

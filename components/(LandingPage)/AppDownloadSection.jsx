@@ -1,43 +1,58 @@
-import { Box,Text, Button, Flex, useColorModeValue, Image } from '@chakra-ui/react';
-import { FaGooglePlay, FaApple } from 'react-icons/fa';
 
-export default function AppDownloadSection() {
-  const bg = useColorModeValue('white', 'gray.800');
-  const border = useColorModeValue('border-gray-200', 'border-gray-700');
 
+"use client";
+
+import Image from "next/image";
+import { BookOpenCheck, Trophy, BarChart4, Languages } from "lucide-react";
+
+export default function PassPromoSection() {
   return (
-    <Box className="mb-12">
-      <div className="text-center mb-8">
-        <h2 className="text-3xl font-bold mb-2">📱 Get Our App</h2>
-        <p className="text-gray-600 dark:text-gray-300 text-lg">Learn anytime, anywhere. Download our mobile app for the best experience!</p>
+    <div className="bg-blue-50 dark:bg-blue-400 py-16 px-6 md:px-20 flex flex-col md:flex-row items-center justify-between gap-10">
+      {/* Left Side: Illustration */}
+      <div className="w-full md:w-1/2">
+        <Image
+          src="/images/Learning-bro.svg" // Replace with your own SVG or image
+          alt="Mock Test Access"
+          width={500}
+          height={500}
+          className="mx-auto"
+        />
       </div>
-      <Flex justify="center" align="center" gap={12} flexWrap="wrap">
-        
-          <Image
-            src="/images/android-chrome-192x192.png"
-            alt="App Device Mockup"
-            // boxSize={{ base: '120px', md: '180px' }}
-            // borderRadius="2xl"
-            // boxShadow="lg"
-            // bg={bg}
-            // borderWidth="1px"
-            // borderColor={border}
-          />
-        
-        <Box textAlign="center">
-          <Text fontSize="xl" mb={4} fontWeight="semibold">
-            Coming soon to your favorite app store!
-          </Text>
-          <Flex gap={4} justify="center">
-            <Button leftIcon={<FaGooglePlay />} colorScheme="green" variant="solid" size="lg" isDisabled>
-              Play Store
-            </Button>
-            <Button leftIcon={<FaApple />} colorScheme="gray" variant="solid" size="lg" isDisabled>
-              App Store
-            </Button>
-          </Flex>
-        </Box>
-      </Flex>
-    </Box>
+
+      {/* Right Side: Content */}
+      <div className="w-full md:w-1/2">
+        <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-800 dark:text-white mb-4">
+          Get Unlimited Access to 600+ Mock Tests
+        </h2>
+
+        <p className="text-gray-600 dark:text-gray-300 mb-6 text-base md:text-lg">
+          Prepare for top government & competitive exams with curated test series,
+          structured performance tracking, and real-time rankings.
+        </p>
+
+        {/* Features */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
+          <FeatureCard icon={<Trophy />} title="All India Rank" />
+          <FeatureCard icon={<BookOpenCheck />} title="Latest Exam Pattern" />
+          <FeatureCard icon={<BarChart4 />} title="Performance Analytics" />
+          <FeatureCard icon={<Languages />} title="Multi-Language Support" />
+        </div>
+
+        <button className="bg-blue-600 text-white py-3 px-6 rounded-xl shadow-md hover:bg-blue-700 transition">
+          Explore Pass Now
+        </button>
+      </div>
+    </div>
   );
-} 
+}
+
+function FeatureCard({ icon, title }) {
+  return (
+    <div className="flex items-center gap-4 p-4 rounded-xl bg-gray-100 dark:bg-gray-800 shadow-sm">
+      <div className="p-2 rounded-full bg-white dark:bg-gray-700 text-blue-600">
+        {icon}
+      </div>
+      <h4 className="text-gray-800 dark:text-white font-semibold text-base">{title}</h4>
+    </div>
+  );
+}

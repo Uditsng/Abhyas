@@ -16,6 +16,7 @@ import {
   ModalFooter,
   useDisclosure,
   Spinner,
+  Avatar,
 } from "@chakra-ui/react";
 import { FiDelete, FiDownload, FiLock, FiUnlock } from "react-icons/fi";
 
@@ -123,7 +124,7 @@ export default function SuperAdminUsersPage() {
           All Users
         </h1>
 
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 px-4 md:px-0 gap-3">
           <input
             type="text"
             placeholder="Search by name or email"
@@ -132,7 +133,7 @@ export default function SuperAdminUsersPage() {
               setSearch(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full sm:w-1/3 px-4 py-2 border border-gray-300 rounded dark:bg-gray-800 dark:text-white dark:border-gray-700" // <<
+            className="w-full sm:w-1/3 px-4 py-2 border border-gray-300 rounded dark:bg-gray-800 dark:text-white dark:border-gray-700"
           />
           <button
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -203,10 +204,20 @@ export default function SuperAdminUsersPage() {
                         <button
                           onClick={() => handleBlockToggle(user)}
                           disabled={actionLoading}
-                          className={`px-3 py-1 rounded text-sm text-white flex items-center gap-1 transition ${user.status === "blocked" ? "bg-green-600 hover:bg-green-700" : "bg-red-600 hover:bg-red-700"} 
-                          ${actionLoading ? "opacity-50 cursor-not-allowed" : "" }`}
+                          className={`px-3 py-1 rounded text-sm text-white flex items-center gap-1 transition ${
+                            user.status === "blocked"
+                              ? "bg-green-600 hover:bg-green-700"
+                              : "bg-red-600 hover:bg-red-700"
+                          } 
+                          ${
+                            actionLoading ? "opacity-50 cursor-not-allowed" : ""
+                          }`}
                         >
-                          {user.status === "blocked" ? ( <FiUnlock /> ) : ( <FiLock />)}
+                          {user.status === "blocked" ? (
+                            <FiUnlock />
+                          ) : (
+                            <FiLock />
+                          )}
                         </button>
                         <button
                           className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
@@ -254,43 +265,77 @@ export default function SuperAdminUsersPage() {
             <ModalHeader>User Details</ModalHeader>
             <ModalBody>
               {selectedUser && (
-                <div className="bg-white dark:bg-gray-800 p-4 rounded shadow">
-                  <p>
-                    <b>Name:</b> {selectedUser.displayName || selectedUser.name}
-                  </p>
-                  <p>
-                    <b>Email:</b> {selectedUser.email}
-                  </p>
-                  <p>
-                    <b>Role:</b> {selectedUser.role}
-                  </p>
-                  <p>
-                    <b>Status:</b> {selectedUser.status || "active"}
-                  </p>
-                  <p>
-                    <b>Joined:</b>{" "}
-                    {selectedUser.createdAt?.toDate
-                      ? selectedUser.createdAt.toDate().toLocaleString()
-                      : ""}
-                  </p>
-                  {userStats ? (
-                    <>
-                      <p>
-                        <b>Bundles Purchased:</b> {userStats.bundlesPurchased}
-                      </p>
-                      <p>
-                        <b>Tests Taken:</b> {userStats.testsTaken}
-                      </p>
-                      <p>
-                        <b>Active Time:</b>{" "}
-                        {userStats.activeTime !== null
-                          ? `${userStats.activeTime} days`
-                          : "N/A"}
-                      </p>
-                    </>
-                  ) : (
-                    <Spinner size="sm" />
-                  )}
+                <div className="bg-white dark:bg-gray-800 p-4 rounded shadow-md">
+                  {/* Centered Avatar */}
+                  <div className="flex justify-center mb-4">
+                    <Avatar
+                      size="xl"
+                      name={selectedUser.name}
+                      src={selectedUser.photoURL}
+                    />
+                  </div>
+                  <table className="w-full table-auto border-collapse">
+                    <tbody>
+                      <tr>
+                        <td className="font-semibold pr-4 py-2">Name:</td>
+                        <td>{selectedUser.displayName || selectedUser.name}</td>
+                      </tr>
+                      <tr>
+                        <td className="font-semibold pr-4 py-2">Email:</td>
+                        <td>{selectedUser.email}</td>
+                      </tr>
+                      <tr>
+                        <td className="font-semibold pr-4 py-2">Role:</td>
+                        <td>{selectedUser.role}</td>
+                      </tr>
+                      <tr>
+                        <td className="font-semibold pr-4 py-2">Status:</td>
+                        <td>{selectedUser.status || "active"}</td>
+                      </tr>
+                      <tr>
+                        <td className="font-semibold pr-4 py-2">Joined:</td>
+                        <td>
+                          {selectedUser.createdAt?.toDate
+                            ? selectedUser.createdAt.toDate().toLocaleString()
+                            : ""}
+                        </td>
+                      </tr>
+
+                      {userStats ? (
+                        <>
+                          <tr>
+                            <td className="font-semibold pr-4 py-2">
+                              Bundles Purchased:
+                            </td>
+                            <td>{userStats.bundlesPurchased}</td>
+                          </tr>
+                          <tr>
+                            <td className="font-semibold pr-4 py-2">
+                              Tests Taken:
+                            </td>
+                            <td>{userStats.testsTaken}</td>
+                          </tr>
+                          <tr>
+                            <td className="font-semibold pr-4 py-2">
+                              Active Time:
+                            </td>
+                            <td>
+                              {userStats.activeTime !== null
+                                ? `${userStats.activeTime} days`
+                                : "N/A"}
+                            </td>
+                          </tr>
+                        </>
+                      ) : (
+                        <tr>
+                          <td className="py-2">Loading Stats:</td>
+                          <td>
+                            <Spinner size="sm" />
+                          </td>
+                        </tr>
+                      )}
+                    </tbody>
+                  </table>
                 </div>
               )}
             </ModalBody>

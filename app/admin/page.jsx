@@ -1,244 +1,473 @@
-'use client';
+// 'use client';
 
-//Admin Panel: page.jsx and subfolders for managing users and tests.
+// import { Box, Heading, SimpleGrid, Text, useColorModeValue } from '@chakra-ui/react';
+// import { useEffect, useState } from 'react';
+// import { useRouter } from 'next/navigation';
+// import dynamic from 'next/dynamic';
+// import { useAuthState } from 'react-firebase-hooks/auth';
+// import { FiUsers, FiFileText, FiFilePlus, } from 'react-icons/fi';
+// import { FaRupeeSign} from "react-icons/fa"
 
-import { Box, Heading, SimpleGrid, Text,useColorModeValue } from '@chakra-ui/react';
-//import StatCard, { adminStats } from '@/components/admin/StatCard';
-import dynamic from 'next/dynamic';
-const AreaChart = dynamic(() => import('@/components/admin/AreaChart'), { ssr: false });
-//const BarChart = dynamic(() => import('@/components/admin/BarChart'), { ssr: false });
-import { FiUsers, FiFileText, FiPackage, FiDollarSign } from 'react-icons/fi';
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebaseConfig';
-import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import PieChart from '@/components/admin/PieChart';
-import { useAuthState } from 'react-firebase-hooks/auth';
-import { auth } from '@/lib/firebaseConfig';
-import { getAllTests } from '@/lib/tests';
-import { getAllBundles } from '@/lib/bundleService';
+// import { auth } from '@/lib/firebaseConfig';
+// import { getAllTests } from '@/lib/adminTestsService';
+// import { getBundlesByAdmin, getOrdersForBundle, getUserInfo } from '@/lib/salesService';
 
+// const AreaChart = dynamic(() => import('@/components/admin/AreaChart'), { ssr: false });
 
-const areaChartOptions = {
-  responsive: true,
-  plugins: {
-    legend: { position: 'top' },
-    title: { display: true, text: 'Test Attempts & New Users' },
-  },
-};
+// export default function AdminDashboard() {
+//   const router = useRouter();
+//   const [user, authLoading] = useAuthState(auth);
+//   const [loading, setLoading] = useState(true);
 
+//   const [stats, setStats] = useState({
+//     totalUsers: 0,
+//     totalTests: 0,
+//     totalBundles: 0,
+//     earnings: 0,
+//   });
 
+//   const [userGrowthData, setUserGrowthData] = useState({ labels: [], datasets: [] });
+//   const [monthlyRevenueData, setMonthlyRevenueData] = useState({ labels: [], datasets: [] });
 
-const userEngagementChartOptions = {
-  responsive: true,
-  plugins: {
-    legend: { position: 'top' },
-    title: { display: true, text: 'User Engagement Metrics' },
-  },
-};
+//   const glassBg = useColorModeValue('bg-white/40', 'bg-white/10');
+//   const glassBorder = useColorModeValue('border-white/30', 'border-white/20');
 
+//   useEffect(() => {
+//     async function fetchAdminDashboardStats() {
+//       setLoading(true);
 
-const monthlyEarningsChartOptions = {
-  responsive: true,
-  plugins: {
-    legend: { position: 'top' },
-    title: { display: true, text: 'Monthly Earnings Trends' },
-  },
-};
+//       if (!user) return;
+
+//       const adminTests = await getAllTests(user.uid);
+//       const adminBundles = await getBundlesByAdmin(user.uid);
+
+//       let earnings = 0;
+//       const userSet = new Set();
+//       const growthMap = {};
+//       const monthlyEarningsMap = {};
+
+//       for (const bundle of adminBundles) {
+//         const orders = await getOrdersForBundle(bundle.id);
+//         for (const order of orders) {
+//           earnings += order.amount || 0;
+//           const orderDate = order.date?.toDate?.() || new Date(order.date);
+//           const monthLabel = `${orderDate.getFullYear()}-${String(orderDate.getMonth() + 1).padStart(2, '0')}`;
+//           monthlyEarningsMap[monthLabel] = (monthlyEarningsMap[monthLabel] || 0) + (order.amount || 0);
+
+//           if (order.userId && !userSet.has(order.userId)) {
+//             userSet.add(order.userId);
+//             const userDoc = await getUserInfo(order.userId);
+//             if (userDoc?.createdAt) {
+//               const date = userDoc.createdAt.toDate ? userDoc.createdAt.toDate() : new Date(userDoc.createdAt);
+//               const growthLabel = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+//               growthMap[growthLabel] = (growthMap[growthLabel] || 0) + 1;
+//             }
+//           }
+//         }
+//       }
+
+//       const sortedGrowthLabels = Object.keys(growthMap).sort();
+//       const growthData = sortedGrowthLabels.map(label => growthMap[label]);
+
+//       const sortedRevenueLabels = Object.keys(monthlyEarningsMap).sort();
+//       const revenueData = sortedRevenueLabels.map(label => (monthlyEarningsMap[label] / 100).toFixed(2));
+
+//       setStats({
+//         totalUsers: userSet.size,
+//         totalTests: adminTests.length,
+//         totalBundles: adminBundles.length,
+//         earnings: (earnings).toFixed(2),
+//       });
+
+//       setUserGrowthData({
+//         labels: sortedGrowthLabels,
+//         datasets: [
+//           {
+//             label: 'New Users',
+//             data: growthData,
+//             borderColor: 'rgba(16, 185, 129, 1)',
+//             backgroundColor: 'rgba(16, 185, 129, 0.2)',
+//             fill: true,
+//           },
+//         ],
+//       });
+
+//       setMonthlyRevenueData({
+//         labels: sortedRevenueLabels,
+//         datasets: [
+//           {
+//             label: 'Monthly Earnings (₹)',
+//             data: revenueData,
+//             borderColor: 'rgba(59, 130, 246, 1)',
+//             backgroundColor: 'rgba(59, 130, 246, 0.2)',
+//             fill: true,
+//           },
+//         ],
+//       });
+
+//       setLoading(false);
+//     }
+
+//     if (!authLoading && user) {
+//       fetchAdminDashboardStats();
+//     }
+//   }, [user, authLoading]);
+
+//   const cardConfig = [
+//     { title: 'Total Users', value: stats.totalUsers, icon: <FiUsers size={28} /> },
+//     { title: 'Total Tests', value: stats.totalTests, icon: <FiFileText size={28} /> },
+//     { title: 'Total Bundles', value: stats.totalBundles, icon: <FiFilePlus size={28} /> },
+//     { title: 'Earnings', value: `₹${stats.earnings}`, icon: <FaRupeeSign size={28} /> },
+//   ];
+
+//   const chartOptions = (title) => ({
+//     responsive: true,
+//     maintainAspectRatio: false,
+//     plugins: {
+//       legend: { position: 'top' },
+//       title: { display: true, text: title },
+//       tooltip: {
+//         callbacks: {
+//           label: function (context) {
+//             return `${context.dataset.label}: ₹${context.formattedValue}`;
+//           },
+//         },
+//       },
+//     },
+//   });
+
+//   return (
+//     <Box mt={4}>
+//       <div className="container mx-auto px-2 pt-4 sm:px-2 md:px-6 lg:px-8 xl:px-12 w-full">
+//         {/* Header */}
+//         <Box mb={6} textAlign="center">
+//           <Heading size="lg" mb={2} color="blue.500">Welcome to the Admin Dashboard</Heading>
+//           <Text fontSize="lg" color="gray.600" _dark={{ color: 'gray.300' }}>
+//             Quick stats, user growth, and sales performance.
+//           </Text>
+//         </Box>
+
+//         {/* Stats */}
+//         <Box mb={10} className={`${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl p-6`}>
+//           <SimpleGrid columns={{ base: 1, sm: 2, lg: 4 }} spacing={6}>
+//             {cardConfig.map((card, idx) => (
+//               <Box key={idx} p={5} className={`${glassBg} border ${glassBorder} shadow rounded-xl transition-transform hover:scale-105`} display="flex" alignItems="center" gap={4}>
+//                 <Box>{card.icon}</Box>
+//                 <Box>
+//                   <Text fontSize="sm" color="gray.500">{card.title}</Text>
+//                   <Heading size="lg">{card.value}</Heading>
+//                 </Box>
+//               </Box>
+//             ))}
+//           </SimpleGrid>
+//         </Box>
+
+//         {/* User Growth */}
+//         <Box mb={10} className={`${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl p-6`}>
+//           <Heading size="md" mb={4}>User Growth</Heading>
+//           <Box className="w-full" style={{ minHeight: '320px' }}>
+//             {!loading ? (
+//               <AreaChart data={userGrowthData} options={chartOptions('User Growth (New Users per Month)')} />
+//             ) : (
+//               <Text>Loading chart...</Text>
+//             )}
+//           </Box>
+//         </Box>
+
+//         {/* Monthly Revenue */}
+//         <Box mb={10} className={`${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl p-6`}>
+//           <Heading size="md" mb={4}>Monthly Revenue</Heading>
+//           <Box className="w-full" style={{ minHeight: '320px' }}>
+//             {!loading ? (
+//               <AreaChart data={monthlyRevenueData} options={chartOptions('Earnings per Month (₹)')} />
+//             ) : (
+//               <Text>Loading chart...</Text>
+//             )}
+//           </Box>
+//         </Box>
+//       </div>
+//     </Box>
+//   );
+// }
+
+"use client";
+
+import React, { useEffect, useState } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { Box, useColorModeValue } from "@chakra-ui/react";
+import { useRouter } from "next/navigation";
+
+import StatCard from "../../components/admin/StatCard";
+import AreaChart from "../../components/admin/AreaChart";
+import BarChart from "../../components/admin/BarChart";
+import PieChart from "../../components/admin/PieChart1"
+
+import { FiUsers, FiFileText, FiFilePlus } from "react-icons/fi";
+import { FaRupeeSign } from "react-icons/fa";
+
+import { auth } from "@/lib/firebaseConfig";
+import { getAllTests } from "@/lib/adminTestsService";
+import {
+  getBundlesByAdmin,
+  getOrdersForBundle,
+  getUserInfo,
+} from "@/lib/salesService";
 
 export default function AdminDashboard() {
   const router = useRouter();
   const [user, authLoading] = useAuthState(auth);
-  // Card stats state
+  const [loading, setLoading] = useState(true);
+
   const [stats, setStats] = useState({
     totalUsers: 0,
     totalTests: 0,
     totalBundles: 0,
-    earnings: 0, // mock
+    earnings: 0,
   });
-  // Area chart state
-  const [userGrowthData, setUserGrowthData] = useState({ labels: [], datasets: [] });
-  const [loading, setLoading] = useState(true);
-  // Plan distribution state
-  const [planDistribution, setPlanDistribution] = useState({});
-  // Recent users state
-  const [recentUsers, setRecentUsers] = useState([]);
-  const glassBg = useColorModeValue('bg-white/40', 'bg-white/10');
-  const glassBorder = useColorModeValue('border-white/30', 'border-white/20');
+
+  const [userGrowthData, setUserGrowthData] = useState({
+    labels: [],
+    datasets: [],
+  });
+  const [monthlyRevenueData, setMonthlyRevenueData] = useState({
+    labels: [],
+    datasets: [],
+  });
+  const [bundlePieData, setBundlePieData] = useState(null)
+
+  const cardBg = useColorModeValue("white", "gray.800");
+  const textColor = useColorModeValue("gray.900", "gray.50");
 
   useEffect(() => {
-    async function fetchStatsAndGrowth() {
+    async function fetchAdminDashboardStats() {
       setLoading(true);
-      // Fetch users (global)
-      const usersSnap = await getDocs(collection(db, 'users'));
-      const users = usersSnap.docs.map(doc => doc.data());
-      // Fetch only this admin's tests and bundles
-      let adminTests = [];
-      let adminBundles = [];
-      if (user) {
-        adminTests = await getAllTests(user.uid);
-        adminBundles = await getAllBundles(user.uid);
-      }
-      // Card stats
-      setStats({
-        totalUsers: users.length,
-        totalTests: adminTests.length,
-        totalBundles: adminBundles.length,
-        earnings: 3500, // mock
-      });
-      // User growth by month (global)
+      if (!user) return;
+
+      const adminTests = await getAllTests(user.uid);
+      const adminBundles = await getBundlesByAdmin(user.uid);
+
+      let earnings = 0;
+      const userSet = new Set();
       const growthMap = {};
-      const planMap = {};
-      users.forEach(u => {
-        if (u.createdAt) {
-          let date = u.createdAt.toDate ? u.createdAt.toDate() : new Date(u.createdAt);
-          const label = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-          growthMap[label] = (growthMap[label] || 0) + 1;
+      const monthlyEarningsMap = {};
+      const bundleEarningsMap = {};
+
+      for (const bundle of adminBundles) {
+        const orders = await getOrdersForBundle(bundle.id);
+        for (const order of orders) {
+          earnings += order.amount || 0;
+
+          const orderDate = order.date?.toDate?.() || new Date(order.date);
+          const monthLabel = `${orderDate.getFullYear()}-${String(
+            orderDate.getMonth() + 1
+          ).padStart(2, "0")}`;
+          monthlyEarningsMap[monthLabel] =
+            (monthlyEarningsMap[monthLabel] || 0) + (order.amount || 0);
+
+          // Bundle earnings  
+          if (bundle.title) {
+            bundleEarningsMap[bundle.title] = (bundleEarningsMap[bundle.title] || 0) + (order.amount || 0);
+          }
+
+          //User Growth
+          if (order.userId && !userSet.has(order.userId)) {
+            userSet.add(order.userId);
+            const userDoc = await getUserInfo(order.userId);
+            if (userDoc?.createdAt) {
+              const date = userDoc.createdAt.toDate
+                ? userDoc.createdAt.toDate()
+                : new Date(userDoc.createdAt);
+              const growthLabel = `${date.getFullYear()}-${String(
+                date.getMonth() + 1
+              ).padStart(2, "0")}`;
+              growthMap[growthLabel] = (growthMap[growthLabel] || 0) + 1;
+            }
+          }
         }
-        if (u.plan) {
-          planMap[u.plan] = (planMap[u.plan] || 0) + 1;
-        }
+      }
+
+      const sortedGrowthLabels = Object.keys(growthMap).sort();
+      const growthData = sortedGrowthLabels.map((label) => growthMap[label]);
+
+      // const sortedRevenueLabels = Object.keys(monthlyEarningsMap).sort();
+      // const revenueData = sortedRevenueLabels.map(label => monthlyEarningsMap[label]);
+
+      //Month Revenue
+      const currentYear = new Date().getFullYear();
+      const months = Array.from({ length: 12 }, (_, i) =>
+        new Date(currentYear, i).toLocaleString("default", { month: "short" })
+      );
+
+      const fullRevenueData = months.map((monthName, i) => {
+        const key = `${currentYear}-${String(i + 1).padStart(2, "0")}`;
+        return monthlyEarningsMap[key] || 0;
       });
-      // Sort labels
-      const labels = Object.keys(growthMap).sort();
-      const data = labels.map(l => growthMap[l]);
-      setUserGrowthData({
-        labels,
+
+      setMonthlyRevenueData({
+        labels: months,
         datasets: [
           {
-            label: 'New Users',
-            data,
-            borderColor: 'rgba(16, 185, 129, 1)',
-            backgroundColor: 'rgba(16, 185, 129, 0.2)',
-            fill: true,
+            label: "Monthly Revenue",
+            data: fullRevenueData,
+            backgroundColor: "rgba(59,130,246,0.7)",
           },
         ],
       });
-      setPlanDistribution(planMap);
-      // Recent users (latest 5 by createdAt, global)
-      const sortedUsers = users
-        .filter(u => u.createdAt)
-        .sort((a, b) => {
-          const da = a.createdAt.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
-          const db = b.createdAt.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
-          return db - da;
-        })
-        .slice(0, 5);
-      setRecentUsers(sortedUsers);
+
+      // Bundle Pie Chart Data
+      const bundleLabels = Object.keys(bundleEarningsMap);
+      const bundleEarnings = bundleLabels.map(label => bundleEarningsMap[label]);
+
+      setBundlePieData({
+        labels: bundleLabels,
+        datasets: [
+          {
+            label: "Bundle Earnings",
+            data: bundleEarnings,
+            backgroundColor: bundleLabels.map((_, i) =>
+              `hsl(${(i * 360) / bundleLabels.length}, 70%, 60%)`
+            ),
+          },
+        ],
+      });
+
+
+
+      setStats({
+        totalUsers: userSet.size,
+        totalTests: adminTests.length,
+        totalBundles: adminBundles.length,
+        earnings: earnings.toFixed(2),
+      });
+
+      setUserGrowthData({
+        labels: sortedGrowthLabels,
+        datasets: [
+          {
+            label: "New Users",
+            data: growthData,
+            borderColor: "rgba(16, 185, 129, 1)",
+            backgroundColor: "rgba(16, 185, 129, 0.2)",
+            fill: true,
+            tension: 0.4,
+          },
+        ],
+      });
+
       setLoading(false);
     }
+
     if (!authLoading && user) {
-      fetchStatsAndGrowth();
+      fetchAdminDashboardStats();
     }
   }, [user, authLoading]);
 
-  // Card config
   const cardConfig = [
-    { title: 'Total Users', value: stats.totalUsers, icon: <FiUsers size={28} /> },
-    { title: 'Total Tests', value: stats.totalTests, icon: <FiFileText size={28} /> },
-    { title: 'Total Bundles', value: stats.totalBundles, icon: <FiPackage size={28} /> },
-    { title: 'Earnings', value: `$${stats.earnings}`, icon: <FiDollarSign size={28} /> },
+    {
+      title: "Total Users",
+      value: stats.totalUsers,
+      icon: <FiUsers size={28} />,
+    },
+    {
+      title: "Total Tests",
+      value: stats.totalTests,
+      icon: <FiFileText size={28} />,
+    },
+    {
+      title: "Total Bundles",
+      value: stats.totalBundles,
+      icon: <FiFilePlus size={28} />,
+    },
+    {
+      title: "Earnings",
+      value: `₹${stats.earnings}`,
+      icon: <FaRupeeSign size={28} />,
+    },
   ];
 
-  // Area chart options
-  const areaChartOptions = {
+  const barChartOptions = {
     responsive: true,
     plugins: {
-      legend: { position: 'top' },
-      title: { display: true, text: 'User Growth (New Users per Month)' },
-    },
-    maintainAspectRatio: false,
-  };
-
-  // Pie chart for plan distribution
-  const planLabels = Object.keys(planDistribution);
-  const planData = planLabels.map(label => planDistribution[label]);
-  const pieChartData = {
-    labels: planLabels,
-    datasets: [
-      {
-        data: planData,
-        backgroundColor: [
-          'rgba(59, 130, 246, 0.7)',
-          'rgba(16, 185, 129, 0.7)',
-          'rgba(255, 206, 86, 0.7)',
-          'rgba(255, 99, 132, 0.7)',
-          'rgba(75, 192, 192, 0.7)',
-        ],
-        borderColor: [
-          'rgba(59, 130, 246, 1)',
-          'rgba(16, 185, 129, 1)',
-          'rgba(255, 206, 86, 1)',
-          'rgba(255, 99, 132, 1)',
-          'rgba(75, 192, 192, 1)',
-        ],
-        borderWidth: 1,
+      legend: { display: false },
+      tooltip: {
+        callbacks: {
+          label: function (ctx) {
+            return `₹${ctx.parsed.y.toLocaleString()}`;
+          },
+        },
       },
-    ],
-  };
-  const pieChartOptions = {
-    responsive: true,
-    plugins: {
-      legend: { position: 'right' },
-      title: { display: true, text: 'Plan Distribution' },
+    },
+    scales: {
+      x: {
+        type: "category",
+        ticks: { autoSkip: false },
+      },
+      y: {
+        beginAtZero: true,
+        ticks: {
+          stepSize:2000,
+          callback: (val) => `₹${val}`,
+        },
+      },
     },
   };
 
-  
+  if (loading)
+    return (
+      <Box p={8} fontSize="lg">
+        Loading dashboard...
+      </Box>
+    );
+
   return (
-    <Box p={0}>
-      <div className="container mx-auto px-4 pt-12 md:px-8 lg:px-12 xl:px-24 w-full">
-        {/* Welcome header */}
-        <Box mb={12} textAlign="center">
-          <Heading size="lg" mb={2}>Welcome to the Admin Dashboard</Heading>
-          <Text fontSize="lg" color="gray.600" _dark={{ color: 'gray.300' }}>
-            Quick stats, user growth, and recent activity at a glance.
-          </Text>
+    <Box mt={8} color={textColor}>
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-center mb-6 sm:mb-8 text-blue-600 dark:text-blue-400">
+        Admin Dashboard
+      </h1>
+
+      {/* Stats Section */}
+      <Box className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        {cardConfig.map((card, idx) => (
+          <StatCard
+            key={idx}
+            title={card.title}
+            value={card.value}
+            icon={card.icon}
+          />
+        ))}
+      </Box>
+
+      {/* Charts Section */}
+      <Box className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <Box bg={cardBg} p={4} borderRadius="md" boxShadow="lg">
+          <h2 className="font-semibold mb-2">User Growth</h2>
+          {userGrowthData ? (
+            <AreaChart data={userGrowthData} />
+          ) : (
+            <div>No data</div>
+          )}
         </Box>
-        {/* Stat cards */}
-        <Box mb={14} className={`${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl p-8`}> 
-          <Heading size="md" mb={6} textAlign="left">Key Metrics</Heading>
-          <SimpleGrid columns={{ base: 1, md: 2, lg: 4 }} spacing={8}>
-            {cardConfig.map((card, idx) => (
-              <Box key={idx} p={7} className={`${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl transition-transform duration-200 hover:scale-105`} display="flex" alignItems="center" gap={4}>
-                <Box>{card.icon}</Box>
-                <Box>
-                  <Text fontSize="sm" color="gray.500">{card.title}</Text>
-                  <Heading size="lg">{card.value}</Heading>
-                </Box>
-              </Box>
-            ))}
-          </SimpleGrid>
+        <Box bg={cardBg} p={4} borderRadius="md" boxShadow="lg">
+          <h2 className="font-semibold mb-2">Revenue (Monthly)</h2>
+          {monthlyRevenueData ? (
+            <BarChart data={monthlyRevenueData} options={barChartOptions} />
+          ) : (
+            <div>No data</div>
+          )}
         </Box>
-        {/* Area chart for user growth */}
-        <Box mb={14} className={`${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl p-8`}> 
-          <Heading size="md" mb={6} textAlign="left">User Growth</Heading>
-          <Box height="400px" width="100%">
-            {!loading && <AreaChart data={userGrowthData} options={areaChartOptions} />}
-            {loading && <Text>Loading chart...</Text>}
-          </Box>
+      </Box>
+      {/* Pie Chart Section */}
+      <Box bg={cardBg} p={4} borderRadius="md" boxShadow="lg" className="mb-8">
+        <h2 className="font-semibold mb-4 text-center">Earnings by Bundle</h2>
+        {bundlePieData ? (
+          <Box className="w-full flex justify-center">
+          <div className="w-[250px] sm:w-[300px] md:w-[360px]">
+             <PieChart data={bundlePieData} />
+          </div>
         </Box>
-        {/* Pie chart for plan distribution (if plans exist) */}
-        {planLabels.length > 0 && (
-          <Box mb={14} className={`${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl p-8`}>
-            <Heading size="md" mb={6} textAlign="left">Plan Distribution</Heading>
-            <Box maxW="lg" mx="auto">
-              <PieChart data={pieChartData} options={pieChartOptions} />
-            </Box>
-          </Box>
-        )}
-        {/* Subscription Overview Section */}
-        <Box mb={14} className={`${glassBg} backdrop-blur-lg border ${glassBorder} shadow-md rounded-2xl p-8`}>
-          <Heading size="md" mb={6} textAlign="left">Subscription Overview</Heading>
-          {/* ... Subscription Overview content ... */}
-        </Box>
-        {/* Divider */}
-        <Box borderBottom="2px" borderColor="gray.200" mb={12} />
-        {/* Keep all other existing sections below (e.g., Plan Distribution, etc.) */}
-        {/* ... existing code ... */}
-      </div>
+      ) : (
+      <div>No data</div>)}
+      </Box>
     </Box>
   );
 }
-
-

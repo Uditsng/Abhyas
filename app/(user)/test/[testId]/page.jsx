@@ -4,11 +4,10 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { Box, Heading, Text, Button, Flex, Progress, useToast, Spinner, Center, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, ModalCloseButton, useDisclosure, VStack, HStack, Tooltip, IconButton } from '@chakra-ui/react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getTestDetails } from '@/lib/tests';
+import { getTestDetails } from '@/lib/adminTestsService';
 import { saveTestResult } from '@/lib/testResultService';
 import { useAuth } from '@/components/AuthContext';
 // Bookmarking removed
-//import SubscriptionAccessGuard from '@/components/SubscriptionAccessGuard';
 
 export default function TestPage() {
   const params = useParams();
@@ -29,6 +28,7 @@ export default function TestPage() {
   const { isOpen: isSubmitModalOpen, onOpen: onSubmitOpen, onClose: onSubmitClose } = useDisclosure(); // For submit modal
   const [isTestSubmitted, setIsTestSubmitted] = useState(false); // NEW: flag for submission
   const nextRouteRef = useRef(null); // NEW: store next route for modal
+
   
   //Fisher-Yates algorithm to shuffle the questions
   function shuffleArray(array) {
@@ -178,6 +178,13 @@ useEffect(() => {
     return correctCount;
   }, [testData, userAnswers]);
 
+    // NEW: Effect to handle navigation after successful submission
+  useEffect(() => {
+    if (isTestSubmitted) {
+      router.push(`/results/${testId}`);
+    }
+  }, [isTestSubmitted, router, testId]); 
+
   const handleSubmitTest = async () => {
     setSubmitting(true);
     const score = calculateScore();
@@ -215,7 +222,6 @@ useEffect(() => {
         isClosable: true,
       });
       setIsTestSubmitted(true); // Allow navigation
-      router.push(`/results/${testId}`);
     } catch (error) {
       console.error("Error submitting test:", error);
       toast({

@@ -1,3 +1,5 @@
+//api/razorpay/verify/route.js
+
 import { db } from "@/lib/firebaseConfig";
 import { doc, setDoc, arrayUnion, getDoc, updateDoc } from "firebase/firestore";
 import crypto from "crypto";
@@ -26,16 +28,21 @@ export async function POST(req) {
     );
   }
 
-  
   // 2. Get commission rate from platformSettings
-  const commissionSnap = await getDoc(doc(db, "platformSettings", "commission"));
-  const commissionRate = commissionSnap.exists() ? commissionSnap.data().rate : 20;
+  const commissionSnap = await getDoc(
+    doc(db, "platformSettings", "commission")
+  );
+  const commissionRate = commissionSnap.exists()
+    ? commissionSnap.data().rate
+    : 20;
 
-  const actualAmount = amount / 100; // Convert to INR
-  const commissionAmount = (commissionRate / 100) * actualAmount;
-  const adminEarning = actualAmount - commissionAmount;
+  const actualAmount = amount / 100; // Total amount paid by user (includes GST)
+  const bundlePrice = actualAmount / 1.18; // Base price before GST
+  const taxAmount = actualAmount - bundlePrice; // GST portion
+  const commissionAmount = (commissionRate / 100) * bundlePrice; // Platform cut
+  const adminEarning = bundlePrice - commissionAmount; // Final earning for Admin
 
-// 3. Save payment and order to Firestore
+  // 3. Save payment and order to Firestore
   const bundleRef = doc(db, "bundles", bundle.id);
   const bundleSnap = await getDoc(bundleRef);
   const createdBy = bundleSnap.exists() ? bundleSnap.data().createdBy : null;
@@ -45,6 +52,8 @@ export async function POST(req) {
     bundleId: bundle.id,
     createdBy,
     amount: actualAmount,
+    bundlePrice, // <-- Base price before GST
+    taxAmount,
     status: "paid",
     paymentID: razorpay_payment_id,
     orderId: razorpay_order_id,
@@ -58,13 +67,11 @@ export async function POST(req) {
   const userRef = doc(db, "users", user.uid);
   const userSnap = await getDoc(userRef);
 
-  if (userSnap.exists()){
-    await updateDoc(userRef,
-      {purchasedBundles:arrayUnion(bundle.id),
-      })
-  }else{
-    await setDoc(userRef,{
-      purchasedBundles:[bundle.id]
+  if (userSnap.exists()) {
+    await updateDoc(userRef, { purchasedBundles: arrayUnion(bundle.id) });
+  } else {
+    await setDoc(userRef, {
+      purchasedBundles: [bundle.id],
     });
   }
 

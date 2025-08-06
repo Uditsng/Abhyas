@@ -7,7 +7,7 @@ import { CheckCircleIcon} from '@chakra-ui/icons';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthContext';
 import { getTestResult } from '@/lib/testResultService';
-import { getTestDetails } from '@/lib/tests';
+import { getTestDetails } from '@/lib/adminTestsService';
 
 export default function ResultsPage() {
   const params = useParams();

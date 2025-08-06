@@ -172,8 +172,6 @@ export default function NotificationBell() {
           ))
         )}
       </MenuList>
-      {/* Notification sound */}
-      <audio ref={audioRef} src="/notification.mp3" preload="auto" />
     </Menu>
   );
 }
