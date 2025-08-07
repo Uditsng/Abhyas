@@ -32,6 +32,10 @@ export default function AdminLayout({ children }) {
         if (data.role === "superAdmin") {
           setIsAdmin(true);
         } else if (data.role === "admin") {
+          if(pathname.startsWith('/dashboard') || pathname.startsWith('/my-purchases')){
+            router.replace('/admin')
+          }
+
           if (data.validated === true) {
             setIsAdmin(true);
             // In-app notification for newly validated admins
@@ -84,7 +88,7 @@ export default function AdminLayout({ children }) {
         checkAdminRole();
       }
     }
-  }, [user, authLoading, router, toast]);
+  }, [user, authLoading, router, toast, pathname]);
 
   if (authLoading || loading) {
     return (

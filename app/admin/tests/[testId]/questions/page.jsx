@@ -431,26 +431,27 @@ export default function QuestionsPage() {
               </Box>
             </Flex>
 
-            <Flex 
+            <Flex
               direction={{ base: "column", md: "row" }}
-              justify="space-between" 
+              justify="space-between"
               align={{ base: "flex-start", md: "center" }}
               gap={4}
+            >
+              <Button
+                onClick={() => router.push("/admin/tests")}
+                leftIcon={<FaArrowAltCircleLeft />}
+                colorScheme="red"
+                variant="solid"
+                size="sm"
               >
-      <Button
-        onClick={() => router.push("/admin/tests")}
-        leftIcon={<FaArrowAltCircleLeft />}
-        colorScheme="red"
-        variant="solid"
-        size="sm"
-      >
-        Back
-      </Button>
-              <Text 
+                Back
+              </Button>
+              <Text
                 color="gray.600"
                 fontSize={{ base: "sm", md: "md" }}
-                alignSelf={{ base: "flex-start", md: "center" }}              
-              >Total Questions: {questions.length}
+                alignSelf={{ base: "flex-start", md: "center" }}
+              >
+                Total Questions: {questions.length}
               </Text>
               <Button
                 leftIcon={<AddIcon />}
@@ -834,7 +835,13 @@ export default function QuestionsPage() {
                         const rows = results.data;
                         let successCount = 0;
                         for (const row of rows) {
-                          if (row.length < 8) continue; // skip invalid rows
+                          if (row.length < 8) {
+                            console.warn(
+                              "Skipping invalid row: Incorrect number of columns.",
+                              row
+                            );
+                            continue;
+                          }
                           const [
                             question,
                             option1,
@@ -845,6 +852,30 @@ export default function QuestionsPage() {
                             explanation,
                             marks,
                           ] = row;
+
+                          // Trim all string fields to remove leading/trailing whitespace
+                          const trimmedQuestion = question.trim();
+                          const trimmedOptions = [
+                            option1.trim(),
+                            option2.trim(),
+                            option3.trim(),
+                            option4.trim(),
+                          ];
+                          const trimmedExplanation = explanation.trim();
+
+                          // **Enhanced Validation**
+
+                          // 1. Validate required text fields are not empty
+                          if (
+                            !trimmedQuestion ||
+                            trimmedOptions.some((opt) => !opt)
+                          ) {
+                            console.warn(
+                              "Skipping invalid row: Question or one or more options are empty.",
+                              row
+                            ); // Added detailed warning.
+                            continue; // Continue to the next row if validation fails.
+                          }
 
                           // Accept correctAnswer as 1-4 or a-d/A-D, map to 0-3
                           let correctAnswerIndex = -1;
@@ -858,9 +889,14 @@ export default function QuestionsPage() {
                               correctAnswerIndex = 2;
                             else if (["d", "4"].includes(trimmed))
                               correctAnswerIndex = 3;
-                          } else if (typeof correctAnswer === "number") {
-                            if (correctAnswer >= 1 && correctAnswer <= 4)
-                              correctAnswerIndex = correctAnswer - 1;
+                          }
+
+                          if (correctAnswerIndex === -1) {
+                            console.warn(
+                              "Skipping invalid row: 'correctAnswer' must be a, b, c, d, 1, 2, 3, or 4.",
+                              row
+                            );
+                            continue;
                           }
 
                           if (

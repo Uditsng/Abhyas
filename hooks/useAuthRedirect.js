@@ -4,25 +4,35 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthContext';
 
-/**
- * Hook to handle authentication redirects
- * @param {string} redirectPath - Path to redirect to if user is not authenticated
- * @returns {Object} - Object containing authentication state
- */
-export function useAuthRedirect(redirectPath = '/auth/login') {
-  const { user, loading } = useAuth();
+export function useAuthRedirect({redirectPath = '/auth/login', allowedRoles = ['user'] } = {}) {
+  const { user, loading,role } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    // Only redirect after auth state is determined (not loading)
-    if (!loading && !user) {
-      console.log('User not authenticated, redirecting to', redirectPath);
-      router.push(redirectPath);
+
+        if (loading) {
+      return;
     }
-  }, [user, loading, router, redirectPath]);
+    // Only redirect after auth state is determined (not loading)
+    if (!user) {
+      console.log('User not authenticated, redirecting to', redirectPath);
+      router.replace(redirectPath);
+      return ;
+    }
+    if (!allowedRoles.includes(role)) {
+      console.log(`User role "${role}" is not authorized. Redirecting.`);
+      // Redirect to a default page based on their role
+      if (role === 'admin' || role === 'superAdmin') {
+        router.replace('/admin');
+      } else {
+        router.replace('/'); // Fallback for any other case
+      }
+      return;
+    }
+  }, [user, loading,role, router, redirectPath, allowedRoles]);
 
   return { 
-    isAuthenticated: !!user, 
+    isAuthenticated: !!user && allowedRoles.includes(role), 
     isLoading: loading,
     user
   };
