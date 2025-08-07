@@ -50,7 +50,7 @@ export default function DashboardPage() {
   const router = useRouter();
   const toast = useToast();
   const { user } = useAuth();
-  const { isAuthenticated, isLoading: authLoading } = useAuthRedirect();
+  const { isAuthenticated, isLoading: authLoading } = useAuthRedirect({allowedRoles:['user']});
   const uid = user?.uid;
 
   const {
