@@ -6,9 +6,10 @@ import { useEffect, useState } from "react";
 import {
   getBundlesByAdmin,
   getOrdersForBundle,
-  getUserInfo,
+  getUsersByIds,
 } from "@/lib/salesService";
 import { useAuth } from "@/components/AuthContext";
+import { format } from "date-fns";
 
 const BUNDLES_PER_PAGE = 5;
 const BUYERS_PER_PAGE = 5;
@@ -17,76 +18,74 @@ export default function SalesRevenuePage() {
   const { user } = useAuth();
   const [salesData, setSalesData] = useState([]);
   const [loading, setLoading] = useState(true);
-
   const [selectedBundleTitle, setSelectedBundleTitle] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [buyerPages, setBuyerPages] = useState({});
 
-  useEffect(() => {
+    useEffect(() => {
     if (!user?.uid) return;
 
     const fetchData = async () => {
       setLoading(true);
       const bundles = await getBundlesByAdmin(user.uid);
-      const result = [];
+      const allOrders = [];
+      const userIds = new Set();
 
+      // First, get all orders for all bundles and collect user IDs
       for (const bundle of bundles) {
         const orders = await getOrdersForBundle(bundle.id);
-        let totalRevenue = 0;
-        const buyers = [];
-
-        for (const order of orders) {
-          const userData = await getUserInfo(order.userId);
-          // const buyerAmount = order.amount;
-          // const platformFee = order.commissionAmount || 0;
-          // const netEarning = order.adminEarning || buyerAmount - platformFee;
-          // totalRevenue += buyerAmount;
-          const buyerAmount = order.amount;
-          const platformFee = order.commissionAmount || 0;
-          const taxAmount = order.taxAmount || 0;
-          const netEarning =
-            order.adminEarning || buyerAmount - taxAmount - platformFee;
-          totalRevenue += buyerAmount;
-
-          if (userData) {
-            buyers.push({
-              name: userData.displayName,
-              email: userData.email,
-              date: order.date.toDate(),
-              amount: buyerAmount,
-              tax: taxAmount,
-              commission: platformFee,
-              earning: netEarning,
-            });
-          }
-        }
-
-        const platformCommission = buyers.reduce(
-          (sum, b) => sum + (b.commission || 0),
-          0
-        );
-        const adminEarning = buyers.reduce(
-          (sum, b) => sum + (b.earning || 0),
-          0
-        );
-        const totalTaxCollected = buyers.reduce(
-          (sum, b) => sum + (b.tax || 0),
-          0
-        );
-
-        result.push({
-          bundleTitle: bundle.title,
-          price: bundle.price,
-          sold: buyers.length,
-          totalRevenue,
-          totalTaxCollected,
-          platformCommission,
-          adminEarning,
-          buyers,
+        orders.forEach(order => {
+          allOrders.push({ ...order, bundle });
+          userIds.add(order.userId);
         });
       }
 
-      setSalesData(result);
+      // Now, fetch all user data in one batch
+      const usersMap = await getUsersByIds(Array.from(userIds));
+      const salesByBundle = {};
+
+      // Process and group sales data by bundle
+      allOrders.forEach(order => {
+        const bundle = order.bundle;
+        if (!salesByBundle[bundle.id]) {
+          salesByBundle[bundle.id] = {
+            bundleTitle: bundle.title,
+            price: bundle.price,
+            sold: 0,
+            totalRevenue: 0,
+            totalTaxCollected: 0,
+            platformCommission: 0,
+            adminEarning: 0,
+            buyers: [],
+          };
+        }
+
+        const data = salesByBundle[bundle.id];
+        const userData = usersMap[order.userId];
+
+        const buyerAmount = order.amount;
+        const platformFee = order.commissionAmount || 0;
+        const taxAmount = order.taxAmount || 0;
+        const netEarning = order.adminEarning || buyerAmount - taxAmount - platformFee;
+        
+        data.totalRevenue += buyerAmount;
+        data.totalTaxCollected += taxAmount;
+        data.platformCommission += platformFee;
+        data.adminEarning += netEarning;
+        data.sold++;
+
+        if (userData) {
+          data.buyers.push({
+            name: userData.displayName,
+            email: userData.email,
+            date: order.date.toDate(),
+            amount: buyerAmount,
+        });
+      }
+    });
+
+      // setSalesData(result);
+      setSalesData(Object.values(salesByBundle));
       setLoading(false);
     };
 
@@ -171,12 +170,6 @@ export default function SalesRevenuePage() {
               <span className="border border-gray-200 rounded-lg px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-red-200">
                 Total Paid by Users: ₹{bundle.totalRevenue.toFixed(2)}
               </span>
-              {/* <span className="border border-gray-200 rounded-lg px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-red-200">
-                GST (18%): ₹{bundle.totalTaxCollected.toFixed(2)}
-              </span>
-              <span className="border border-gray-200 rounded-lg px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-red-200">
-                Platform Fee (20%): ₹{bundle.platformCommission.toFixed(2)}
-              </span> */}
               <span className="border border-gray-200 rounded-lg px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-red-200">
                 Your Earning (after all deductions): ₹
                 {bundle.adminEarning.toFixed(2)}

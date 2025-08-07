@@ -5,7 +5,7 @@
 
 
 /* Import theme integration styles */
-@import url('../styles/theme-integration.css');
+@import url('../public/theme-integration.css');
 
 /* Base styles */
 body {

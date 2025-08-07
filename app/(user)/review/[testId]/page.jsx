@@ -30,7 +30,7 @@ export default function TestReviewPage() {
   useEffect(() => {
     const fetchAndLoadData = async () => {
       setLoading(true);
-      if (!testId) { // Only testId is required now
+      if (!testId) {
         setLoading(false);
         return;
       }
@@ -43,7 +43,6 @@ export default function TestReviewPage() {
 
           let answers = {};
           let score = 0;
-          // Try to fetch from Firestore if logged in
           if (user) {
             try {
               const result = await getTestResult(user.uid, testId);
@@ -55,7 +54,7 @@ export default function TestReviewPage() {
               // fallback to localStorage
             }
           }
-          // Fallback to localStorage if not logged in or Firestore fetch failed
+          
           if (!user || Object.keys(answers).length === 0) {
             if (typeof window !== 'undefined') {
               try {
@@ -73,7 +72,6 @@ export default function TestReviewPage() {
           setUserAnswers(answers);
           setScore(score);
 
-          // Bookmarks
           if (typeof window !== 'undefined') {
             const storedBookmarks = localStorage.getItem('bookmarkedQuestions');
             if (storedBookmarks) {
@@ -81,7 +79,6 @@ export default function TestReviewPage() {
             }
           }
 
-          // If a specific question is requested via URL, jump to it
           if (questionParam) {
             const questionIndex = fetchedData.questions.findIndex(q => q.id === questionParam);
             if (questionIndex !== -1) {
@@ -118,7 +115,7 @@ export default function TestReviewPage() {
 
   // Handle navigation between questions
   const goToNextQuestion = () => {
-    if (currentQuestionIndex < testData.questions.length - 1) {
+    if (testData && currentQuestionIndex < testData.questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
   };
@@ -139,48 +136,43 @@ export default function TestReviewPage() {
         // If already bookmarked, remove it
         if (user) {
           await removeBookmark(user.uid, bookmarkKey);
-        } else {
-          // Just use localStorage if not logged in
-          delete newBookmarks[bookmarkKey];
-          localStorage.setItem('bookmarkedQuestions', JSON.stringify(newBookmarks));
         }
-
-        // Update state
         delete newBookmarks[bookmarkKey];
+        localStorage.setItem('bookmarkedQuestions', JSON.stringify(newBookmarks));
         setBookmarkedQuestions(newBookmarks);
 
         toast({
           title: "Bookmark removed",
-          description: "Question removed from bookmarks",
           status: "info",
           duration: 2000,
           isClosable: true,
         });
       } else {
-        // If not bookmarked, add it with test info
+        // If not bookmarked, add it
+        const currentQuestion = testData.questions.find(q => q.id === questionId);
         const bookmarkData = {
           testId: testData.id,
-          testTitle: testData.title,
+          // ✅ **THE FIX IS HERE**: Changed testData.title to testData.testName
+          testTitle: testData.testName || testData.title || "Untitled Test",
+          courseId: testData.category || testData.subject || "general",
           questionId: questionId,
-          question: testData.questions[currentQuestionIndex].question,
+          question: currentQuestion.question,
+          options: currentQuestion.options,
+          correctAnswer: currentQuestion.options[currentQuestion.correctAnswer],
+          explanation: currentQuestion.explanation || "No explanation provided.",
           date: new Date().toISOString(),
         };
 
         if (user) {
           await saveBookmark(user.uid, bookmarkKey, bookmarkData);
-        } else {
-          // Just use localStorage if not logged in
-          newBookmarks[bookmarkKey] = bookmarkData;
-          localStorage.setItem('bookmarkedQuestions', JSON.stringify(newBookmarks));
         }
-
-        // Update state
+        
         newBookmarks[bookmarkKey] = bookmarkData;
+        localStorage.setItem('bookmarkedQuestions', JSON.stringify(newBookmarks));
         setBookmarkedQuestions(newBookmarks);
 
         toast({
           title: "Bookmarked!",
-          description: "Question added to bookmarks",
           status: "success",
           duration: 2000,
           isClosable: true,
@@ -198,7 +190,6 @@ export default function TestReviewPage() {
     }
   };
 
-  // If still loading or test not found
   if (loading || !testData) {
     return (
       <Center h="100vh">
@@ -208,23 +199,17 @@ export default function TestReviewPage() {
     );
   }
 
-  // Calculate percentage score
-  const scorePercentage = Math.round((score / testData.questions.length) * 100);
   const currentQuestion = testData.questions[currentQuestionIndex];
   const userAnswer = userAnswers[currentQuestion.id];
   const correctAnswerString = currentQuestion.options[currentQuestion.correctAnswer];
   const isCorrect = userAnswer === correctAnswerString;
-
-  // Check if current question is bookmarked
   const bookmarkKey = `${testData.id}_${currentQuestion.id}`;
   const isBookmarked = bookmarkedQuestions[bookmarkKey] !== undefined;
 
   return (
     <Box px={4} py={24} maxW="800px" mx="auto" className="min-h-screen">
-      <Heading size="lg" mb={4}>{testData.title}Review</Heading>
+      <Heading size="lg" mb={4}>{testData.testName || testData.title} Review</Heading>
 
-
-      {/* Question navigation */}
       <Flex justify="space-between" mb={4} align="center">
         <Button
           onClick={goToPrevQuestion}
@@ -235,9 +220,7 @@ export default function TestReviewPage() {
         >
           Previous
         </Button>
-
         <Text>Question {currentQuestionIndex + 1} of {testData.questions.length}</Text>
-
         <Button
           onClick={goToNextQuestion}
           isDisabled={currentQuestionIndex === testData.questions.length - 1}
@@ -249,8 +232,6 @@ export default function TestReviewPage() {
         </Button>
       </Flex>
 
-
-      {/* Question card */}
       <Card mb={6}>
         <CardBody>
           <Box mb={4}>
@@ -263,8 +244,6 @@ export default function TestReviewPage() {
                   <Badge colorScheme="red">Incorrect</Badge>
                 )}
               </Flex>
-
-              {/* Bookmark button */}
               <IconButton
                 icon={<StarIcon />}
                 aria-label="Bookmark question"
@@ -289,32 +268,14 @@ export default function TestReviewPage() {
                     borderWidth={1}
                     borderRadius="md"
                     borderColor={
-                      isOptionCorrect
-                        ? 'green.300'
-                        : isUserSelected && !isOptionCorrect
-                          ? 'red.300'
-                          : 'gray.200'
+                      isOptionCorrect ? 'green.300' : isUserSelected ? 'red.300' : 'gray.200'
                     }
                     _dark={{
-                      borderColor:
-                        isOptionCorrect
-                          ? 'green.500'
-                          : isUserSelected && !isOptionCorrect
-                            ? 'red.500'
-                            : 'gray.600',
-                      bg:
-                        isOptionCorrect
-                          ? 'green.900'
-                          : isUserSelected && !isOptionCorrect
-                            ? 'red.900'
-                            : 'gray.700'
+                      borderColor: isOptionCorrect ? 'green.500' : isUserSelected ? 'red.500' : 'gray.600',
+                      bg: isOptionCorrect ? 'green.900' : isUserSelected ? 'red.900' : 'gray.700'
                     }}
                     bg={
-                      isOptionCorrect
-                        ? 'green.50'
-                        : isUserSelected && !isOptionCorrect
-                          ? 'red.50'
-                          : 'white'
+                      isOptionCorrect ? 'green.50' : isUserSelected ? 'red.50' : 'white'
                     }
                   >
                     <Flex align="center">
@@ -325,13 +286,11 @@ export default function TestReviewPage() {
                       >
                         {option}
                       </Radio>
-
                       {isOptionCorrect && (
                         <Tooltip label="Correct answer" placement="right">
                           <CheckCircleIcon ml={2} color="green.500" />
                         </Tooltip>
                       )}
-
                       {isUserSelected && !isOptionCorrect && (
                         <Tooltip label="Your answer (incorrect)" placement="right">
                           <WarningIcon ml={2} color="red.500" />
@@ -344,7 +303,6 @@ export default function TestReviewPage() {
             </Stack>
           </RadioGroup>
 
-          {/* Explanation section */}
           {currentQuestion.explanation && (
             <Box mt={6} p={4} bg="blue.50" _dark={{ bg: "blue.900" }} borderRadius="md">
               <Flex align="center" mb={2}>
@@ -357,12 +315,10 @@ export default function TestReviewPage() {
         </CardBody>
       </Card>
 
-      {/* Action buttons */}
       <Flex justify="space-between" mt={6}>
         <Link href={`/results/${testData.id}`}>
           <Button colorScheme="gray">Back to Results</Button>
         </Link>
-
         <Link href="/dashboard">
           <Button colorScheme="blue">Go to Dashboard</Button>
         </Link>

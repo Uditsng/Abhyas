@@ -36,6 +36,21 @@ export default function HomePage() {
   const router = useRouter();
   const [topBundles, setTopBundles] = useState([]);
 
+    useEffect(() => {
+    const criticalImages = [
+      '/images/textbook result banner.webp',
+      '/images/textbook selection banner.webp'
+    ];
+    
+    criticalImages.forEach(src => {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.as = 'image';
+      link.href = src;
+      document.head.appendChild(link);
+    });
+  }, []);
+
   useEffect(() => {
     async function fetchBundles() {
       const snap = await getDocs(collection(db, 'bundles'));

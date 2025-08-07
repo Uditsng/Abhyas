@@ -7,7 +7,7 @@ import { BookOpenCheck, Trophy, BarChart4, Languages } from "lucide-react";
 
 export default function PassPromoSection() {
   return (
-    <div className="bg-blue-50 dark:bg-blue-400 py-16 px-6 md:px-20 flex flex-col md:flex-row items-center justify-between gap-10">
+    <div className="bg-blue-50 dark:bg-blue-400/50 py-16 px-6 md:px-20 flex flex-col md:flex-row items-center justify-between gap-10">
       {/* Left Side: Illustration */}
       <div className="w-full md:w-1/2">
         <Image
@@ -39,7 +39,8 @@ export default function PassPromoSection() {
         </div>
 
         <button className="bg-blue-600 text-white py-3 px-6 rounded-xl shadow-md hover:bg-blue-700 transition">
-          Explore Pass Now
+          
+          Explore Tests Now
         </button>
       </div>
     </div>
