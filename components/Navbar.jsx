@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { useAuth } from "./AuthContext";
 import { useTheme } from "./ThemeContext";
 import NotificationBell from "./NotificationBell";
-import { FaUser, FaShoppingCart, FaSignOutAlt } from "react-icons/fa";
+import { FaUser, FaShoppingCart, FaSignOutAlt, FaBookmark } from "react-icons/fa";
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
@@ -117,6 +117,14 @@ export default function Navbar() {
                   <FaShoppingCart />
                 </button>
                 )}
+                {role === 'user' && (
+                <button
+                  onClick={() => router.push("/bookmarks")}
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-700 transition hover:scale-110"
+                >
+                  <FaBookmark />
+                </button>
+                )}
               </>
             ) : (
               <>
@@ -164,6 +172,19 @@ export default function Navbar() {
                   >
                     <FaShoppingCart className="text-blue-500 dark:text-blue-300" />
                     <span>My Purchases</span>
+                  </button>
+                  )}
+
+                                    {role === "user" && (
+                  <button
+                    onClick={() => {
+                      router.push("/bookmarks");
+                      setMenuOpen(false);
+                    }}
+                    className="flex items-center gap-3 px-4 py-2 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-800 transition"
+                  >
+                    <FaBookmark className="text-blue-500 dark:text-blue-300" />
+                    <span>My Bookmarks</span>
                   </button>
                   )}
 

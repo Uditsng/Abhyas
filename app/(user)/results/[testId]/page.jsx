@@ -1,18 +1,40 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { Box, Heading, Text, Button, Flex, Stat, StatLabel, StatNumber, StatHelpText, StatArrow, SimpleGrid, Card, CardBody, Stack, StackDivider, useToast, Spinner, Center, Badge } from '@chakra-ui/react';
-import { CheckCircleIcon} from '@chakra-ui/icons';
-import Link from 'next/link';
-import { useAuth } from '@/components/AuthContext';
-import { getTestResult } from '@/lib/testResultService';
-import { getTestDetails } from '@/lib/adminTestsService';
+import { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import {
+  Box,
+  Heading,
+  Text,
+  Button,
+  Flex,
+  Stat,
+  StatLabel,
+  StatNumber,
+  StatHelpText,
+  StatArrow,
+  SimpleGrid,
+  Card,
+  CardBody,
+  Stack,
+  StackDivider,
+  useToast,
+  Spinner,
+  Center,
+  Badge,
+} from "@chakra-ui/react";
+import { CheckCircleIcon } from "@chakra-ui/icons";
+import Link from "next/link";
+import { useAuth } from "@/components/AuthContext";
+import { getTestResult } from "@/lib/testResultService";
+import { getTestDetails } from "@/lib/adminTestsService";
 
 export default function ResultsPage() {
   const params = useParams();
   const router = useRouter();
-  const testId = Array.isArray(params.testId) ? params.testId[0] : params.testId;
+  const testId = Array.isArray(params.testId)
+    ? params.testId[0]
+    : params.testId;
   const toast = useToast();
   const { user, loading: authLoading } = useAuth();
 
@@ -32,7 +54,7 @@ export default function ResultsPage() {
           duration: 5000,
           isClosable: true,
         });
-        router.push('/auth/login');
+        router.push("/auth/login");
         return;
       }
 
@@ -45,7 +67,7 @@ export default function ResultsPage() {
           duration: 5000,
           isClosable: true,
         });
-        router.push('/dashboard');
+        router.push("/dashboard");
         return;
       }
 
@@ -53,32 +75,36 @@ export default function ResultsPage() {
       let attempts = 0;
       while (attempts < 5 && !fetchedResult) {
         try {
-          console.log('[DEBUG] Fetching test result:', { userId: user.uid, testId });
+          console.log("[DEBUG] Fetching test result:", {
+            userId: user.uid,
+            testId,
+          });
           fetchedResult = await getTestResult(user.uid, testId);
-          console.log('[DEBUG] Fetched result:', fetchedResult);
+          console.log("[DEBUG] Fetched result:", fetchedResult);
           if (fetchedResult) break;
           // Wait 400ms before retrying
-          await new Promise(res => setTimeout(res, 400));
+          await new Promise((res) => setTimeout(res, 400));
         } catch (error) {
           // Only show error after all retries
           if (attempts === 4) {
             console.error("Error fetching test results:", error);
             toast({
               title: "Error",
-              description: "Failed to load test results. Please try again later.",
+              description:
+                "Failed to load test results. Please try again later.",
               status: "error",
               duration: 5000,
               isClosable: true,
             });
-            router.push('/dashboard');
+            router.push("/dashboard");
           }
         }
         attempts++;
       }
-  
+
       if (fetchedResult) {
         setResult(fetchedResult);
-        sessionStorage.setItem('testCompleted', 'true');
+        sessionStorage.setItem("testCompleted", "true");
         const details = await getTestDetails(testId);
         setTestDetails(details);
       } else if (attempts === 5) {
@@ -89,13 +115,27 @@ export default function ResultsPage() {
           duration: 5000,
           isClosable: true,
         });
-        router.push('/dashboard');
+        router.push("/dashboard");
       }
       setLoading(false);
     };
-  
+
     fetchResults();
   }, [testId, user, authLoading, router, toast]);
+
+  useEffect(() => {
+    const disableBackNavigation = () => {
+      window.history.pushState(null, "", window.location.href);
+    };
+
+    disableBackNavigation(); // Initial push
+    window.addEventListener("popstate", disableBackNavigation);
+
+    return () => {
+      window.removeEventListener("popstate", disableBackNavigation);
+    };
+  }, []);
+
   if (loading || !result || !testDetails) {
     return (
       <Center h="100vh">
@@ -105,8 +145,8 @@ export default function ResultsPage() {
     );
   }
 
-  if (!result || !testDetails){
-    return null
+  if (!result || !testDetails) {
+    return null;
   }
 
   const totalQuestions = testDetails.questions.length;
@@ -133,10 +173,10 @@ export default function ResultsPage() {
                     Overall Performance
                   </Heading>
                   <Text pt="2" fontSize="sm">
-                    You completed the test with a score of{' '}
+                    You completed the test with a score of{" "}
                     <Text as="span" fontWeight="bold" color="blue.500">
                       {correctAnswers} out of {totalQuestions}
-                    </Text>{' '}
+                    </Text>{" "}
                     questions correct.
                   </Text>
                 </Box>
@@ -147,8 +187,10 @@ export default function ResultsPage() {
                   <Stat>
                     <StatNumber fontSize="2xl">{percentage}%</StatNumber>
                     <StatHelpText>
-                      <StatArrow type={percentage >= 50 ? 'increase' : 'decrease'} />
-                      {percentage >= 50 ? 'Good Job!' : 'Keep Practicing!'}
+                      <StatArrow
+                        type={percentage >= 50 ? "increase" : "decrease"}
+                      />
+                      {percentage >= 50 ? "Good Job!" : "Keep Practicing!"}
                     </StatHelpText>
                   </Stat>
                 </Box>
@@ -166,7 +208,9 @@ export default function ResultsPage() {
                   <SimpleGrid columns={2} spacing={4} pt="2">
                     <Stat>
                       <StatLabel>Correct</StatLabel>
-                      <StatNumber color="green.500">{correctAnswers}</StatNumber>
+                      <StatNumber color="green.500">
+                        {correctAnswers}
+                      </StatNumber>
                     </Stat>
                     <Stat>
                       <StatLabel>Incorrect</StatLabel>
@@ -178,7 +222,9 @@ export default function ResultsPage() {
                     </Stat>
                     <Stat>
                       <StatLabel>Time Taken</StatLabel>
-                      <StatNumber>{timeTakenMinutes}m {timeTakenSeconds}s</StatNumber>
+                      <StatNumber>
+                        {timeTakenMinutes}m {timeTakenSeconds}s
+                      </StatNumber>
                     </Stat>
                   </SimpleGrid>
                 </Box>

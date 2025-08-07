@@ -5,7 +5,6 @@ import { FaTrash } from "react-icons/fa";
 import { useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
-// import useRealtimeUserData from "@/hooks/useRealtimeUserData";
 import { auth } from "@/lib/firebaseConfig";
 import {
   useDisclosure,
@@ -35,7 +34,6 @@ export default function CartPage() {
 
   const { isOpen, onOpen, onClose } = useDisclosure();
   const cancelRef = useRef();
-  // const { users, loading } = useRealtimeUserData();
 
   useEffect(() => {
     if (!user?.uid) return;
