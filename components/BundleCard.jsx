@@ -6,12 +6,12 @@ export default function BundleCard({ bundle }) {
   return (
     <Link href={`/testList/${bundle.id}`} className="no-underline">
       <div className="max-w-sm w-full mx-auto bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl overflow-hidden shadow hover:shadow-lg transition-all duration-200 flex flex-col backdrop-blur-md cursor-pointer">
-        {/* Image (16:9) */}
+        
         <div className="aspect-video bg-gray-100 dark:bg-gray-800">
           <img
             src={bundle.imageUrl}
             alt={bundle.title}
-            className="w-full h-full object-contain"
+            className="w-full h-full object-cover"
           />
         </div>
 
@@ -19,18 +19,18 @@ export default function BundleCard({ bundle }) {
         <div className="p-4 flex flex-col justify-between h-full">
           {/* Title & Subject */}
           <div className="mb-2">
-            <h3 className="text-lg font-semibold text-gray-800 dark:text-white truncate">
+            <h3 className="text-lg font-semibold text-gray-800 dark:text-white truncate uppercase">
               {bundle.title}
             </h3>
-            <p className="text-sm text-gray-600 dark:text-gray-300 truncate">
-              Subject: <b>{bundle.subject}</b>
+            <p className="text-sm text-gray-600 dark:text-gray-300 truncate uppercase">
+              <b>{bundle.subject}</b>
             </p>
           </div>
 
           {/* Price & Test Count */}
           <div className="flex flex-wrap gap-2 items-center mb-4">
             {bundle.originalPrice && (
-              <span className="text-sm line-through text-gray-500 dark:text-gray-400">
+              <span className="text-sm line-through px-2 py-1 bg-red-200 dark:bg-red-700 text-red-700 dark:text-red-300 rounded-md font-medium">
                 ₹{bundle.originalPrice}
               </span>
             )}

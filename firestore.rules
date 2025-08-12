@@ -49,18 +49,6 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == userId;
     }
 
-     match /subscriptionPlans/{planId} {
-      allow read: if true;
-      allow write: if isAdmin();
-    }
-
-    // Allow users to read their own subscription
-    match /subscriptions/{userId} {
-      allow read: if request.auth != null && request.auth.uid == userId;
-      // Only admins can write to subscriptions
-      allow write: if isAdmin();
-    }
-
     // Tests collection - allow authenticated users to read, admins to write
     match /tests/{testId} {
       allow read: if request.auth != null;

@@ -8,10 +8,10 @@ export default function BundlePurchase({ bundle }) {
 
   return (
     <div className="w-full max-w-sm mx-auto bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-md overflow-hidden shadow hover:shadow-lg transition-all duration-200 flex flex-col backdrop-blur-md">
-      {/* Banner Image */}
+      
       <div className="aspect-video bg-gray-100 dark:bg-gray-800">
         <img
-          src={bundle.imageUrl || "/images/defence1.jpg"}
+          src={bundle.imageUrl}
           alt={bundle.title}
           className="w-full h-full object-contain"
         />
@@ -32,7 +32,7 @@ export default function BundlePurchase({ bundle }) {
         {/* Price & Tests */}
         <div className="flex flex-wrap gap-2 items-center mb-4">
           {bundle.originalPrice && (
-            <span className="text-sm line-through text-gray-500 dark:text-gray-400">
+            <span className="text-sm line-through px-2 py-1 bg-red-200 dark:bg-red-700 text-red-700 dark:text-red-300 rounded-md font-medium">
               ₹{bundle.originalPrice}
             </span>
           )}

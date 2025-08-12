@@ -51,7 +51,9 @@ export default function CartPage() {
   }, []);
 
   const handleRemoveAll = () => {
-    clearCart();
+        if (user) {
+      clearCart(user.uid);
+    }
     onClose();
   };
 
@@ -89,7 +91,9 @@ export default function CartPage() {
             }),
           });
 
-          clearCart();
+          if(user){
+            clearCart(user.uid);
+          }
           router.push("/dashboard");
         },
         prefill: {
@@ -149,7 +153,7 @@ export default function CartPage() {
                       ₹{bundle.price}
                     </p>
                     <button
-                      onClick={() => removeFromCart(bundle.id)}
+                      onClick={() => user && removeFromCart(bundle.id, user.uid)}
                       className="text-red-500 hover:underline text-sm flex items-center gap-1"
                     >
                       <FaTrash />

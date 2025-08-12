@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useTheme } from './ThemeContext';
 import { usePathname } from "next/navigation";
+import { FaInstagram, FaFacebook, FaLinkedin, FaYoutube } from "react-icons/fa";
 
 export default function Footer() {
   // This might be unnecessary unless you’ve had hydration mismatch issues
@@ -25,10 +26,10 @@ if (/^\/test(\/[^\/]+){1,2}$/.test(pathname)) return null;
             </p>
             <div className="flex gap-4 mt-4">
               {/* Replace emoji with actual icons or <Image />/SVG */}
-              <a href="#" className="hover:text-blue-500 transition text-xl">📘</a>
-              <a href="#" className="hover:text-pink-500 transition text-xl">📸</a>
-              <a href="#" className="hover:text-blue-400 transition text-xl">🐦</a>
-              <a href="#" className="hover:text-red-600 transition text-xl">▶️</a>
+              <a href="#" className="hover:text-blue-500 transition text-xl"><FaFacebook/></a>
+              <a href="#" className="hover:text-pink-500 transition text-xl"><FaInstagram/></a>
+              <a href="#" className="hover:text-blue-400 transition text-xl"><FaLinkedin/></a>
+              <a href="#" className="hover:text-red-600 transition text-xl"><FaYoutube/></a>
             </div>
           </div>
 

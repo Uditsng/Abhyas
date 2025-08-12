@@ -38,8 +38,8 @@ export default function HomePage() {
 
     useEffect(() => {
     const criticalImages = [
-      '/images/textbook result banner.webp',
-      '/images/textbook selection banner.webp'
+      '/images/ADVENTURE IS CALLING (1).png',
+      '/images/ADVENTURE IS CALLING (1).png'
     ];
     
     criticalImages.forEach(src => {
@@ -57,7 +57,7 @@ export default function HomePage() {
       const bundles = snap.docs
         .map(doc => ({ id: doc.id, ...doc.data() }))
         .sort((a, b) => b.price - a.price)
-        .slice(0, 6);
+        .slice(0, 3);
       setTopBundles(bundles);
     }
     fetchBundles();
@@ -106,7 +106,7 @@ export default function HomePage() {
         <Slider {...bannerCarouselSettings}>
           <div className="relative w-full h-32 sm:h-40 md:h-56 lg:h-80 overflow-hidden bg-red-400">
             <OptimizedImage
-              src="/images/textbook result banner.webp"
+              src="/images/ADVENTURE IS CALLING (1).png"
               alt="Textbook Result Banner"
               fill
               sizes="90vw"
@@ -116,7 +116,7 @@ export default function HomePage() {
           </div>
           <div className="relative w-full h-32 sm:h-40 md:h-56 lg:h-80 overflow-hidden bg-blue-300">
             <OptimizedImage
-              src="/images/textbook selection banner.webp"
+              src="/images/ADVENTURE IS CALLING (1).png"
               alt="Textbook Selection Banner"
               fill
               sizes="90vw"
@@ -143,8 +143,8 @@ export default function HomePage() {
           <h2 className="text-3xl font-bold mb-2 text-gray-800 dark:text-gray-100">🔥 Top Bundles</h2>
           <p className="text-gray-600 dark:text-gray-300 text-lg">Explore our most popular bundles and start your preparation today!</p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8">
-          {topBundles.length === 0 ? (
+<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {topBundles.length === 0 ? (
             <div className="col-span-full text-center text-gray-500 dark:text-gray-400">No bundles found.</div>
           ) : (
             topBundles.map(bundle => (
