@@ -65,7 +65,7 @@ export default function Navbar() {
             onClick={() => router.push("/")}
           >
             <img
-              src="/favicon.ico"
+              src="/images/android-chrome-192x192.png"
               alt="Logo"
               className="h-8 w-8 rounded-full shadow"
             />
