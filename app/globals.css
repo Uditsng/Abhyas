@@ -7,6 +7,8 @@
 /* Import theme integration styles */
 @import url('../public/theme-integration.css');
 
+html { height: 100%; }
+
 /* Base styles */
 body {
   @apply bg-gray-100 text-gray-900 transition duration-200;

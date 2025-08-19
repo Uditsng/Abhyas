@@ -173,11 +173,11 @@ export default function BundleDetailsPage() {
   }
 
   return (
-    <div className="min-h-screen flex flex-col max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-24 bg-gradient-to-r from-blue-200 via-indigo-200 to-indigo-100 dark:bg-gradient-to-r dark:from-gray-800 dark:via-gray-900 dark:to-gray-800">
+    <div className="min-h-screen flex flex-col max-w-6xl mx-auto px-4 sm:px-4 lg:px-8 py-24 bg-gradient-to-r from-blue-200 via-indigo-200 to-indigo-100 dark:bg-gradient-to-r dark:from-gray-800 dark:via-gray-900 dark:to-gray-800">
       
       {/* Image Section - Keep as you like */}
       {bundle.imageUrl && (
-        <div className="flex justify-center">
+        <div className="flex justify-center px-2">
           <img
             src={bundle.imageUrl}
             alt={bundle.title}

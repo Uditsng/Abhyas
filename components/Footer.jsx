@@ -20,7 +20,7 @@ if (/^\/test(\/[^\/]+){1,2}$/.test(pathname)) return null;
 
           {/* Brand Info */}
           <div>
-            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Mock Test Series</h2>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">ABHYAS Platform</h2>
             <p className="text-sm">
               Ace your exams with curated mock tests designed by experts. Trusted by over 1L+ students.
             </p>
@@ -40,7 +40,6 @@ if (/^\/test(\/[^\/]+){1,2}$/.test(pathname)) return null;
               <li><Link href="/dashboard" className="hover:text-blue-600 dark:hover:text-blue-400">Dashboard</Link></li>
               <li><Link href="/bookmarks" className="hover:text-blue-600 dark:hover:text-blue-400">Bookmarks</Link></li>
               <li><Link href="/profile" className="hover:text-blue-600 dark:hover:text-blue-400">Profile</Link></li>
-              <li><Link href="/plans" className="hover:text-blue-600 dark:hover:text-blue-400">Pricing Plans</Link></li>
             </ul>
           </div>
 
@@ -61,15 +60,15 @@ if (/^\/test(\/[^\/]+){1,2}$/.test(pathname)) return null;
             <ul className="text-sm space-y-2">
               <li>Email: <a href="mailto:support@mocktestseries.com" className="hover:underline">support@mocktestseries.com</a></li>
               <li>Phone: <a href="tel:+919876543210" className="hover:underline">+91 98765 43210</a></li>
-              <li>Hours: Mon–Sat, 9AM–6PM</li>
-              <li>Location: Delhi, India</li>
+              <li>Hours: Mon–fri, 10AM–5PM</li>
+              <li>Location: Gorakhpur, India</li>
             </ul>
           </div>
         </div>
 
         {/* Bottom Section */}
         <div className="mt-12 border-t border-gray-300 dark:border-gray-700 pt-6 text-center text-xs text-gray-500 dark:text-gray-400">
-          <p>© {currentYear} Mock Test Series. All rights reserved.</p>
+          <p>© {currentYear} [WG] Abhyas Platform. All rights reserved.</p>
         </div>
       </div>
     </footer>

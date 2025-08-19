@@ -39,7 +39,7 @@ export default function BlogPreviewSection() {
         </p>
       </div>
 
-      <div className="flex flex-wrap justify-center gap-6">
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 justify-items-center">
         {blogPosts.map((post) => (
           <div
             key={post.id}

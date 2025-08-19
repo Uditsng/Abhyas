@@ -129,8 +129,8 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 transition-colors duration-200">
-      <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg shadow-blue-500/50 dark:shadow-cyan-500/50 w-full max-w-lg transition-colors duration-200 mt-24 mb-8">
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 px-4 transition-colors duration-200">
+      <div className="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-lg shadow-blue-500/50 dark:shadow-cyan-500/50 w-full max-w-md transition-colors duration-200 mt-24 mb-8">
         <h2 className="text-2xl text-center font-bold mb-6 text-blue-500 dark:text-cyan-100">Register</h2>
         <div className="flex justify-center mb-6 gap-4">
           <button onClick={() => setRegisterRole('user')} className={`px-4 py-2 rounded-full font-semibold ${registerRole === 'user' ? 'bg-blue-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-200'}`}>User</button>

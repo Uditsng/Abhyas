@@ -17,7 +17,8 @@ export const bannerCarouselSettings = {
       settings: {
         slidesToShow: 1,
         slidesToScroll: 1,
-        arrows: true,
+        arrows: false,
+        dots: false,
       }
     },
     {
@@ -26,6 +27,7 @@ export const bannerCarouselSettings = {
         slidesToShow: 1,
         slidesToScroll: 1,
         arrows: false,
+        dots: false,
       }
     },
     {
@@ -34,7 +36,7 @@ export const bannerCarouselSettings = {
         slidesToShow: 1,
         slidesToScroll: 1,
         arrows: false,
-        dots: true
+        dots: false
       }
     }
   ]

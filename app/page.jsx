@@ -36,19 +36,28 @@ export default function HomePage() {
   const router = useRouter();
   const [topBundles, setTopBundles] = useState([]);
 
-    useEffect(() => {
-    const criticalImages = [
-      '/images/ADVENTURE IS CALLING (1).png',
-      '/images/ADVENTURE IS CALLING (1).png'
-    ];
-    
+  const criticalImages = [
+    '/images/ADVENTURE IS CALLING (1).png',
+    '/images/ABHYAS.png'
+  ];
+
+  useEffect(() => {
+    const links = [];
     criticalImages.forEach(src => {
       const link = document.createElement('link');
       link.rel = 'preload';
       link.as = 'image';
       link.href = src;
       document.head.appendChild(link);
+      links.push(link);
     });
+    return () => {
+      links.forEach(link => {
+        if (document.head.contains(link)) {
+          document.head.removeChild(link);
+        }
+      });
+    };
   }, []);
 
   useEffect(() => {
@@ -104,25 +113,18 @@ export default function HomePage() {
       {/* Banner Carousel */}
       <div className="w-full">
         <Slider {...bannerCarouselSettings}>
-          <div className="relative w-full h-32 sm:h-40 md:h-56 lg:h-80 overflow-hidden bg-red-400">
-            <OptimizedImage
-              src="/images/ADVENTURE IS CALLING (1).png"
-              alt="Textbook Result Banner"
-              fill
-              sizes="90vw"
-              className="object-cover"
-              priority
-            />
-          </div>
-          <div className="relative w-full h-32 sm:h-40 md:h-56 lg:h-80 overflow-hidden bg-blue-300">
-            <OptimizedImage
-              src="/images/ADVENTURE IS CALLING (1).png"
-              alt="Textbook Selection Banner"
-              fill
-              sizes="90vw"
-              className="object-cover"
-            />
-          </div>
+          {criticalImages.map((src, idx) => (
+            <div key={idx} className="relative  w-full aspect-[21/5] overflow-hidden border rounded-lg ">
+              <OptimizedImage
+                src={src}
+                alt={`Banner ${idx + 1}`}
+                fill
+                sizes="90vw"
+                className="object-cover"
+                priority={idx === 0}
+              />
+            </div>
+          ))}
         </Slider>
       </div>
 
@@ -204,7 +206,7 @@ export default function HomePage() {
         <PartnerWithUsSection />
       </motion.div>
 {/* className={`mb-14 ${cardStyle}`} */}
-      <motion.div  initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={fadeInUp}>
+      <motion.div className="mt-14" initial="hidden" whileInView="visible" viewport={{ once: true, amount: 0.2 }} variants={fadeInUp}>
         <FAQsSection />
       </motion.div>
 
