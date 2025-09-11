@@ -1,21 +1,48 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter, useSearchParams } from 'next/navigation'; 
-import Link from 'next/link';
-import {Box,Heading,Text,Badge,Button,Flex,Progress,Card,CardBody,Stack,StackDivider,Radio,RadioGroup,Tooltip,IconButton,useToast,Spinner,Center} from '@chakra-ui/react';
-import { CheckCircleIcon, WarningIcon, InfoIcon, StarIcon, ChevronLeftIcon, ChevronRightIcon } from '@chakra-ui/icons';
-import { getTestDetails } from '@/lib/adminTestsService';
-import { useAuth } from '@/components/AuthContext';
-import { saveBookmark, removeBookmark } from '@/lib/bookmarkService';
-import { getTestResult } from '@/lib/testResultService';
+import { useState, useEffect } from "react";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
+import {
+  Box,
+  Heading,
+  Text,
+  Badge,
+  Button,
+  Flex,
+  Progress,
+  Card,
+  CardBody,
+  Stack,
+  StackDivider,
+  Radio,
+  RadioGroup,
+  Tooltip,
+  IconButton,
+  useToast,
+  Spinner,
+  Center,
+} from "@chakra-ui/react";
+import {
+  CheckCircleIcon,
+  WarningIcon,
+  InfoIcon,
+  StarIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from "@chakra-ui/icons";
+import { getTestDetails } from "@/lib/adminTestsService";
+import { useAuth } from "@/components/AuthContext";
+import { saveBookmark, removeBookmark } from "@/lib/bookmarkService";
+import { getTestResult } from "@/lib/testResultService";
+import ReactMarkdown from "react-markdown";
 
 export default function TestReviewPage() {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
   const testId = params.testId;
-  const questionParam = searchParams.get('q');
+  const questionParam = searchParams.get("q");
   const toast = useToast();
   const { user } = useAuth();
 
@@ -25,6 +52,13 @@ export default function TestReviewPage() {
   const [score, setScore] = useState(0);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [bookmarkedQuestions, setBookmarkedQuestions] = useState({});
+  const [aiExplanation, setAiExplanation] = useState(null);
+  const [loadingAI, setLoadingAI] = useState(false);
+
+  useEffect(() => {
+    setAiExplanation(null);
+    setLoadingAI(false);
+  }, [currentQuestionIndex]);
 
   // Load test data and user answers
   useEffect(() => {
@@ -54,12 +88,16 @@ export default function TestReviewPage() {
               // fallback to localStorage
             }
           }
-          
+
           if (!user || Object.keys(answers).length === 0) {
-            if (typeof window !== 'undefined') {
+            if (typeof window !== "undefined") {
               try {
-                const results = JSON.parse(localStorage.getItem('testResults') || '[]');
-                const testResult = results.find(result => result.testId === testId);
+                const results = JSON.parse(
+                  localStorage.getItem("testResults") || "[]"
+                );
+                const testResult = results.find(
+                  (result) => result.testId === testId
+                );
                 if (testResult) {
                   answers = testResult.answers || {};
                   score = testResult.score || 0;
@@ -72,15 +110,17 @@ export default function TestReviewPage() {
           setUserAnswers(answers);
           setScore(score);
 
-          if (typeof window !== 'undefined') {
-            const storedBookmarks = localStorage.getItem('bookmarkedQuestions');
+          if (typeof window !== "undefined") {
+            const storedBookmarks = localStorage.getItem("bookmarkedQuestions");
             if (storedBookmarks) {
               setBookmarkedQuestions(JSON.parse(storedBookmarks));
             }
           }
 
           if (questionParam) {
-            const questionIndex = fetchedData.questions.findIndex(q => q.id === questionParam);
+            const questionIndex = fetchedData.questions.findIndex(
+              (q) => q.id === questionParam
+            );
             if (questionIndex !== -1) {
               setCurrentQuestionIndex(questionIndex);
             }
@@ -93,7 +133,7 @@ export default function TestReviewPage() {
             duration: 3000,
             isClosable: true,
           });
-          router.push('/dashboard');
+          router.push("/dashboard");
         }
       } catch (error) {
         console.error("Error fetching test data for review:", error);
@@ -104,7 +144,7 @@ export default function TestReviewPage() {
           duration: 3000,
           isClosable: true,
         });
-        router.push('/dashboard');
+        router.push("/dashboard");
       } finally {
         setLoading(false);
       }
@@ -138,7 +178,10 @@ export default function TestReviewPage() {
           await removeBookmark(user.uid, bookmarkKey);
         }
         delete newBookmarks[bookmarkKey];
-        localStorage.setItem('bookmarkedQuestions', JSON.stringify(newBookmarks));
+        localStorage.setItem(
+          "bookmarkedQuestions",
+          JSON.stringify(newBookmarks)
+        );
         setBookmarkedQuestions(newBookmarks);
 
         toast({
@@ -149,7 +192,9 @@ export default function TestReviewPage() {
         });
       } else {
         // If not bookmarked, add it
-        const currentQuestion = testData.questions.find(q => q.id === questionId);
+        const currentQuestion = testData.questions.find(
+          (q) => q.id === questionId
+        );
         const bookmarkData = {
           testId: testData.id,
           // ✅ **THE FIX IS HERE**: Changed testData.title to testData.testName
@@ -159,16 +204,20 @@ export default function TestReviewPage() {
           question: currentQuestion.question,
           options: currentQuestion.options,
           correctAnswer: currentQuestion.options[currentQuestion.correctAnswer],
-          explanation: currentQuestion.explanation || "No explanation provided.",
+          explanation:
+            currentQuestion.explanation || "No explanation provided.",
           date: new Date().toISOString(),
         };
 
         if (user) {
           await saveBookmark(user.uid, bookmarkKey, bookmarkData);
         }
-        
+
         newBookmarks[bookmarkKey] = bookmarkData;
-        localStorage.setItem('bookmarkedQuestions', JSON.stringify(newBookmarks));
+        localStorage.setItem(
+          "bookmarkedQuestions",
+          JSON.stringify(newBookmarks)
+        );
         setBookmarkedQuestions(newBookmarks);
 
         toast({
@@ -179,7 +228,7 @@ export default function TestReviewPage() {
         });
       }
     } catch (error) {
-      console.error('Error toggling bookmark:', error);
+      console.error("Error toggling bookmark:", error);
       toast({
         title: "Error",
         description: "Could not update bookmark",
@@ -201,14 +250,63 @@ export default function TestReviewPage() {
 
   const currentQuestion = testData.questions[currentQuestionIndex];
   const userAnswer = userAnswers[currentQuestion.id];
-  const correctAnswerString = currentQuestion.options[currentQuestion.correctAnswer];
+  const correctAnswerString =
+    currentQuestion.options[currentQuestion.correctAnswer];
   const isCorrect = userAnswer === correctAnswerString;
   const bookmarkKey = `${testData.id}_${currentQuestion.id}`;
   const isBookmarked = bookmarkedQuestions[bookmarkKey] !== undefined;
 
+  // const fetchAIExplanation = async () => {
+  //   setLoadingAI(true);
+  //   setAiExplanation(null);
+  //   try {
+  //     const res = await fetch("/api/ai-explanation", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({
+  //         question: currentQuestion.question,
+  //         correctAnswer: correctAnswerString,
+  //       }),
+  //     });
+  //     const data = await res.json();
+  //     setAiExplanation(data.explanation);
+  //   } catch (error) {
+  //     setAiExplanation("Error fetching AI explanation.");
+  //   } finally {
+  //     setLoadingAI(false);
+  //   }
+  // };
+
+  const fetchAIExplanation = async () => {
+  setLoadingAI(true);
+  setAiExplanation(""); // reset
+
+  const res = await fetch("/api/ai-explanation", {
+    method: "POST",
+    body: JSON.stringify({
+      question: currentQuestion.question,
+      correctAnswer: correctAnswerString,
+      options: currentQuestion.options,
+    }),
+  });
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    setAiExplanation(prev => prev + decoder.decode(value, { stream: true }));
+  }
+
+  setLoadingAI(false);
+};
+
   return (
     <Box px={4} py={24} maxW="800px" mx="auto" className="min-h-screen">
-      <Heading size="lg" mb={4}>{testData.testName || testData.title} Review</Heading>
+      <Heading size="lg" mb={4}>
+        {testData.testName || testData.title} Review
+      </Heading>
 
       <Flex justify="space-between" mb={4} align="center">
         <Button
@@ -220,7 +318,9 @@ export default function TestReviewPage() {
         >
           Previous
         </Button>
-        <Text>Question {currentQuestionIndex + 1} of {testData.questions.length}</Text>
+        <Text>
+          Question {currentQuestionIndex + 1} of {testData.questions.length}
+        </Text>
         <Button
           onClick={goToNextQuestion}
           isDisabled={currentQuestionIndex === testData.questions.length - 1}
@@ -237,7 +337,9 @@ export default function TestReviewPage() {
           <Box mb={4}>
             <Flex align="center" justify="space-between" mb={2}>
               <Flex align="center">
-                <Heading size="md" mr={2}>Question {currentQuestionIndex + 1}</Heading>
+                <Heading size="md" mr={2}>
+                  Question {currentQuestionIndex + 1}
+                </Heading>
                 {isCorrect ? (
                   <Badge colorScheme="green">Correct</Badge>
                 ) : (
@@ -250,13 +352,15 @@ export default function TestReviewPage() {
                 size="sm"
                 colorScheme={isBookmarked ? "yellow" : "gray"}
                 onClick={() => toggleBookmark(currentQuestion.id)}
-                title={isBookmarked ? "Remove bookmark" : "Bookmark this question"}
+                title={
+                  isBookmarked ? "Remove bookmark" : "Bookmark this question"
+                }
               />
             </Flex>
             <Text fontSize="lg">{currentQuestion.question}</Text>
           </Box>
 
-          <RadioGroup value={userAnswer || ''}>
+          <RadioGroup value={userAnswer || ""}>
             <Stack spacing={3}>
               {currentQuestion.options.map((option, index) => {
                 const isOptionCorrect = option === correctAnswerString;
@@ -268,21 +372,37 @@ export default function TestReviewPage() {
                     borderWidth={1}
                     borderRadius="md"
                     borderColor={
-                      isOptionCorrect ? 'green.300' : isUserSelected ? 'red.300' : 'gray.200'
+                      isOptionCorrect
+                        ? "green.300"
+                        : isUserSelected
+                        ? "red.300"
+                        : "gray.200"
                     }
                     _dark={{
-                      borderColor: isOptionCorrect ? 'green.500' : isUserSelected ? 'red.500' : 'gray.600',
-                      bg: isOptionCorrect ? 'green.900' : isUserSelected ? 'red.900' : 'gray.700'
+                      borderColor: isOptionCorrect
+                        ? "green.500"
+                        : isUserSelected
+                        ? "red.500"
+                        : "gray.600",
+                      bg: isOptionCorrect
+                        ? "green.900"
+                        : isUserSelected
+                        ? "red.900"
+                        : "gray.700",
                     }}
                     bg={
-                      isOptionCorrect ? 'green.50' : isUserSelected ? 'red.50' : 'white'
+                      isOptionCorrect
+                        ? "green.50"
+                        : isUserSelected
+                        ? "red.50"
+                        : "white"
                     }
                   >
                     <Flex align="center">
                       <Radio
                         value={option}
                         isDisabled={true}
-                        colorScheme={isOptionCorrect ? 'green' : 'red'}
+                        colorScheme={isOptionCorrect ? "green" : "red"}
                       >
                         {option}
                       </Radio>
@@ -292,7 +412,10 @@ export default function TestReviewPage() {
                         </Tooltip>
                       )}
                       {isUserSelected && !isOptionCorrect && (
-                        <Tooltip label="Your answer (incorrect)" placement="right">
+                        <Tooltip
+                          label="Your answer (incorrect)"
+                          placement="right"
+                        >
                           <WarningIcon ml={2} color="red.500" />
                         </Tooltip>
                       )}
@@ -304,9 +427,19 @@ export default function TestReviewPage() {
           </RadioGroup>
 
           {currentQuestion.explanation && (
-            <Box mt={6} p={4} bg="blue.50" _dark={{ bg: "blue.900" }} borderRadius="md">
+            <Box
+              mt={6}
+              p={4}
+              bg="blue.50"
+              _dark={{ bg: "blue.900" }}
+              borderRadius="md"
+            >
               <Flex align="center" mb={2}>
-                <InfoIcon mr={2} color="blue.500" _dark={{ color: "blue.300" }} />
+                <InfoIcon
+                  mr={2}
+                  color="blue.500"
+                  _dark={{ color: "blue.300" }}
+                />
                 <Text fontWeight="bold">Explanation:</Text>
               </Flex>
               <Text>{currentQuestion.explanation}</Text>
@@ -314,6 +447,31 @@ export default function TestReviewPage() {
           )}
         </CardBody>
       </Card>
+
+      <Box mt={4}>
+        <Button
+          onClick={fetchAIExplanation}
+          colorScheme="purple"
+          size="sm"
+          isDisabled={loadingAI}
+        >
+          {loadingAI ? <Spinner size="sm" /> : "Get AI Explanation"}
+        </Button>
+        {aiExplanation && (
+          <Box
+            mt={3}
+            p={3}
+            bg="purple.50"
+            borderRadius="md"
+            _dark={{ bg: "purple.900" }}
+          >
+            <Text fontWeight="bold" mb={2}>
+              AI Explanation:
+            </Text>
+            <ReactMarkdown>{aiExplanation}</ReactMarkdown>
+          </Box>
+        )}
+      </Box>
 
       <Flex justify="space-between" mt={6}>
         <Link href={`/results/${testData.id}`}>

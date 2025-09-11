@@ -17,12 +17,8 @@ export default function SuperDashboardLayout({ children }) {
       if (!user) {
         router.replace('/auth/login');
       } else if (user.role !== 'superAdmin') {
-        if (user.role === 'admin') {
-          router.replace('/admin');
-        } else {
           router.replace('/dashboard');
         }
-      }
     }
   }, [user, loading, router]);
 

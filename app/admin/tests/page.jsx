@@ -19,6 +19,8 @@ import {
   FormLabel,
   Input,
   useToast,
+  Flex,
+  Select,
 } from "@chakra-ui/react";
 import {
   AddIcon,
@@ -37,6 +39,7 @@ import {
   addDoc,
   updateDoc,
 } from "firebase/firestore";
+import Pagination from "../../../components/Pagination";
 
 export default function AdminTestsPage() {
   const [tests, setTests] = useState([]);
@@ -55,51 +58,78 @@ export default function AdminTestsPage() {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editTest, setEditTest] = useState(null);
 
+  // Search and Filter States
+  const [searchQuery, setSearchQuery] = useState("");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [filteredAndSortedTests, setFilteredAndSortedTests] = useState([]);
+
   //Pagination States
   const [currentPage, setCurrentPage] = useState(1);
   const testsPerPage = 10;
-
-  const indexOfLastTest = currentPage * testsPerPage;
-  const indexOfFirstTest = indexOfLastTest - testsPerPage;
-  const currentTests = tests.slice(indexOfFirstTest, indexOfLastTest);
-  const totalPages = Math.ceil(tests.length / testsPerPage);
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage((prev) => prev + 1);
-  };
-
-  const handlePrevPage = () => {
-    if (currentPage > 1) setCurrentPage((prev) => prev - 1);
-  };
-
+  
   useEffect(() => {
     if (!authLoading && !user) {
       router.push("/auth/login");
       return;
     }
+
     const fetchAllTests = async () => {
-      setLoading(true);
-      try {
-        const allTests = await getAllTests(user.uid);
-        setTests(allTests);
-      } catch (error) {
-        console.error("Error fetching tests", error);
-        toast({
-          title: "Error loading tests",
-          description: "Failed to load tests. Please try again later.",
-          status: "error",
-          duration: 5000,
-          isClosable: true,
-        });
-      } finally {
-        setLoading(false);
-      }
-    };
+        setLoading(true);
+        try {
+          if (user) {
+            const allTests = await getAllTests(user.uid);
+            setTests(allTests);
+          }
+        } catch (error) {
+          console.error("Error fetching tests", error);
+          toast({
+            title: "Error loading tests",
+            description: "Failed to load tests. Please try again later.",
+            status: "error",
+            duration: 5000,
+            isClosable: true,
+          });
+        } finally {
+          setLoading(false);
+        }
+      };
+
     if (user) {
       fetchAllTests();
     }
   }, [user, authLoading, router, toast]);
-  console.log(tests);
+
+  useEffect(() => {
+    let processedTests = [...tests];
+
+    // Filter by search query
+    if (searchQuery) {
+        processedTests = processedTests.filter((test) =>
+        test.testName.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    // Sort the tests
+    processedTests.sort((a, b) => {
+        const dateA = new Date(a.createdAt);
+        const dateB = new Date(b.createdAt);
+        if (sortOrder === 'asc') {
+            return dateA - dateB;
+        } else {
+            return dateB - dateA;
+        }
+    });
+
+    setFilteredAndSortedTests(processedTests);
+    setCurrentPage(1); // Reset to first page whenever filters change
+  }, [searchQuery, sortOrder, tests]);
+
+
+  const indexOfLastTest = currentPage * testsPerPage;
+  const indexOfFirstTest = indexOfLastTest - testsPerPage;
+  const currentTests = filteredAndSortedTests.slice(indexOfFirstTest, indexOfLastTest);
+  const totalPages = Math.ceil(filteredAndSortedTests.length / testsPerPage);
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setNewTest((prev) => ({
@@ -145,7 +175,7 @@ export default function AdminTestsPage() {
         createdAt: new Date().toISOString(),
         updatedAt: null,
       });
-      setTests((prev) => [...prev, { id: docRef.id, ...newTest }]);
+      setTests((prev) => [...prev, { id: docRef.id, ...newTest, createdAt: new Date().toISOString() }]);
       onClose();
       setNewTest({
         title: "",
@@ -257,94 +287,107 @@ export default function AdminTestsPage() {
     );
   }
 
-return (
-  <div className="pt-8">
-    <h1 className="text-3xl sm:text-4xl font-extrabold text-center mb-6 sm:mb-8 text-blue-600 dark:text-blue-400">
-      Manage Tests
-    </h1>
-
-    <div className="flex justify-center mb-6">
-      <Button leftIcon={<AddIcon />} colorScheme="blue" onClick={onOpen}>
-        Add New Test
-      </Button>
-    </div>
-
-    {tests.length === 0 ? (
-      <div className="border rounded-lg p-6 text-center bg-white/30 dark:bg-gray-900/30 shadow-md">
-        <h2 className="text-xl font-semibold mb-2">No tests found</h2>
-        <p className="mb-4">Start by adding your first test.</p>
-        <Button colorScheme="blue" onClick={onOpen}>
+  return (
+    <div className="pt-8">
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-center mb-6 sm:mb-8 text-blue-600 dark:text-blue-400">
+        Manage Tests
+      </h1>
+ 
+      <Flex justify="space-between" mb={6} direction={{ base: "column", md: "row" }} gap={4}>
+        <Flex gap={2}>
+          <Input
+            placeholder="Search by test name"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+        </Flex>
+ 
+        <Select
+          value={sortOrder}
+          onChange={(e) => setSortOrder(e.target.value)}
+          w={{ base: "full", md: "auto" }}
+          bg="white"
+          _dark={{ bg: "gray.700"}}
+          sx={{
+            "& option":{
+              bg: "white",
+              _dark:{
+                bg: "gray.700",
+              }
+            }
+          }}
+        >
+          <option value="desc">New to Old</option>
+          <option value="asc">Old to New</option>
+        </Select>
+ 
+        <Button leftIcon={<AddIcon />} colorScheme="blue" onClick={onOpen}>
           Add New Test
         </Button>
-      </div>
-    ) : (
-      <div className="bg-white/30 dark:bg-gray-900/30 border shadow-md rounded-lg overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-blue-200">
-              <tr>
-                <th className="px-4 py-2 text-left text-sm font-semibold text-black">Test Name</th>
-                <th className="px-4 py-2 text-left text-sm font-semibold text-black">Subject</th>
-                <th className="px-4 py-2 text-left text-sm font-semibold text-black">Duration</th>
-                <th className="px-4 py-2 text-left text-sm font-semibold text-black">Questions</th>
-                <th className="px-4 py-2 text-left text-sm font-semibold text-black">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {currentTests.map((test) => (
-                <tr key={test.id}>
-                  <td className="px-4 py-2">{test.testName}</td>
-                  <td className="px-4 py-2">{test.subject}</td>
-                  <td className="px-4 py-2">{test.duration}</td>
-                  <td className="px-4 py-2">{test.totalQuestions}</td>
-                  <td className="px-4 py-2">
-                    <div className="flex gap-2">
-                      <IconButton
-                        aria-label="Manage Questions"
-                        icon={<ExternalLinkIcon />}
-                        size="sm"
-                        colorScheme="teal"
-                        onClick={() =>
-                          router.push(`/admin/tests/${test.id}/questions`)
-                        }
-                      />
-                      <IconButton
-                        aria-label="Edit Test"
-                        icon={<EditIcon />}
-                        size="sm"
-                        colorScheme="blue"
-                        onClick={() => handleEditClick(test)}
-                      />
-                      {/* <IconButton
-                        aria-label="Delete Test"
-                        icon={<DeleteIcon />}
-                        size="sm"
-                        colorScheme="red"
-                        onClick={() => handleDeleteTest(test.id, test.courseId)}
-                      /> */}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      </Flex>
+ 
+      {currentTests.length === 0 ? (
+        <div className="border rounded-lg p-6 text-center bg-white/30 dark:bg-gray-900/30 shadow-md">
+          <h2 className="text-xl font-semibold mb-2">No tests found</h2>
+          <p className="mb-4">Start by adding your first test or adjust your search.</p>
+          <Button colorScheme="blue" onClick={onOpen}>
+            Add New Test
+          </Button>
         </div>
-      </div>
-    )}
+      ) : (
+        <div className="bg-white/30 dark:bg-gray-900/30 border shadow-md rounded-lg overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-blue-200">
+                <tr>
+                  <th className="px-4 py-2 text-left text-sm font-semibold text-black">Test Name</th>
+                  <th className="px-4 py-2 text-left text-sm font-semibold text-black">Subject</th>
+                  <th className="px-4 py-2 text-left text-sm font-semibold text-black">Duration</th>
+                  <th className="px-4 py-2 text-left text-sm font-semibold text-black">Questions</th>
+                  <th className="px-4 py-2 text-left text-sm font-semibold text-black">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {currentTests.map((test) => (
+                  <tr key={test.id}>
+                    <td className="px-4 py-2">{test.testName}</td>
+                    <td className="px-4 py-2">{test.subject}</td>
+                    <td className="px-4 py-2">{test.duration}</td>
+                    <td className="px-4 py-2">{test.totalQuestions}</td>
+                    <td className="px-4 py-2">
+                      <div className="flex gap-2">
+                        <IconButton
+                          aria-label="Manage Questions"
+                          icon={<ExternalLinkIcon />}
+                          size="sm"
+                          colorScheme="teal"
+                          onClick={() =>
+                            router.push(`/admin/tests/${test.id}/questions`)
+                          }
+                        />
+                        <IconButton
+                          aria-label="Edit Test"
+                          icon={<EditIcon />}
+                          size="sm"
+                          colorScheme="blue"
+                          onClick={() => handleEditClick(test)}
+                        />
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+ 
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
 
-    <div className="flex justify-between items-center py-4">
-      <Button onClick={handlePrevPage} isDisabled={currentPage === 1}>
-        Previous
-      </Button>
-      <p>
-        Page {currentPage} of {totalPages}
-      </p>
-      <Button onClick={handleNextPage} isDisabled={currentPage === totalPages}>
-        Next
-      </Button>
-    </div>
-
-      {/* Modal: Add Test */}
       <Modal isOpen={isOpen} onClose={onClose} size="xl">
         <ModalOverlay />
         <ModalContent>
@@ -398,8 +441,7 @@ return (
           </ModalFooter>
         </ModalContent>
       </Modal>
-
-      {/* Modal: Edit Test */}
+ 
       <Modal
         isOpen={editModalOpen}
         onClose={() => setEditModalOpen(false)}
@@ -458,3 +500,4 @@ return (
     </div>
   );
 }
+

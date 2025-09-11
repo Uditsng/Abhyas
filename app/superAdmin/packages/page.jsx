@@ -1,183 +1,358 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import {
   getAllPackages,
   createPackage,
   editPackage,
   deletePackage,
-  getPackageStats,
-  getAllBundles
+  getAllBundlesWithAdminName
 } from '../../../lib/superAdminPackagesService';
-import { Box, Button, Input, Select, Table, Thead, Tbody, Tr, Th, Td, Spinner, Modal, ModalOverlay, ModalContent, ModalHeader, ModalBody, ModalFooter, useDisclosure, Checkbox, Flex, FormControl, FormLabel, Text } from '@chakra-ui/react';
+import { getAllExams } from '../../../lib/superAdminExamsService';
+import ImageCropper from "@/components/ImageCropper";
+import { FaPlus, FaInfoCircle, FaTimes, FaRupeeSign } from "react-icons/fa";
+import { FiEdit, FiTrash2, FiSearch, FiDelete, FiPackage,FiUser, FiFileText } from "react-icons/fi";
+import {
+    Box, Button, Input, Select, Table, Thead, Tbody, Tr, Th, Td, Spinner, Modal,
+    ModalOverlay, ModalContent,ModalCloseButton , ModalHeader, ModalBody, ModalFooter, useDisclosure,
+    Checkbox, Flex, FormControl, FormLabel, Text, Textarea, useToast, InputGroup,
+    InputLeftElement, SimpleGrid, Tag, Stat, StatLabel, StatNumber, Center, IconButton, VStack, HStack, Image, useColorModeValue
+} from '@chakra-ui/react';
+import { uploadToCloudinary } from '@/utils/uploadToCloudinary';
 
+// Main Component
 export default function SuperAdminPackagesPage() {
-  const [packages, setPackages] = useState([]);
-  const [bundles, setBundles] = useState([]);
-  const [form, setForm] = useState({ name: '', examId: '', bundleIds: [], price: '' });
-  const [editingId, setEditingId] = useState(null);
-  const [selectedPackage, setSelectedPackage] = useState(null);
-  const [packageStats, setPackageStats] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
-  const { isOpen, onOpen, onClose } = useDisclosure();
+    // State Management
+    const [packages, setPackages] = useState([]);
+    const [bundles, setBundles] = useState([]);
+    const [exams, setExams] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [actionLoading, setActionLoading] = useState(false);
+    
+    // Main Modal State
+    const { isOpen: isEditModalOpen, onOpen: onEditModalOpen, onClose: onEditModalClose } = useDisclosure();
+    
+    // Bundle Details Modal State
+    const { isOpen: isDetailsModalOpen, onOpen: onDetailsModalOpen, onClose: onDetailsModalClose } = useDisclosure();
+    
+    const [editingPackage, setEditingPackage] = useState(null);
+    const [selectedBundleDetails, setSelectedBundleDetails] = useState(null);
+    const toast = useToast();
 
-  useEffect(() => {
-    async function fetchData() {
-      setLoading(true);
-      const [pkgs, bnds] = await Promise.all([
-        getAllPackages(),
-        getAllBundles()
-      ]);
-      setPackages(pkgs);
-      setBundles(bnds);
-      setLoading(false);
+    // Data Fetching
+    const fetchData = async () => {
+        setLoading(true);
+        try {
+            const [pkgs, bnds, exms] = await Promise.all([
+                getAllPackages(),
+                getAllBundlesWithAdminName(),
+                getAllExams()
+            ]);
+            setPackages(pkgs.sort((a, b) => a.name.localeCompare(b.name)));
+            setBundles(bnds);
+            setExams(exms);
+        } catch (error) {
+            toast({ title: "Error fetching data", description: error.message, status: "error", duration: 5000, isClosable: true });
+        }
+        setLoading(false);
+    };
+
+    useEffect(() => {
+        fetchData();
+    }, []);
+
+    // Handlers
+    const handleOpenCreateModal = () => {
+        setEditingPackage({
+            name: '', price: '', originalPrice: '', exam: '', subExamCategory: '',
+            imageUrl: '', description: '', features: '', bundleIds: []
+        });
+        onEditModalOpen();
+    };
+
+    const handleOpenEditModal = (pkg) => {
+        setEditingPackage({ ...pkg, features: (pkg.features || []).join('\n') });
+        onEditModalOpen();
+    };
+    
+    const handleViewBundleDetails = (bundle) => {
+        setSelectedBundleDetails(bundle);
+        onDetailsModalOpen();
+    };
+
+    const handleDelete = async (pkgId) => {
+        if (!window.confirm('Are you sure you want to delete this package? This action cannot be undone.')) return;
+        setActionLoading(true);
+        try {
+            await deletePackage(pkgId);
+            toast({ title: "Package Deleted", status: "success", duration: 2000, isClosable: true });
+            fetchData();
+        } catch (error) {
+            toast({ title: "Error deleting package", description: error.message, status: "error", duration: 5000, isClosable: true });
+        }
+        setActionLoading(false);
+    };
+
+    if (loading) {
+        return <Center h="80vh"><Spinner size="xl" thickness="4px" color="blue.500" /></Center>;
     }
-    fetchData();
-  }, []);
 
-  const handleFormChange = (e) => {
-    const { name, value, type, selectedOptions } = e.target;
-    if (type === 'select-multiple') {
-      setForm(f => ({ ...f, [name]: Array.from(selectedOptions, o => o.value) }));
-    } else {
-      setForm(f => ({ ...f, [name]: value }));
-    }
-  };
+    return (
+        <Box p={{ base: 4, md: 8 }} className="min-h-screen">
+            <Flex justify="space-between" align="center" mb={8} direction={{base: "column", md: "row"}} gap={4}>
+                <Text fontSize={{ base: "2xl", md: "3xl" }} fontWeight="extrabold" className="text-gray-800 dark:text-gray-100">Manage Packages</Text>
+                <Button bg="blue.500" color="white" _hover={{bg: "blue.600"}} leftIcon={<FaPlus />} onClick={handleOpenCreateModal} shadow="md">
+                    Create New Package
+                </Button>
+            </Flex>
 
-  const handleCreateOrEdit = async (e) => {
-    e.preventDefault();
-    setActionLoading(true);
-    if (editingId) {
-      await editPackage(editingId, form);
-    } else {
-      await createPackage(form);
-    }
-    setForm({ name: '', examId: '', bundleIds: [], price: '' });
-    setEditingId(null);
-    const pkgs = await getAllPackages();
-    setPackages(pkgs);
-    setActionLoading(false);
-  };
+            <Box className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-x-auto">
+                <Table variant="simple">
+                    <Thead className="bg-gray-50 dark:bg-gray-700">
+                        <Tr>
+                            <Th>Package Name</Th>
+                            <Th>Exam</Th>
+                            <Th isNumeric>Price</Th>
+                            <Th isNumeric>Bundles</Th>
+                            <Th>Actions</Th>
+                        </Tr>
+                    </Thead>
+                    <Tbody>
+                        {packages.map(pkg => (
+                            <Tr key={pkg.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors duration-200">
+                                <Td>
+                                    <HStack>
+                                        <Image src={pkg.imageUrl || 'https://placehold.co/40x40/E2E8F0/A0AEC0?text=Pkg'} alt={pkg.name} boxSize="40px" borderRadius="md" objectFit="cover" />
+                                        <Text fontWeight="medium">{pkg.name}</Text>
+                                    </HStack>
+                                </Td>
+                                <Td>{pkg.subExamCategory || pkg.exam || 'N/A'}</Td>
+                                <Td isNumeric>
+                                    <Flex direction="column" align="flex-end">
+                                        <Text fontWeight="bold" color="green.500">₹{pkg.price}</Text>
+                                        {pkg.originalPrice && <Text as="s" fontSize="xs" color="gray.500">₹{pkg.originalPrice}</Text>}
+                                    </Flex>
+                                </Td>
+                                <Td isNumeric><Tag colorScheme="blue">{pkg.bundleIds?.length || 0}</Tag></Td>
+                                <Td>
+                                    <Flex gap={2}>
+                                       <IconButton icon={<FiEdit />} size="sm" colorScheme="blue" aria-label="Edit" onClick={() => handleOpenEditModal(pkg)} />
+                                         <IconButton icon={<FiDelete />} size="sm" colorScheme="red" aria-label="Delete" isLoading={actionLoading} onClick={() => handleDelete(pkg.id)} />
+</Flex>
+                                </Td>
+                            </Tr>
+                        ))}
+                    </Tbody>
+                </Table>
+            </Box>
 
-  const handleEdit = (pkg) => {
-    setForm({ name: pkg.name, examId: pkg.examId, bundleIds: pkg.bundleIds || [], price: pkg.price });
-    setEditingId(pkg.id);
-  };
-
-  const handleDelete = async (pkgId) => {
-    if (!window.confirm('Delete this package?')) return;
-    setActionLoading(true);
-    await deletePackage(pkgId);
-    setPackages(packages.filter(p => p.id !== pkgId));
-    setActionLoading(false);
-  };
-
-  const handleRowClick = async (pkg) => {
-    setSelectedPackage(pkg);
-    setPackageStats(null);
-    onOpen();
-    const stats = await getPackageStats(pkg.id);
-    setPackageStats(stats);
-  };
-
-  const toggleBundleSelection = (bundleId) => {
-    setForm(f => {
-      const selected = f.bundleIds.includes(bundleId)
-        ? f.bundleIds.filter(id => id !== bundleId)
-        : [...f.bundleIds, bundleId];
-      return { ...f, bundleIds: selected };
-    });
-  };
-
-  return (
-    <Box p={6} mt={8}>
-      <h2 className="text-2xl font-bold mb-4">Manage Packages</h2>
-      <form onSubmit={handleCreateOrEdit} className="mb-8 bg-white p-4 rounded shadow">
-        <div className="flex flex-col md:flex-row gap-4 mb-4">
-          <Input name="name" placeholder="Package Name" value={form.name} onChange={handleFormChange} maxW="300px" required />
-          <Input name="examId" placeholder="Exam ID" value={form.examId} onChange={handleFormChange} maxW="300px" required />
-          <Input name="price" type="number" placeholder="Price (₹)" value={form.price} onChange={handleFormChange} maxW="300px" required />
-        </div>
-        <Box maxW="600px" minW="220px" mb={4}>
-          <FormControl>
-            <FormLabel>Select Bundles to Include</FormLabel>
-            {bundles.length === 0 ? (
-              <Text color="gray.500">No bundles available.</Text>
-            ) : (
-              <Flex direction="column" gap={2} height="140px" overflowY="auto" border="1px solid #ccc" p={3} borderRadius="md" bg="gray.50">
-                {bundles.map((b) => (
-                  <Checkbox
-                    key={b.id}
-                    isChecked={form.bundleIds.includes(b.id)}
-                    onChange={() => toggleBundleSelection(b.id)}
-                  >
-                    <Box>
-                      <Text fontWeight="medium">{b.title || b.id}</Text>
-                    </Box>
-                  </Checkbox>
-                ))}
-              </Flex>
+            {isEditModalOpen && (
+                <CreateEditPackageModal
+                    isOpen={isEditModalOpen}
+                    onClose={onEditModalClose}
+                    pkg={editingPackage}
+                    bundles={bundles}
+                    exams={exams}
+                    onSuccess={fetchData}
+                    handleViewBundleDetails={handleViewBundleDetails}
+                />
             )}
-          </FormControl>
+            
+            {selectedBundleDetails && (
+                <BundleDetailsModal 
+                    isOpen={isDetailsModalOpen}
+                    onClose={onDetailsModalClose}
+                    bundle={selectedBundleDetails}
+                />
+            )}
         </Box>
-        <Button type="submit" colorScheme="blue" isLoading={actionLoading}>{editingId ? 'Update' : 'Create'} Package</Button>
-        {editingId && <Button ml={2} onClick={() => { setForm({ name: '', examId: '', bundleIds: [], price: '' }); setEditingId(null); }}>Cancel</Button>}
-      </form>
-      {loading ? <Spinner size="lg" /> : (
-        <Table variant="simple" className="bg-white rounded shadow">
-          <Thead>
-            <Tr>
-              <Th>Name</Th>
-              <Th>Exam ID</Th>
-              <Th>Bundles</Th>
-              <Th>Price (₹)</Th>
-              <Th>Actions</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {packages.map(pkg => (
-              <Tr key={pkg.id} className="cursor-pointer hover:bg-gray-50" onClick={() => handleRowClick(pkg)}>
-                <Td>{pkg.name}</Td>
-                <Td>{pkg.examId}</Td>
-                <Td>{(pkg.bundleIds || []).map(bid => {
-                  const b = bundles.find(b => b.id === bid);
-                  return b ? (b.title || b.id) : bid;
-                }).join(', ')}</Td>
-                <Td>{pkg.price}</Td>
-                <Td onClick={e => e.stopPropagation()}>
-                  <Button size="sm" colorScheme="blue" mr={2} onClick={() => handleEdit(pkg)}>Edit</Button>
-                  <Button size="sm" colorScheme="red" onClick={() => handleDelete(pkg.id)} isLoading={actionLoading}>Delete</Button>
-                </Td>
-              </Tr>
-            ))}
-          </Tbody>
-        </Table>
-      )}
-      {/* Package Stats Modal */}
-      <Modal isOpen={isOpen} onClose={onClose} size="md">
-        <ModalOverlay />
-        <ModalContent>
-          <ModalHeader>Package Stats</ModalHeader>
-          <ModalBody>
-            {selectedPackage && packageStats ? (
-              <Box>
-                <p><b>Name:</b> {selectedPackage.name}</p>
-                <p><b>Exam ID:</b> {selectedPackage.examId}</p>
-                <p><b>Bundles:</b> {(selectedPackage.bundleIds || []).map(bid => {
-                  const b = bundles.find(b => b.id === bid);
-                  return b ? (b.title || b.id) : bid;
-                }).join(', ')}</p>
-                <p><b>Price:</b> ₹{selectedPackage.price}</p>
-                <p><b>Total Sales:</b> {packageStats.totalSales}</p>
-                <p><b>Total Revenue:</b> ₹{packageStats.totalRevenue}</p>
-              </Box>
-            ) : <Spinner size="sm" />}
-          </ModalBody>
-          <ModalFooter>
-            <Button onClick={onClose}>Close</Button>
-          </ModalFooter>
-        </ModalContent>
-      </Modal>
-    </Box>
-  );
-} 
+    );
+}
+
+// Create/Edit Modal Component
+function CreateEditPackageModal({ isOpen, onClose, pkg, bundles, exams, onSuccess, handleViewBundleDetails }) {
+    const [formState, setFormState] = useState(pkg);
+    const [imageFile, setImageFile] = useState(null);
+    const [bundleSearch, setBundleSearch] = useState("");
+    const [actionLoading, setActionLoading] = useState(false);
+    const toast = useToast();
+
+    // Logic to automatically calculate original price
+    useEffect(() => {
+        const total = formState.bundleIds.reduce((sum, id) => {
+            const bundle = bundles.find(b => b.id === id);
+            return sum + (bundle ? Number(bundle.price) : 0);
+        }, 0);
+        setFormState(prev => ({ ...prev, originalPrice: total > 0 ? total : '' }));
+    }, [formState.bundleIds, bundles]);
+
+
+    const examCategoryMap = useMemo(() => {
+        return exams.reduce((acc, exam) => {
+            if (!acc[exam.category]) acc[exam.category] = new Set();
+            acc[exam.category].add(exam.subCategory);
+            return acc;
+        }, {});
+    }, [exams]);
+    const examCategories = Object.keys(examCategoryMap);
+    const subExamOptions = formState.exam ? [...examCategoryMap[formState.exam]] : [];
+
+    const handleFormChange = (e) => {
+        const { name, value } = e.target;
+        setFormState(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleBundleToggle = (bundleId) => {
+        setFormState(prev => {
+            const bundleIds = prev.bundleIds.includes(bundleId)
+                ? prev.bundleIds.filter(id => id !== bundleId)
+                : [...prev.bundleIds, bundleId];
+            return { ...prev, bundleIds };
+        });
+    };
+
+    const handleSubmit = async () => {
+        setActionLoading(true);
+        try {
+            let imageUrl = formState.imageUrl;
+            if (imageFile) {
+                imageUrl = await uploadToCloudinary(imageFile);
+            }
+
+            const finalPackageData = {
+                ...formState,
+                features: formState.features.split('\n').filter(Boolean),
+                price: parseFloat(formState.price),
+                originalPrice: formState.originalPrice ? parseFloat(formState.originalPrice) : null,
+                imageUrl,
+            };
+
+            if (formState.id) {
+                await editPackage(formState.id, finalPackageData);
+                toast({ title: "Package updated successfully!", status: 'success' });
+            } else {
+                await createPackage(finalPackageData);
+                toast({ title: "Package created successfully!", status: 'success' });
+            }
+            onSuccess();
+            onClose();
+        } catch (error) {
+            toast({ title: "An error occurred", description: error.message, status: 'error' });
+        }
+        setActionLoading(false);
+    };
+
+    const filteredBundles = useMemo(() => {
+        return bundles.filter(b => b.title.toLowerCase().includes(bundleSearch.toLowerCase()));
+    }, [bundles, bundleSearch]);
+    
+    const selectedBundles = useMemo(() => {
+        return formState.bundleIds.map(id => bundles.find(b => b.id === id)).filter(Boolean);
+    }, [formState.bundleIds, bundles]);
+
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} size="6xl" scrollBehavior="inside">
+            <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(10px)" />
+            <ModalContent className="dark:bg-gray-800" mx={4}>
+                <ModalHeader>{formState.id ? "Edit" : "Create"} Package</ModalHeader>
+                <ModalBody>
+                    <SimpleGrid columns={{ base: 1, lg: 2 }} spacing={8}>
+                        {/* Left Side: Form */}
+                        <VStack spacing={4} align="stretch">
+                            <FormControl isRequired><FormLabel>Package Name</FormLabel><Input name="name" value={formState.name} onChange={handleFormChange} /></FormControl>
+                            <SimpleGrid columns={2} spacing={4}>
+                                <FormControl isRequired><FormLabel>Price (₹)</FormLabel><Input name="price" type="number" value={formState.price} onChange={handleFormChange} /></FormControl>
+                                <FormControl><FormLabel>Original Price (Auto-calculated)</FormLabel><Input name="originalPrice" type="number" value={formState.originalPrice} isReadOnly _readOnly={{bg: useColorModeValue("gray.100", "gray.700")}} placeholder="Auto-calculates..." /></FormControl>
+                            </SimpleGrid>
+                            <SimpleGrid columns={2} spacing={4}>
+                                <FormControl isRequired><FormLabel>Exam Category</FormLabel><Select name="exam" placeholder="Select Exam" value={formState.exam} onChange={handleFormChange}>{examCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}</Select></FormControl>
+                                <FormControl isRequired><FormLabel>Sub Exam</FormLabel><Select name="subExamCategory" placeholder="Select Sub Exam" value={formState.subExamCategory} onChange={handleFormChange} isDisabled={!formState.exam}>{subExamOptions.map(sub => <option key={sub} value={sub}>{sub}</option>)}</Select></FormControl>
+                            </SimpleGrid>
+                            <FormControl><FormLabel>Description</FormLabel><Textarea name="description" value={formState.description} onChange={handleFormChange} /></FormControl>
+                            <FormControl><FormLabel>Features (one per line)</FormLabel><Textarea name="features" value={formState.features} onChange={handleFormChange} /></FormControl>
+                            <ImageCropper label="Package Poster Image" aspect={16 / 9} onCropComplete={setImageFile} />
+                        </VStack>
+
+                        {/* Right Side: Bundle Selector */}
+                        <VStack spacing={4} align="stretch" className="border dark:border-gray-700 rounded-lg p-4 bg-gray-50 dark:bg-gray-900/50">
+                            <Text fontWeight="bold" fontSize="lg">Select Bundles</Text>
+                            <InputGroup>
+                                <InputLeftElement pointerEvents="none"><FiSearch /></InputLeftElement>
+                                <Input placeholder="Search bundles..." value={bundleSearch} onChange={(e) => setBundleSearch(e.target.value)} />
+                            </InputGroup>
+                            
+                            <Box h="200px" overflowY="auto" className="p-2 border dark:border-gray-600 rounded">
+                                {filteredBundles.map(bundle => (
+                                    <Flex key={bundle.id} justify="space-between" align="center" className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">
+                                        <Checkbox isChecked={formState.bundleIds.includes(bundle.id)} onChange={() => handleBundleToggle(bundle.id)}>
+                                            <VStack align="start" spacing={0} ml={2}>
+                                                <Text fontSize="sm" fontWeight="medium">{bundle.title}</Text>
+                                                <Text fontSize="xs" color="gray.500">{bundle.adminName} - ₹{bundle.price}</Text>
+                                            </VStack>
+                                        </Checkbox>
+                                        <IconButton icon={<FaInfoCircle />} size="xs" variant="ghost" aria-label="Details" onClick={() => handleViewBundleDetails(bundle)} />
+                                    </Flex>
+                                ))}
+                            </Box>
+
+                            <Text fontWeight="bold">Selected Bundles ({selectedBundles.length})</Text>
+                            <Box h="150px" overflowY="auto" className="p-2 border dark:border-gray-600 rounded">
+                                {selectedBundles.map(bundle => (
+                                     <Flex key={bundle.id} justify="space-between" align="center" className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded mb-1">
+                                       <Text fontSize="sm" fontWeight="medium">{bundle.title}</Text>
+                                       <IconButton icon={<FaTimes />} size="xs" variant="ghost" colorScheme="red" aria-label="Remove" onClick={() => handleBundleToggle(bundle.id)} />
+                                     </Flex>
+                                ))}
+                            </Box>
+                        </VStack>
+                    </SimpleGrid>
+                </ModalBody>
+                <ModalFooter>
+                    <Button onClick={onClose}>Cancel</Button>
+                    <Button colorScheme="blue" ml={3} onClick={handleSubmit} isLoading={actionLoading}>
+                        {formState.id ? "Save Changes" : "Create Package"}
+                    </Button>
+                </ModalFooter>
+            </ModalContent>
+        </Modal>
+    );
+}
+
+// Bundle Details Modal
+function BundleDetailsModal({ isOpen, onClose, bundle }) {
+    if (!bundle) return null;
+    return (
+        <Modal isOpen={isOpen} onClose={onClose} isCentered size="lg">
+            <ModalOverlay bg="blackAlpha.300" backdropFilter="blur(10px)" />
+            <ModalContent className="dark:bg-gray-800 rounded-xl">
+                <ModalHeader borderTopRadius="xl" bg={useColorModeValue("gray.50", "gray.700")} borderBottomWidth="1px" borderColor={useColorModeValue("gray.200", "gray.600")}>{bundle.title}</ModalHeader>
+                <ModalCloseButton />
+                <ModalBody p={6}>
+                    <VStack align="stretch" spacing={5}>
+                        <HStack justify="space-between">
+                           <Stat>
+                               <StatLabel display="flex" alignItems="center" color="gray.500"><FiUser mr={2}/> Admin</StatLabel>
+                               <StatNumber>{bundle.adminName}</StatNumber>
+                           </Stat>
+                           <Stat textAlign="right">
+                               <StatLabel display="flex" alignItems="center" justifyContent="flex-end" color="gray.500"><FaRupeeSign mr={2}/> Price</StatLabel>
+                               <StatNumber>₹{bundle.price}</StatNumber>
+                           </Stat>
+                           <Stat textAlign="right">
+                               <StatLabel display="flex" alignItems="center" justifyContent="flex-end" color="gray.500"><FiFileText mr={2}/> Tests</StatLabel>
+                               <StatNumber>{bundle.testIds?.length || 0}</StatNumber>
+                           </Stat>
+                        </HStack>
+                        <Box>
+                            <Text fontWeight="bold" mb={2}>Description:</Text>
+                            <Text fontSize="sm" p={3} bg={useColorModeValue("gray.50", "gray.700")} borderRadius="md">{bundle.description || 'No description provided.'}</Text>
+                        </Box>
+                    </VStack>
+                </ModalBody>
+                <ModalFooter borderBottomRadius="xl" bg={useColorModeValue("gray.50", "gray.700")} borderTopWidth="1px" borderColor={useColorModeValue("gray.200", "gray.600")}>
+                    <Button onClick={onClose} variant="outline">Close</Button>
+                </ModalFooter>
+            </ModalContent>
+        </Modal>
+    )
+}
+

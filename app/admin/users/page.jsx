@@ -10,6 +10,7 @@ import { useAuth } from "@/components/AuthContext";
 import { Spinner } from "@chakra-ui/react";
 import {FiDownload} from 'react-icons/fi'
 import { format } from "date-fns";
+import Pagination from '@/components/Pagination'
 
 const ITEMS_PER_PAGE = 10;
 
@@ -157,26 +158,11 @@ export default function AdminUserPurchases() {
     </div>
 
         {/* Pagination Control */}
-        <div className="flex justify-between items-center mt-6">
-            <button
-              className="px-4 py-2 rounded bg-gray-300 dark:bg-gray-700 disabled:opacity-50"
-              disabled={currentPage === 1}
-              onClick={() => setCurrentPage((prev)=> prev-1)}
-              >
-                Previous
-            </button>
-
-            <span className="text-gray-700 dark:text-gray-200">
-                Page {currentPage} of {totalPages}
-            </span>
-
-            <button
-              className="px-4 py-2 rounded bg-gray-300 dark:bg-gray-700 disabled:opacity-50"
-              disabled={currentPage === totalPages}
-              onClick={()=> setCurrentPage((perv) => prev + 1)}>
-                Next
-            </button>
-        </div>
+        <Pagination  
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
     </div>
     </div>
   );

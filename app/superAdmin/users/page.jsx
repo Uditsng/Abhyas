@@ -19,7 +19,7 @@ import {
   Avatar,
 } from "@chakra-ui/react";
 import { FiDelete, FiDownload, FiLock, FiUnlock } from "react-icons/fi";
-
+import Pagination from '@/components/Pagination'
 export default function SuperAdminUsersPage() {
   const [users, setUsers] = useState([]);
   const [filtered, setFiltered] = useState([]);
@@ -236,27 +236,11 @@ export default function SuperAdminUsersPage() {
         </div>
 
         {/* Pagination Controls */}
-        <div className="flex justify-between items-center mt-6">
-          <button
-            className="px-4 py-2 rounded bg-gray-300 dark:bg-gray-700 disabled:opacity-50"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((prev) => prev - 1)}
-          >
-            Previous
-          </button>
-
-          <span className="text-gray-700 dark:text-gray-200">
-            Page {currentPage} of {totalPages}
-          </span>
-
-          <button
-            className="px-4 py-2 rounded bg-gray-300 dark:bg-gray-700 disabled:opacity-50"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((prev) => prev + 1)}
-          >
-            Next
-          </button>
-        </div>
+        <Pagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+        />
 
         {/* Modal Section */}
         <Modal isOpen={isOpen} onClose={onClose} size="xl">

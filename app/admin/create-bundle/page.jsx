@@ -36,6 +36,8 @@ import {
 import { getAllExams } from "@/lib/superAdminExamsService";
 import { FaPlus } from "react-icons/fa";
 import ImageCropper from "@/components/ImageCropper";
+import {getUserProfile} from '@/lib/userService';
+import Pagination from '@/components/Pagination'
 
 export default function CreateBundlePage() {
   const [user, loadingUser] = useAuthState(auth);
@@ -66,9 +68,27 @@ export default function CreateBundlePage() {
   const [instructorName, setInstructorName] = useState("");
   const [instructorBio, setInstructorBio] = useState("");
   const [instructorImageFile, setInstructorImageFile] = useState(null);
+  const [instructorImageUrl, setInstructorImageUrl] = useState('');
 
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
+
+  //Auto-fetch admin data
+  useEffect(() =>{
+    async function fetchAdminData(){
+      if(user){
+        const adminProfile = await getUserProfile(user.uid)
+        if(adminProfile){
+          setInstructorName(adminProfile.name || '');
+          setInstructorBio(adminProfile.bio || '');
+          if (adminProfile.photoURL) {
+              setInstructorImageUrl(adminProfile.photoURL);
+          }
+        }
+      }
+    }
+    fetchAdminData();
+  },[user]);
 
   // Fetch bundles, tests, exams
   useEffect(() => {
@@ -175,7 +195,6 @@ export default function CreateBundlePage() {
         subject,
         price: parseFloat(price),
         originalPrice: originalPrice ? parseFloat(originalPrice) : null,
-        statu:"live",
         testIds: selectedTestIds,
         promote: promoteBundle,
         createdBy: user.uid,
@@ -211,7 +230,6 @@ export default function CreateBundlePage() {
       setSubExamCategory("");
       setSubject("");
       setPrice("");
-      setStatus("draft");
       setPromoteBundle(false);
       setSelectedTestIds([]);
       setImageFile(null);
@@ -342,25 +360,10 @@ export default function CreateBundlePage() {
         )}
 
         {/* Pagination Controls */}
-        <div className="flex justify-end items-center gap-2 px-6 py-4">
-          <Button
-            size="sm"
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-          >
-            Prev
-          </Button>
-          <Text fontSize="sm">
-            Page {currentPage} of {totalPages}
-          </Text>
-          <Button
-            size="sm"
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-          >
-            Next
-          </Button>
-        </div>
+        <Pagination 
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}/>
 
         {/* Modal */}
 
@@ -508,6 +511,15 @@ export default function CreateBundlePage() {
                     </FormControl>
 
                     <FormControl>
+                      <FormLabel>Instructor Image</FormLabel>
+            {instructorImageUrl && !instructorImageFile && (
+                <div className="flex items-center gap-4 mb-4">
+                    <img src={instructorImageUrl} alt="Instructor" className="w-24 h-24 rounded-full object-cover" />
+                    <Button size="sm" onClick={() => setInstructorImageUrl('')}>Change Image</Button>
+                </div>
+            )}
+
+            {(!instructorImageUrl || instructorImageFile) && (
                       <ImageCropper
                         label="Admin Image"
                         aspect={1}
@@ -517,6 +529,7 @@ export default function CreateBundlePage() {
                         shape="circle"
                         onCropComplete={(file) => setInstructorImageFile(file)}
                       />
+            )}
                     </FormControl>
                   </Stack>
                 </Box>

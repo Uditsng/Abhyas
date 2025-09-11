@@ -22,6 +22,7 @@ import {
   useDisclosure,
 } from "@chakra-ui/react";
 import { FiDelete, FiDownload, FiLock, FiUnlock } from "react-icons/fi";
+import Pagination from "../../../components/Pagination";
 
 export default function SuperAdminAdminsPage() {
   const [admins, setAdmins] = useState([]);
@@ -34,6 +35,7 @@ export default function SuperAdminAdminsPage() {
   const [currentPage, setCurrentPage] = useState(1);
   const [actionLoading, setActionLoading] = useState(false);
   const adminsPerPage = 10;
+  const [sortOrder, setSortOrder] = useState("newest");
 
   useEffect(() => {
     async function fetchAdmins() {
@@ -47,19 +49,25 @@ export default function SuperAdminAdminsPage() {
   }, []);
 
   useEffect(() => {
-    if (!search) setFiltered(admins);
-    else
-      setFiltered(
-        admins.filter(
-          (a) =>
-            (a.displayName || "")
-              .toLowerCase()
-              .includes(search.toLowerCase()) ||
-            (a.email || "").toLowerCase().includes(search.toLowerCase())
-        )
+    let sortedAdmins = [...admins].sort((a, b) => {
+        const dateA = a.createdAt?.toDate() || 0;
+        const dateB = b.createdAt?.toDate() || 0;
+        return sortOrder === "newest" ? dateB - dateA : dateA - dateB;
+    });
+
+    if (search) {
+        sortedAdmins = sortedAdmins.filter(
+        (a) =>
+          (a.displayName || "")
+            .toLowerCase()
+            .includes(search.toLowerCase()) ||
+          (a.email || "").toLowerCase().includes(search.toLowerCase())
       );
+    }
+    
+    setFiltered(sortedAdmins);
     setCurrentPage(1);
-  }, [search, admins]);
+  }, [search, admins, sortOrder]);
 
   const handleRowClick = async (admin) => {
     setSelectedAdmin(admin);
@@ -67,7 +75,7 @@ export default function SuperAdminAdminsPage() {
     onOpen();
 
     try {
-      const stats = await getAdminStats(admin.id); // Fetch stats here
+      const stats = await getAdminStats(admin.id);
       setAdminStats(stats);
     } catch (err) {
       console.error("Failed to fetch admin stats:", err);
@@ -116,7 +124,12 @@ export default function SuperAdminAdminsPage() {
         )
         .join("\n");
     const encodedUri = encodeURI(csvContent);
-    saveAs(encodedUri, "admins.csv");
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "admins.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   const indexOfLastAdmin = currentPage * adminsPerPage;
@@ -135,10 +148,14 @@ export default function SuperAdminAdminsPage() {
           <input
             type="text"
             placeholder="Search by name"
-            className="w-full sm:w-1/3 px-4 py-2 border border-gray-300 rounded dark:bg-gray-800 dark:text-white dark:border-gray-700" // <<
+            className="w-full sm:w-1/3 px-4 py-2 border border-gray-300 rounded dark:bg-gray-800 dark:text-white dark:border-gray-700"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
+           <div className="flex items-center gap-2">
+            <button onClick={() => setSortOrder("newest")} className={`px-3 py-1 rounded ${sortOrder === 'newest' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>Newest</button>
+            <button onClick={() => setSortOrder("oldest")} className={`px-3 py-1 rounded ${sortOrder === 'oldest' ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>Oldest</button>
+          </div>
           <button
             onClick={handleDownloadCSV}
             className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -148,10 +165,7 @@ export default function SuperAdminAdminsPage() {
           </button>
         </div>
 
-        {/* Table Section */}
         <div className="overflow-x-auto bg-white dark:bg-gray-800 shadow rounded-lg">
-          {" "}
-          {/* << */}
           {loading ? (
             <div className="flex justify-center items-center p-8">
               <Spinner />
@@ -178,7 +192,7 @@ export default function SuperAdminAdminsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((admin) => (
+                {currentAdmins.map((admin) => (
                   <tr
                     key={admin.id}
                     className="hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer"
@@ -193,7 +207,6 @@ export default function SuperAdminAdminsPage() {
                     <td className="px-4 py-2 border dark:border-gray-700">
                       {admin.status || "active"}
                     </td>
-                    {/* <td className="px-4 py-2 border dark:border-gray-700">{admin.role}</td> */}
                     <td className="px-4 py-2 border dark:border-gray-700">
                       {admin.createdAt?.toDate?.().toLocaleDateString()}
                     </td>
@@ -230,6 +243,7 @@ export default function SuperAdminAdminsPage() {
                         )}
                         <button
                           className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
+                          disabled={actionLoading}
                           onClick={() => handleDelete(admin)}
                         >
                           <FiDelete />
@@ -243,28 +257,12 @@ export default function SuperAdminAdminsPage() {
           )}
         </div>
 
-        {/* Pagination */}
-        <div className="flex justify-between items-center mt-6">
-          <button
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((prev) => prev - 1)}
-            className="px-4 py-2 rounded bg-gray-300 dark:bg-gray-700 disabled:opacity-50"
-          >
-            Previous
-          </button>
-          <span className="text-gray-700 dark:text-gray-200">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((prev) => prev + 1)}
-            className="px-4 py-2 rounded bg-gray-300 dark:bg-gray-700 disabled:opacity-50"
-          >
-            Next
-          </button>
-        </div>
+        <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={setCurrentPage}
+        />
 
-        {/* Modal */}
         <Modal isOpen={isOpen} onClose={onClose} size="lg">
           <ModalOverlay />
           <ModalContent>
@@ -273,7 +271,6 @@ export default function SuperAdminAdminsPage() {
             <ModalBody>
               {selectedAdmin && (
                 <div className="bg-white dark:bg-gray-800 p-6 rounded shadow-md">
-                  {/* Centered Avatar */}
                   <div className="flex justify-center mb-4">
                     <Avatar
                       size="xl"
@@ -282,7 +279,6 @@ export default function SuperAdminAdminsPage() {
                     />
                   </div>
 
-                  {/* Info Table */}
                   <table className="w-full table-auto border-collapse">
                     <tbody>
                       <tr>

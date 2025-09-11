@@ -78,6 +78,18 @@ service cloud.firestore {
       allow read, write: if isAdmin() || isSuperAdmin();
     } 
 
+    // Rules for invoices
+    match /invoices/{invoiceId} {
+      allow read: if request.auth != null && (isSuperAdmin() || get(/databases/$(database)/documents/invoices/$(invoiceId)).data.userId == request.auth.uid);
+      allow create: if request.auth != null;
+    }
+
+    // Rules for invoice template
+    match /invoiceTemplate/default {
+      allow read: if request.auth != null;
+      allow write: if isSuperAdmin();
+    }
+
     // Default deny
     match /{document=**} {
       allow read, write: if false;

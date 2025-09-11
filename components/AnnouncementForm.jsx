@@ -36,7 +36,7 @@ export default function AnnouncementForm() {
   return (
     
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="max-w-4xl mx-auto mt-10 p-6 bg-white dark:bg-gray-900 rounded-xl shadow-md border border-gray-200 dark:border-gray-800">
+      <div className="max-w-6xl mx-auto mt-10 p-6 bg-white dark:bg-gray-900 rounded-xl shadow-md border border-gray-200 dark:border-gray-800">
       <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4 text-gyar-900 dark:text-gray-100">Send Platform Notification</h2>
       <div className="mb-4">
         <label className="block text-sm font-semibold mb-2 text-gray-700 dark:text-gray-300">Send To Role</label>

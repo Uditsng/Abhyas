@@ -8,6 +8,7 @@ import Link from 'next/link';
 import { auth } from '@/lib/firebaseConfig';
 import { useAuth } from '@/components/AuthContext';
 import { saveUserProfile, getUserProfile } from '@/lib/userService';
+import { uploadToCloudinary } from '@/utils/uploadToCloudinary'
 
 function UserRegister({ onRegister, isLoading, error }) {
   const [name, setName] = useState('');
@@ -74,13 +75,23 @@ export default function RegisterPage() {
     try {
       const userCred = await createUserWithEmailAndPassword(auth, email, password);
       const user = userCred.user;
-      await updateProfile(user, { displayName: name });
+;
+      let profilePicUrl ='';
+      if (registerRole === 'admin' && profilePic){
+        try{
+          profilePicUrl = await uploadToCloudinary(profilePic)
+        } catch (uploadError){
+          console.error("Image upload failed:", uploadError)
+        }
+      }
+      await updateProfile(user, { displayName: name, photoURL: profilePicUrl });
       const userData = {
         name,
         email,
         displayName: name,
         role: registerRole,
         createdAt: new Date(),
+        photURL: profilePicUrl,
       };
       if (registerRole === 'admin') {
         userData.qualifications = qualifications;
@@ -88,10 +99,6 @@ export default function RegisterPage() {
         userData.experience = experience;
         userData.phone = phone;
         userData.validated = false;
-        if (profilePic) {
-          // You can implement upload logic here
-          userData.profilePic = profilePic.name;
-        }
       }
       const profileSaved = await saveUserProfile(user.uid, userData);
       if (!profileSaved) {

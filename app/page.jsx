@@ -15,6 +15,7 @@ import OptimizedImage from '@/components/OptimizedImage';
 import Footer from '@/components/Footer';
 import ExamBrowser from '@/components/ExamBrowser';
 import BundleCard from '@/components/BundleCard';
+import PackageCard from '@/components/PackageCard'; // Import PackageCard
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
 import { FiAward, FiBookOpen, FiDollarSign, FiSmartphone, FiBarChart2 } from 'react-icons/fi';
@@ -35,6 +36,7 @@ export default function HomePage() {
   const { user, loading } = useAuth();
   const router = useRouter();
   const [topBundles, setTopBundles] = useState([]);
+  const [topPackages, setTopPackages] = useState([]); // This line was missing
 
   const criticalImages = [
     '/images/ADVENTURE IS CALLING (1).png',
@@ -68,6 +70,14 @@ export default function HomePage() {
         .sort((a, b) => b.price - a.price)
         .slice(0, 3);
       setTopBundles(bundles);
+
+      // Fetch Packages
+      const packageSnap = await getDocs(collection(db, 'packages'));
+      const packages = packageSnap.docs
+        .map(doc => ({ id: doc.id, ...doc.data() }))
+        .sort((a, b) => b.price - a.price)
+        .slice(0, 3);
+      setTopPackages(packages);
     }
     fetchBundles();
   }, []);
@@ -132,6 +142,30 @@ export default function HomePage() {
       <div className="my-8">
         <ExamBrowser />
       </div>
+
+       
+            {/* Top Packages */}
+      <motion.section
+        className={`mb-14 ${cardStyle}`}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, amount: 0.2 }}
+        variants={fadeInUp}
+      >
+        <div className="text-center mb-8">
+          <h2 className="text-3xl font-bold mb-2 text-gray-800 dark:text-gray-100">🏆 Top Packages</h2>
+          <p className="text-gray-600 dark:text-gray-300 text-lg">Get complete exam preparation with our curated packages.</p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {topPackages.length === 0 ? (
+            <div className="col-span-full text-center text-gray-500 dark:text-gray-400">No packages found.</div>
+          ) : (
+            topPackages.map(pkg => (
+              <PackageCard key={pkg.id} pkg={pkg} />
+            ))
+          )}
+        </div>
+      </motion.section>
 
       {/* Top Bundles */}
       <motion.section

@@ -1,16 +1,17 @@
 "use client";
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   getAllExams,
   createExam,
   editExam,
-  deleteExam
-} from '../../../lib/superAdminExamsService';
-import {FiEdit, FiDelete} from "react-icons/fi";
+  deleteExam,
+} from "../../../lib/superAdminExamsService";
+import { FiEdit, FiDelete } from "react-icons/fi";
+import Pagination from "@/components/pagination";
 
 export default function SuperAdminExamsPage() {
   const [exams, setExams] = useState([]);
-  const [form, setForm] = useState({ name: '', category: '', subCategory: '' });
+  const [form, setForm] = useState({ name: "", category: "", subCategory: "" });
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
@@ -44,7 +45,7 @@ export default function SuperAdminExamsPage() {
     } else {
       await createExam(form);
     }
-    setForm({ name: '', category: '', subCategory: '' });
+    setForm({ name: "", category: "", subCategory: "" });
     setEditingId(null);
     const all = await getAllExams();
     setExams(all);
@@ -52,19 +53,23 @@ export default function SuperAdminExamsPage() {
   };
 
   const handleEdit = (exam) => {
-    setForm({ name: exam.name, category: exam.category || '', subCategory: exam.subCategory || '' });
+    setForm({
+      name: exam.name,
+      category: exam.category || "",
+      subCategory: exam.subCategory || "",
+    });
     setEditingId(exam.id);
   };
 
   const handleDelete = async (examId) => {
-    if (!window.confirm('Delete this exam?')) return;
+    if (!window.confirm("Delete this exam?")) return;
     setActionLoading(true);
     await deleteExam(examId);
-    setExams(exams.filter(e => e.id !== examId));
+    setExams(exams.filter((e) => e.id !== examId));
     setActionLoading(false);
   };
 
- return (
+  return (
     <div className="p-4 mt-4">
       <h1 className="text-3xl sm:text-4xl font-extrabold text-center mb-6 sm:mb-8 text-blue-600 dark:text-blue-400">
         Manage Exams
@@ -148,19 +153,19 @@ export default function SuperAdminExamsPage() {
                   <td className="px-4 py-3">{exam.subCategory}</td>
                   <td className="px-4 py-3 flex justify-end">
                     <div className="flex flex-col sm:flex-row gap-2">
-                    <button
-                      onClick={() => handleEdit(exam)}
-                      className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
-                    >
-                      <FiEdit/>
-                    </button>
-                    <button
-                      onClick={() => handleDelete(exam.id)}
-                      disabled={actionLoading}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
-                    >
-                      <FiDelete/>
-                    </button>
+                      <button
+                        onClick={() => handleEdit(exam)}
+                        className="bg-blue-500 hover:bg-blue-600 text-white px-3 py-1 rounded text-sm"
+                      >
+                        <FiEdit />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(exam.id)}
+                        disabled={actionLoading}
+                        className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded text-sm disabled:opacity-50"
+                      >
+                        <FiDelete />
+                      </button>
                     </div>
                   </td>
                 </tr>
@@ -171,23 +176,11 @@ export default function SuperAdminExamsPage() {
       )}
 
       {/* Pagination Controls */}
-      {!loading && totalPages > 1 && (
-        <div className="flex justify-center mt-6 gap-2 flex-wrap">
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <button
-              key={page}
-              onClick={() => setCurrentPage(page)}
-              className={`px-3 py-1 rounded-md text-sm font-medium ${
-                currentPage === page
-                  ? "bg-blue-600 text-white"
-                  : "bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600"
-              }`}
-            >
-              {page}
-            </button>
-          ))}
-        </div>
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 }

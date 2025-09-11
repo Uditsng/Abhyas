@@ -10,6 +10,7 @@ import {
 } from "@/lib/salesService";
 import { useAuth } from "@/components/AuthContext";
 import { format } from "date-fns";
+import Pagination from '@/components/Pagination'
 
 const BUNDLES_PER_PAGE = 5;
 const BUYERS_PER_PAGE = 5;

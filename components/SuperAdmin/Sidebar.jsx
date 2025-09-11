@@ -21,7 +21,9 @@ import {
   FiMessageSquare,
   FiBookOpen,
   FiPieChart,
-  FiUserPlus
+  FiUserPlus,
+  FiFileText,
+  FiPackage
 } from 'react-icons/fi';
 import { FaRupeeSign } from 'react-icons/fa';
 
@@ -32,7 +34,10 @@ const navItems = [
   { name: 'Revenue', path: '/superAdmin/revenue', icon: FaRupeeSign },
   { name: 'Communication', path: '/superAdmin/communication', icon: FiMessageSquare },
   { name: 'Exams', path: '/superAdmin/exams', icon: FiBookOpen },
-  { name: 'Expenses', path: '/superAdmin/expenses', icon: FiPieChart }
+  { name: 'Packages', path: '/superAdmin/packages', icon: FiPackage },
+  { name: 'Expenses', path: '/superAdmin/expenses', icon: FiPieChart },
+  { name: 'Invoices', path: '/superAdmin/invoices', icon: FiFileText } // New Item
+
 ];
 
 export default function Sidebar({ isCollapsed, setIsCollapsed }) {
