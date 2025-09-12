@@ -8,7 +8,7 @@ import "slick-carousel/slick/slick-theme.css";
 import StatCard from "@/components/StatCard";
 import SectionHeader from "@/components/SectionHeader";
 import { getAllBundles } from "@/lib/bundleService";
-import { getAllPackages } from "@/lib/packageService"; // Import package service
+import { getAllPackages } from "@/lib/packageService"; 
 import ResourceCards from "@/components/ResourceCards";
 import { useAuthRedirect } from "@/hooks/useAuthRedirect";
 import { useRouter } from "next/navigation";
@@ -21,7 +21,6 @@ import useUserDashboardStats from "@/hooks/useUserDashboardStats";
 import PerformanceChart from "@/components/PerformanceChart";
 import BundleProgressList from "@/components/BundleProgressList";
 import SmartSuggestions from "@/components/SmartSuggestions";
-import PackageCard from "@/components/PackageCard"; // Import PackageCard
 
 
 // Define slider settings
@@ -81,9 +80,16 @@ export default function DashboardPage() {
         } else if (user?.email) {
           setUsername(user.email.split("@")[0]);
         }
-        // Fetch Trending Courses from Firestore
-        const fetchedBundles = await getAllBundles();
+        
+        // Fetch Bundles and Packages using the service functions
+        const [fetchedBundles, fetchedPackages] = await Promise.all([
+          getAllBundles(),
+          getAllPackages()
+        ]);
+        
         setTrendingBundles(fetchedBundles);
+        setFeaturedPackages(fetchedPackages);
+        
         setLoading(false);
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
@@ -148,16 +154,6 @@ export default function DashboardPage() {
 
       {/* Exams Carousel */}
       <ExamBrowser />
-
-      {/* Featured Packages */}
-      <div className="mt-4">
-        <SectionHeader title="🏆 Featured Packages" />
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          {featuredPackages.slice(0, 3).map((pkg) => (
-            <PackageCard key={pkg.id} pkg={pkg} />
-          ))}
-        </div>
-      </div>
 
       <div className="mt-4">
         <SectionHeader title="🔥 Featured Bundles" />

@@ -15,9 +15,9 @@ import OptimizedImage from '@/components/OptimizedImage';
 import Footer from '@/components/Footer';
 import ExamBrowser from '@/components/ExamBrowser';
 import BundleCard from '@/components/BundleCard';
-import PackageCard from '@/components/PackageCard'; // Import PackageCard
-import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/lib/firebaseConfig';
+import PackageCard from '@/components/PackageCard'; 
+import { getAllBundles } from '@/lib/bundleService'; 
+import { getAllPackages } from '@/lib/packageService';
 import { FiAward, FiBookOpen, FiDollarSign, FiSmartphone, FiBarChart2 } from 'react-icons/fi';
 import TestimonialsSection from '@/components/(LandingPage)/TestimonialsSection';
 import BlogPreviewSection from '@/components/(LandingPage)/BlogPreviewSection';
@@ -63,23 +63,22 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    async function fetchBundles() {
-      const snap = await getDocs(collection(db, 'bundles'));
-      const bundles = snap.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
+    async function fetchData() {
+      // Fetch Bundles
+      const bundles = await getAllBundles();
+      const sortedBundles = bundles
         .sort((a, b) => b.price - a.price)
         .slice(0, 3);
-      setTopBundles(bundles);
+      setTopBundles(sortedBundles);
 
-      // Fetch Packages
-      const packageSnap = await getDocs(collection(db, 'packages'));
-      const packages = packageSnap.docs
-        .map(doc => ({ id: doc.id, ...doc.data() }))
+      // Use the service function to get enriched package data
+      const packages = await getAllPackages();
+      const sortedPackages = packages
         .sort((a, b) => b.price - a.price)
         .slice(0, 3);
-      setTopPackages(packages);
+      setTopPackages(sortedPackages);
     }
-    fetchBundles();
+    fetchData();
   }, []);
 
   useEffect(() => {

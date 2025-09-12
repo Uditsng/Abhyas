@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getPackageById } from "@/lib/packageService";
-import BundleCard from "@/components/BundleCard";
-import { FiBox, FiStar } from "react-icons/fi";
+import { FiBox, FiStar,FiChevronRight } from "react-icons/fi";
 
 export default function PackageDetailsPage() {
   const { packageId } = useParams();
@@ -75,17 +74,52 @@ export default function PackageDetailsPage() {
               Buy Now
             </button>
           </div>
-            <p className="text-xs text-yellow-500 mt-2 text-center w-full">* Checkout for packages is coming soon!</p>
         </div>
       </div>
 
-      {/* Bundles included in this package */}
+          {/* BUNDLE LIST */}
       <div>
-        <h2 className="text-2xl font-bold mb-6 border-b-2 border-blue-500 pb-2 inline-block">What's Included in this Package?</h2>
+        <h2 className="text-2xl font-bold mb-6 border-b-2 border-blue-500 pb-2 inline-block">
+          What's Included
+        </h2>
         {pkg.bundles && pkg.bundles.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="space-y-4">
             {pkg.bundles.map((bundle) => (
-              <BundleCard key={bundle.id} bundle={bundle} />
+              <div 
+                key={bundle.id}                 
+              >
+                <div className="bg-white/10 dark:bg-white/5 border border-white/20 hover:border-white/40 dark:hover:border-white/30 backdrop-blur-md shadow-lg rounded-xl p-4 transition-all duration-300 group-hover:shadow-blue-500/20">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                    
+                    {/* Left Side: Title & Subject */}
+                    <div className="flex-grow">
+                      <h3 className="font-semibold text-lg text-gray-900 dark:text-white hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                        {bundle.title}
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                        {bundle.subject}
+                      </p>
+                    </div>
+
+                    {/* Middle: Stats */}
+                    <div className="flex items-center gap-4 sm:gap-6 text-sm text-gray-800 dark:text-gray-200 w-full sm:w-auto">
+                      <div className="text-center flex-1 sm:flex-initial">
+                        <p className="font-bold text-lg">{bundle.testIds?.length || 0}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Tests</p>
+                      </div>
+                      <div className="text-center flex-1 sm:flex-initial">
+                        <p className="font-bold text-lg">{bundle.totalQuestionsInBundle || 0}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Questions</p>
+                      </div>
+                      <div className="text-center flex-1 sm:flex-initial">
+                        <p className="font-bold text-lg text-green-600 dark:text-green-400">₹{bundle.price}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">Price</p>
+                      </div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
             ))}
           </div>
         ) : (
