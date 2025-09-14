@@ -1,126 +1,105 @@
+'use client';
 
-"use client";
-
-import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
-import { getAllBundles } from "@/lib/bundleService";
-import { getDoc, doc } from "firebase/firestore";
+import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
+import BundlePurchase from '@/components/BundlePurchase';
+import PackageCard from '@/components/PackageCard';
+import SectionHeader from '@/components/SectionHeader';
+// import { getBundlesByExamId } from '@/lib/bundleService';
+// import { getPackagesByExamId } from '@/lib/packageService';
+import { getBundlesBySubExamCategory } from '@/lib/bundleService';
+import { getPackagesBySubExamCategory } from '@/lib/packageService';
+import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
-import BundlePurchase from "@/components/BundlePurchase";
 
-export default function ExamBundlesPage() {
-  const params = useParams();
-  const examId = params.examId;
+export default function ExamDetailsPage() {
+  const { examId } = useParams();
   const [exam, setExam] = useState(null);
   const [bundles, setBundles] = useState([]);
+  const [packages, setPackages] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Pagination
-  const [currentPage, setCurrentPage] = useState(1);
-  const bundlesPerPage = 10;
-
   useEffect(() => {
-    async function fetchExamAndBundles() {
+    const fetchExamData = async () => {
+      if (!examId) return;
       setLoading(true);
-      const examSnap = await getDoc(doc(db, "exams", examId));
-      if (!examSnap.exists()) {
-        setExam(null);
-        setBundles([]);
-        setLoading(false);
-        return;
-      }
-      const examData = { id: examSnap.id, ...examSnap.data() };
-      setExam(examData);
-      const allBundles = await getAllBundles();
-      const filtered = allBundles.filter(
-        (b) =>
-          b.exam === examData.category &&
-          b.subExamCategory === (examData.subCategory || examData.name)
-      );
-      setBundles(filtered);
-      setCurrentPage(1); // reset pagination when examId changes
-      setLoading(false);
-    }
+      try {
+        // Step 1: Fetch the exam document itself to get its category
+        const examSnap = await getDoc(doc(db, "exams", examId));
+        if (!examSnap.exists()) {
+          setExam(null);
+          setLoading(false);
+          return;
+        }
+        const examData = { id: examSnap.id, ...examSnap.data() };
+        setExam(examData);
 
-    if (examId) fetchExamAndBundles();
+  const subCategory = examData.subCategory || examData.name;
+        if (subCategory) {
+          const [packagesData, bundlesData] = await Promise.all([
+            getPackagesBySubExamCategory(subCategory),
+            getBundlesBySubExamCategory(subCategory),
+          ]);
+          setPackages(packagesData);
+          setBundles(bundlesData);
+        }
+      } catch (error) {
+        console.error("Failed to fetch exam data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchExamData();
   }, [examId]);
 
-  // Pagination slice
-  const indexOfLastBundle = currentPage * bundlesPerPage;
-  const indexOfFirstBundle = indexOfLastBundle - bundlesPerPage;
-  const currentBundles = bundles.slice(indexOfFirstBundle, indexOfLastBundle);
-  const totalPages = Math.ceil(bundles.length / bundlesPerPage);
-
-  const paginate = (pageNumber) => {
-    setCurrentPage(pageNumber);
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
 
   if (loading) {
     return (
-      <div className="min-h-[300px] flex items-center justify-center text-gray-600 dark:text-gray-300">
-        <svg className="animate-spin h-6 w-6 mr-3 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
-        </svg>
-        Loading bundles...
+      <div className="flex justify-center items-center h-64 pt-20">
+        <p className="text-gray-500 dark:text-gray-400">Loading content...</p>
       </div>
     );
   }
-
+  
   if (!exam) {
-    return (
-      <div className="p-8 text-red-600 dark:text-red-400 text-xl">
-        Exam not found.
-      </div>
-    );
+      return <div className="text-center py-10 pt-20">Exam not found.</div>
   }
 
   return (
-    <div className="py-28 mb-24 px-4">
-      <div className="max-w-7xl mx-auto py-4">
-        <h1 className="text-2xl md:text-3xl font-semibold mb-6 text-gray-800 dark:text-white">
-          {exam.subCategory || exam.name} Bundles
-        </h1>
+    <div className="container mx-auto px-4 py-8 pt-28">
+      <SectionHeader
+        title={exam.subCategory || exam.name}
+        subtitle={`Browse packages and bundles for this exam.`}
+      />
+      {/* Packages Section */}
+      {packages.length > 0 && (
+        <section className="mb-16">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">Available Packages</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {packages.map(pkg => (
+              <PackageCard key={pkg.id} pkg={pkg} />
+            ))}
+          </div>
+        </section>
+      )}
 
-        {bundles.length === 0 ? (
-          <div className="text-center py-10 text-gray-500 dark:text-gray-400">
-            No bundles found for this exam.
+      {/* Individual Bundles Section */}
+      <section>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-white mb-6">
+            {packages.length > 0 ? "Individual Bundles" : "Available Bundles"}
+        </h2>
+        {bundles.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {bundles.map((bundle) => (
+              <BundlePurchase key={bundle.id} bundle={bundle} />
+            ))}
           </div>
         ) : (
-          <>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-              {currentBundles.map((bundle) => (
-                <BundlePurchase key={bundle.id} bundle={bundle} />
-              ))}
-            </div>
-
-            {/* Pagination */}
-            {totalPages > 1 && (
-              <div className="mt-10 flex justify-center">
-                <nav className="inline-flex space-x-2">
-                  {[...Array(totalPages)].map((_, i) => {
-                    const page = i + 1;
-                    return (
-                      <button
-                        key={page}
-                        onClick={() => paginate(page)}
-                        className={`px-4 py-2 rounded-md text-sm font-medium border transition ${
-                          currentPage === page
-                            ? "bg-blue-600 text-white border-blue-600"
-                            : "bg-white dark:bg-gray-800 text-gray-800 dark:text-gray-200 border-gray-300 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700"
-                        }`}
-                      >
-                        {page}
-                      </button>
-                    );
-                  })}
-                </nav>
-              </div>
-            )}
-          </>
+          <div className="text-center py-10 bg-gray-100 dark:bg-gray-800 rounded-lg">
+            <p className="text-gray-500 dark:text-gray-400">No individual bundles found for this exam category.</p>
+          </div>
         )}
-      </div>
+      </section>
     </div>
   );
 }

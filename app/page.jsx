@@ -14,7 +14,7 @@ import { bannerCarouselSettings } from '@/app/config/carouselSettings';
 import OptimizedImage from '@/components/OptimizedImage';
 import Footer from '@/components/Footer';
 import ExamBrowser from '@/components/ExamBrowser';
-import BundleCard from '@/components/BundleCard';
+import BundlePurchase from '@/components/BundlePurchase';
 import PackageCard from '@/components/PackageCard'; 
 import { getAllBundles } from '@/lib/bundleService'; 
 import { getAllPackages } from '@/lib/packageService';
@@ -183,7 +183,7 @@ export default function HomePage() {
             <div className="col-span-full text-center text-gray-500 dark:text-gray-400">No bundles found.</div>
           ) : (
             topBundles.map(bundle => (
-              <BundleCard key={bundle.id} bundle={bundle} />
+              <BundlePurchase key={bundle.id} bundle={bundle} />
             ))
           )}
         </div>
