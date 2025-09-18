@@ -1,3 +1,5 @@
+//bundle/[bundleId]/page.jsx
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -36,10 +38,24 @@ export default function BundleDescriptionPage() {
 
   const handleAddToCart = () => {
     if (!bundle || !user) return;
-    addToCart(bundle, user.uid);
+
+    const itemToAdd = {
+      ...bundle,
+      itemType: 'bundle',
+    };
+    
+    // addToCart(bundle, user.uid);
+    addToCart(itemToAdd, user.uid);
     setShowToast(true);
     setTimeout(() => setShowToast(false), 3000);
   };
+
+  const handleBuyNow = () => {
+  if (!bundle || !user) return;
+  // addToCart(bundle, user.uid); 
+  handleAddToCart();
+  router.push("/cart");        
+};
 
   if (loading) {
     return (
@@ -107,7 +123,7 @@ export default function BundleDescriptionPage() {
             {bundle.testIds?.length || 0} Tests
           </span>
           {bundle.originalPrice && (
-            <span className="line-through text-gray-500 dark:text-gray-400 text-sm">
+            <span className="line-through bg-red-200 dark:bg-red-800 text-red-500 dark:text-red-300 text-sm px-3 py-1 rounded-full">
               ₹{bundle.originalPrice}
             </span>
           )}
@@ -177,16 +193,14 @@ export default function BundleDescriptionPage() {
             </div>
           )}
           <button
-            onClick={() => router.push(`/cart`)}
+            onClick={handleBuyNow}
             className="flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-medium border border-green-500 text-green-500 hover:bg-green-500/10 transition"
           >
             <FaShoppingBag />
             Buy Now
           </button>
         </div>
-        <p className="text-xs text-yellow-400 dark:text-yellow-200 mt-2 text-center w-full">
-          * First add to cart, then click Buy Now
-        </p>
+      
       </motion.div>
     </div>
   );

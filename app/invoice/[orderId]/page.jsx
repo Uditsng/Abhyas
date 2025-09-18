@@ -2,10 +2,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useParams } from 'next/navigation'; 
 import { getInvoice, getInvoiceTemplate } from '@/lib/invoiceService';
 import { Spinner, Center, Text, Button } from '@chakra-ui/react';
 
-export default function InvoicePage({ params }) {
+export default function InvoicePage() {
+  const params = useParams();
   const {orderId }= params;
 
   const [invoice, setInvoice] = useState(null);
@@ -14,6 +16,7 @@ export default function InvoicePage({ params }) {
 
   useEffect(() => {
     async function fetchData() {
+      if (!orderId) return;
       try {
         const [invoiceData, templateData] = await Promise.all([
           getInvoice(orderId),
@@ -48,7 +51,7 @@ export default function InvoicePage({ params }) {
 
   return (
     <div className="bg-gray-100 min-h-screen p-8 pt-24" style={{ fontFamily: template.font }}>
-      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8">
+      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8 printable-area">
         <div className="flex justify-between items-start mb-8">
           <div>
             <img src={template.logoUrl} alt="Company Logo" className="h-16 mb-4" />
@@ -63,7 +66,7 @@ export default function InvoicePage({ params }) {
             <h2 className="text-3xl font-bold uppercase" style={{ color: template.primaryColor }}>
               Invoice
             </h2>
-            <p className="text-gray-500">#{invoice.orderId}</p>
+            <p className="text-gray-500">{invoice.orderId}</p>
             <p>
               <strong>Date:</strong>{' '}
               {new Date(invoice.date.seconds * 1000).toLocaleDateString()}
@@ -88,7 +91,7 @@ export default function InvoicePage({ params }) {
           </thead>
           <tbody>
             <tr className="border-b">
-              <td className="p-2">{invoice.bundleInfo.title}</td>
+              <td className="p-2">{(invoice.bundleInfo || invoice.packageInfo)?.title }</td>
               <td className="p-2 text-right">₹{invoice.amount.toFixed(2)}</td>
             </tr>
           </tbody>
@@ -101,7 +104,7 @@ export default function InvoicePage({ params }) {
         <div className="mt-12 text-center text-gray-500 text-sm">
           <p>{template.footerNote}</p>
         </div>
-        <Center mt={8}>
+        <Center mt={8} className="no-print">
             <Button onClick={() => window.print()} colorScheme="blue">
                 Print Invoice
             </Button>

@@ -73,3 +73,33 @@ body {
   height: auto;
   width: 900px !important;
 }
+
+
+@media print {
+  /* Hide every element on the page by default */
+  body * {
+    visibility: hidden;
+  }
+
+  /* Make the printable area and everything inside it visible */
+  .printable-area, .printable-area * {
+    visibility: visible;
+  }
+
+  /* Position the printable area at the top of the page */
+  .printable-area {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    border: none;
+    box-shadow: none;
+  }
+
+  /* Ensure elements marked with 'no-print' are not visible */
+  .no-print {
+    display: none !important;
+  }
+}

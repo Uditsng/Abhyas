@@ -23,7 +23,8 @@ import {
   FiPieChart,
   FiUserPlus,
   FiFileText,
-  FiPackage
+  FiPackage,
+  FiCreditCard
 } from 'react-icons/fi';
 import { FaRupeeSign } from 'react-icons/fa';
 
@@ -32,11 +33,12 @@ const navItems = [
   { name: 'Users', path: '/superAdmin/users', icon: FiUser },
   { name: 'Admins', path: '/superAdmin/admins', icon: FiUserPlus },
   { name: 'Revenue', path: '/superAdmin/revenue', icon: FaRupeeSign },
-  { name: 'Communication', path: '/superAdmin/communication', icon: FiMessageSquare },
   { name: 'Exams', path: '/superAdmin/exams', icon: FiBookOpen },
   { name: 'Packages', path: '/superAdmin/packages', icon: FiPackage },
+  { name: 'Package Revenue', path: '/superAdmin/package-revenue', icon: FiCreditCard},
   { name: 'Expenses', path: '/superAdmin/expenses', icon: FiPieChart },
-  { name: 'Invoices', path: '/superAdmin/invoices', icon: FiFileText } // New Item
+  { name: 'Invoices', path: '/superAdmin/invoices', icon: FiFileText } ,
+  { name: 'Communication', path: '/superAdmin/communication', icon: FiMessageSquare },
 
 ];
 

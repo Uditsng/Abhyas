@@ -10,7 +10,7 @@ import {
 import { getAllExams } from '../../../lib/superAdminExamsService';
 import ImageCropper from "@/components/ImageCropper";
 import { FaPlus, FaInfoCircle, FaTimes, FaRupeeSign } from "react-icons/fa";
-import { FiEdit, FiTrash2, FiSearch, FiDelete, FiPackage,FiUser, FiFileText } from "react-icons/fi";
+import { FiEdit, FiSearch, FiDelete, FiPackage,FiUser, FiFileText } from "react-icons/fi";
 import {
     Box, Button, Input, Select, Table, Thead, Tbody, Tr, Th, Td, Spinner, Modal,
     ModalOverlay, ModalContent,ModalCloseButton , ModalHeader, ModalBody, ModalFooter, useDisclosure,
@@ -176,6 +176,8 @@ function CreateEditPackageModal({ isOpen, onClose, pkg, bundles, exams, onSucces
     const [actionLoading, setActionLoading] = useState(false);
     const toast = useToast();
 
+    const [discountPercentage, setDiscountPercentage] = useState(0);
+
     // Logic to automatically calculate original price
     useEffect(() => {
         const total = formState.bundleIds.reduce((sum, id) => {
@@ -184,6 +186,18 @@ function CreateEditPackageModal({ isOpen, onClose, pkg, bundles, exams, onSucces
         }, 0);
         setFormState(prev => ({ ...prev, originalPrice: total > 0 ? total : '' }));
     }, [formState.bundleIds, bundles]);
+
+    useEffect(() => {
+        const original = parseFloat(formState.originalPrice);
+        const selling = parseFloat(formState.price);
+
+        if (original > 0 && selling > 0 && selling < original) {
+            const percentage = ((original - selling) / original) * 100;
+            setDiscountPercentage(percentage.toFixed(0));
+        } else {
+            setDiscountPercentage(0);
+        }
+    }, [formState.originalPrice, formState.price]);
 
 
     const examCategoryMap = useMemo(() => {
@@ -262,6 +276,23 @@ function CreateEditPackageModal({ isOpen, onClose, pkg, bundles, exams, onSucces
                             <SimpleGrid columns={2} spacing={4}>
                                 <FormControl isRequired><FormLabel>Price (₹)</FormLabel><Input name="price" type="number" value={formState.price} onChange={handleFormChange} /></FormControl>
                                 <FormControl><FormLabel>Original Price (Auto-calculated)</FormLabel><Input name="originalPrice" type="number" value={formState.originalPrice} isReadOnly _readOnly={{bg: useColorModeValue("gray.100", "gray.700")}} placeholder="Auto-calculates..." /></FormControl>
+                            
+                                <FormControl>
+                                    <FormLabel>Discount (%)</FormLabel>
+                                    <Input 
+                                        name="discount" 
+                                        type="text" 
+                                        value={discountPercentage > 0 ? `${discountPercentage}% off` : '0%'} 
+                                        isReadOnly 
+                                        _readOnly={{
+                                            bg: useColorModeValue("green.100", "green.800"),
+                                            color: useColorModeValue("green.800", "green.200"),
+                                            fontWeight: "bold",
+                                            textAlign: "center"
+                                        }}
+                                    />
+                                </FormControl>
+                                
                             </SimpleGrid>
                             <SimpleGrid columns={2} spacing={4}>
                                 <FormControl isRequired><FormLabel>Exam Category</FormLabel><Select name="exam" placeholder="Select Exam" value={formState.exam} onChange={handleFormChange}>{examCategories.map(cat => <option key={cat} value={cat}>{cat}</option>)}</Select></FormControl>

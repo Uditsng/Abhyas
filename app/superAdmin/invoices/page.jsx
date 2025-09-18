@@ -182,7 +182,7 @@ function InvoicesList() {
                 <tr key={invoice.id} className="hover:bg-gray-50 dark:hover:bg-slate-800/40 transition-colors duration-150">
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-mono text-gray-700 dark:text-gray-300">{invoice.orderId}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">{invoice.userInfo.name}</td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm">{invoice.bundleInfo.title}</td>
+                    <td className="px-6 py-4 whitespace-nowrap text-sm">{(invoice.bundleInfo || invoice.packageInfo)?.title}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">₹{invoice.amount.toFixed(2)}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">{new Date(invoice.date.seconds * 1000).toLocaleDateString('en-GB')}</td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm">

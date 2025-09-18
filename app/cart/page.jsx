@@ -1,3 +1,4 @@
+//app/cart/page.jsx
 "use client";
 
 import { useCartStore } from "@/lib/cartStore";
@@ -57,60 +58,67 @@ export default function CartPage() {
     onClose();
   };
 
-  const handleCheckout = async () => {
-    if (cartItems.length === 0) return;
-    const bundle = cartItems[0];
-    const amount = Math.round(total * 100);
+const handleCheckout = async () => {
+  if (cartItems.length === 0) return;
 
-    try {
-      const res = await fetch("/api/razorpay/order", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ amount }),
-      });
-      const order = await res.json();
+  const item = cartItems[0]; 
+  const amount = Math.round(total * 100);
 
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-        amount: order.amount,
-        currency: "INR",
-        name: "ABHYAS",
-        description: bundle.title,
-        order_id: order.id,
-        handler: async function (response) {
-          await fetch("/api/razorpay/verify", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              razorpay_payment_id: response.razorpay_payment_id,
-              razorpay_order_id: response.razorpay_order_id,
-              razorpay_signature: response.razorpay_signature,
-              user,
-              bundle,
-              amount,
-            }),
-          });
+  if (!item || !item.id || !item.title || !item.price) {
+    console.error("Invalid item data in cart:", item);
+    return;
+  }
+  
+  try {
+    const res = await fetch("/api/razorpay/order", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ amount }),
+    });
+    const order = await res.json();
 
-          if(user){
-            clearCart(user.uid);
-          }
-          router.push("/dashboard");
-        },
-        prefill: {
-          name: user?.displayName || "Guest",
-          email: user?.email || "",
-          contact: user?.phone || "",
-        },
-        theme: { color: "#3085d6" },
-      };
+    const options = {
+      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      amount: order.amount,
+      currency: "INR",
+      name: "ABHYAS",
+      description: item.title,
+      order_id: order.id,
+      handler: async function (response) {
+        await fetch("/api/razorpay/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_signature: response.razorpay_signature,
+            user,
+            // *** THE CORRECTED LINE ***
+            // Send the entire object from the cart under a single 'item' key
+            item: item, 
+            amount,
+          }),
+        });
 
-      const rzp = new Razorpay(options);
-      rzp.open();
-    } catch (error) {
-      console.error("Payment error:", error);
-    }
-  };
+        if (user) {
+          clearCart(user.uid);
+        }
+        router.push("/my-purchases");
+      },
+      prefill: {
+        name: user?.displayName || "Guest",
+        email: user?.email || "",
+        contact: user?.phone || "",
+      },
+      theme: { color: "#3085d6" },
+    };
 
+    const rzp = new window.Razorpay(options);
+    rzp.open();
+  } catch (error) {
+    console.error("Payment error:", error);
+  }
+};
   // if (loading) {
   //   return (
   //     <div className="flex items-center justify-center min-h-[300px]">
