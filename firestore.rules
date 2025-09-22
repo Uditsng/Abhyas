@@ -1,6 +1,19 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+
+    // sessions: server-only writes, client read only for owner
+    match /sessions/{sessionId} {
+      allow read: if request.auth != null && request.auth.uid == resource.data.uid;
+      allow create, update, delete: if false; // admin-only (Admin SDK bypasses rules)
+    }
+
+    // audit logs - admin only
+    match /auditLogs/{logId} {
+      allow read: if false;
+      allow write: if false; // admin-only
+    }
+    
     // Check if user is an admin or superAdmin
     function isAdmin() {
       return request.auth != null &&

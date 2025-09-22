@@ -6,20 +6,20 @@ import { createContext, useContext, useEffect, useState } from 'react';
 import { onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut, signInWithEmailAndPassword } from 'firebase/auth';
 import { auth, db } from '@/lib/firebaseConfig';
 import { syncBookmarks } from '@/lib/bookmarkService';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc,onSnapshot } from 'firebase/firestore';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [sessionUnsub, setSessionUnsub] = useState(null);
 
   useEffect(() => {
     let unsubscribe;
 
     const initializeAuth = async () => {
       try {
-        // Set loading initially
         setLoading(true);
 
         // Check if we have a cached user in localStorage
@@ -34,7 +34,6 @@ export function AuthProvider({ children }) {
           }
         }
 
-        // Listen for auth state changes
         unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
           if (firebaseUser) {
             try {
@@ -58,6 +57,29 @@ export function AuthProvider({ children }) {
               localStorage.setItem('cachedUser', JSON.stringify(userWithRole));
               setUser(userWithRole);
 
+              // start session listener if we have local sessionId (for realtime revoke)
+              const localSessionId = localStorage.getItem('abhyas_session_id');
+              if (localSessionId) {
+                const sessionRef = doc(db, 'sessions', localSessionId);
+                const unsub = onSnapshot(sessionRef, (snap) => {
+                  if (!snap.exists()) {
+                    // session removed -> force logout
+                    firebaseSignOut(auth);
+                    localStorage.removeItem('abhyas_session_id');
+                  } else {
+                    const s = snap.data();
+                    if (s.status !== 'active') {
+                      firebaseSignOut(auth);
+                      localStorage.removeItem('abhyas_session_id');
+                    }
+                  }
+                });
+                // cleanup previous listener if any
+                if (sessionUnsub) sessionUnsub();
+                setSessionUnsub(() => unsub);
+              }
+
+
               // Sync bookmarks in the background
               setTimeout(() => {
                 syncBookmarks(firebaseUser.uid).catch(err =>
@@ -70,6 +92,11 @@ export function AuthProvider({ children }) {
             }
           } else {
             localStorage.removeItem('cachedUser');
+            // clear any session listener
+            if (sessionUnsub) {
+              sessionUnsub();
+              setSessionUnsub(null);
+            }
             setUser(null);
           }
           setLoading(false);
@@ -83,9 +110,8 @@ export function AuthProvider({ children }) {
     initializeAuth();
 
     return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
+      if (unsubscribe) unsubscribe();
+      if (sessionUnsub) sessionUnsub();  
     };
   }, []);
 
@@ -108,7 +134,23 @@ export function AuthProvider({ children }) {
       if (user) {
         await syncBookmarks(user.uid);
       }
+
+      // call server to revoke session + clear cookie
+      try {
+        await fetch('/api/sessions/revoke', { method: 'POST', credentials: 'include' });
+      } catch (e) {
+        console.warn('Session revoke failed:', e);
+      }
+
       await firebaseSignOut(auth);
+      // cleanup client-side session info
+      localStorage.removeItem('abhyas_session_id');
+      localStorage.removeItem('cachedUser');
+
+      if (sessionUnsub) {
+        sessionUnsub();
+        setSessionUnsub(null);
+      }
     } catch (error) {
       console.error('Error signing out:', error);
     }
