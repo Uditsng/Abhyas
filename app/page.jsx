@@ -25,6 +25,7 @@ import AppDownloadSection from '@/components/(LandingPage)/AppDownloadSection';
 import PartnerWithUsSection from '@/components/(LandingPage)/PartnerWithUsSection';
 import FAQsSection from '@/components/(LandingPage)/FAQsSection';
 import { motion } from 'framer-motion';
+import VacancyAlerts from '@/components/VacancyAlerts';
 
 // Animation variants
 const fadeInUp = {
@@ -143,7 +144,7 @@ export default function HomePage() {
       </div>
 
        
-            {/* Top Packages */}
+      {/* Top Packages */}
       <motion.section
         className={`mb-14 ${cardStyle}`}
         initial="hidden"
@@ -188,6 +189,9 @@ export default function HomePage() {
           )}
         </div>
       </motion.section>
+
+      {/*VacancyAlerts component*/}
+      <VacancyAlerts />
 
       {/* Why Choose Us */}
       <motion.section

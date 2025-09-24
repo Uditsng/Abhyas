@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
@@ -26,7 +26,7 @@ import {
   FiPackage,
   FiCreditCard
 } from 'react-icons/fi';
-import { FaRupeeSign } from 'react-icons/fa';
+import { FaRupeeSign, FaNewspaper } from 'react-icons/fa';
 
 const navItems = [
   { name: 'Dashboard', path: '/superAdmin', icon: FiHome },
@@ -39,7 +39,7 @@ const navItems = [
   { name: 'Expenses', path: '/superAdmin/expenses', icon: FiPieChart },
   { name: 'Invoices', path: '/superAdmin/invoices', icon: FiFileText } ,
   { name: 'Communication', path: '/superAdmin/communication', icon: FiMessageSquare },
-
+  { name: 'Vacancies', path: '/superAdmin/vacancies', icon: FaNewspaper },
 ];
 
 export default function Sidebar({ isCollapsed, setIsCollapsed }) {
@@ -71,6 +71,13 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
       bottom='0'
       zIndex={10}
       pb='96px'
+      overflowY='auto'
+      css={{
+        scrollbarWidth: 'none', // For Firefox
+        '&::-webkit-scrollbar': {
+          display: 'none', // For Chrome, Safari, and Edge
+        },
+      }}
     >
       <Flex
         px={8}
@@ -101,7 +108,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
                 bg:
                   pathname === item.path
                     ? 'blue.600'
-                    : useColorModeValue('gray.100', 'gray.700')
+                    : useColorModeValue('gray.100', 'gray.700'),
               }}
               alignItems='center'
               cursor='pointer'

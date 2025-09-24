@@ -21,7 +21,7 @@ import useUserDashboardStats from "@/hooks/useUserDashboardStats";
 import PerformanceChart from "@/components/PerformanceChart";
 import BundleProgressList from "@/components/BundleProgressList";
 import SmartSuggestions from "@/components/SmartSuggestions";
-
+import VacancyAlerts from '@/components/VacancyAlerts';
 
 // Define slider settings
 const sliderSettings = {
@@ -193,6 +193,9 @@ export default function DashboardPage() {
           borderColor="border-yellow-500"
         />
       </div>
+
+      {/*VacancyAlerts component*/}
+      <VacancyAlerts />
 
       {/* Performance & Suggestions */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">

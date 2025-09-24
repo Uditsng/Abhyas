@@ -1,8 +1,7 @@
 // app/api/sessions/create/route.js
+
 import { nanoid } from "nanoid";
 import { admin, firestore } from "@/lib/firebaseAdmin";
-import { cookies } from "next/headers"; 
-// import { createAuditLog } from "@/lib/auditLogService";
 
 export async function POST(req) {
   try {
@@ -26,7 +25,6 @@ export async function POST(req) {
       try {
         await firestore.collection("sessions").doc(userData.currentSessionId).update({ status: "revoked", revokedAt: admin.firestore.FieldValue.serverTimestamp() });
       } catch (e) {
-        // ignore if old session doc missing
         console.warn("Old session revoke error:", e.message || e);
       }
     }
@@ -41,10 +39,10 @@ export async function POST(req) {
 
     await firestore.collection("sessions").doc(sessionId).set(sessionDoc);
 
-    // atomically set currentSessionId on user (lastSeen too)
+    // atomically set currentSessionId and lastseen on user 
     await userRef.set({ currentSessionId: sessionId, lastSeenAt: admin.firestore.FieldValue.serverTimestamp() }, { merge: true });
 
-    // audit log (replace with your helper if exists)
+    // audit log 
     await firestore.collection("auditLogs").add({
       uid,
       eventType: "login",
