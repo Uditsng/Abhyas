@@ -46,11 +46,9 @@ export default function VacanciesPage() {
         applicationFeeReserved: "",
         ageLimit: "",
         totalPosts: "",
-        vacancyDetails: [{ postName: "", eligibility: "", totalPosts: "" }],
+        vacancyDetails: [{ postName: "", eligibility: "", totalPosts: "", links: "", }],
         howToApply: "",
-        detailsUrl: "",
-        applyUrl: "",
-        notificationUrl: "",
+        importantLinks: [{ name: "", url: "" }],
       });
     }
     setShowModal(true);
@@ -91,9 +89,28 @@ export default function VacanciesPage() {
       ...currentVacancy,
       vacancyDetails: [
         ...currentVacancy.vacancyDetails,
-        { postName: "", eligibility: "", totalPosts: "" },
+        { postName: "", eligibility: "", totalPosts: "", links: "" },
       ],
     });
+  };
+
+  const handleLinkChange = (index, field, value) => {
+    const newLinks = [...currentVacancy.importantLinks];
+    newLinks[index][field] = value;
+    setCurrentVacancy({ ...currentVacancy, importantLinks: newLinks });
+  };
+
+  const addLinkRow = () => {
+    setCurrentVacancy({
+      ...currentVacancy,
+      importantLinks: [...currentVacancy.importantLinks, { name: "", url: "" }],
+    });
+  };
+
+  const removeLinkRow = (index) => {
+    const newLinks = [...currentVacancy.importantLinks];
+    newLinks.splice(index, 1);
+    setCurrentVacancy({ ...currentVacancy, importantLinks: newLinks });
   };
 
   return (
@@ -179,7 +196,7 @@ export default function VacanciesPage() {
                   className="w-full p-2 border rounded dark:bg-gray-700"
                   required
                 />
-                {/* updated - Added || "" fallback */}
+                
                 <input
                   type="text"
                   placeholder="Organization (e.g., Staff Selection Commission)"
@@ -274,6 +291,7 @@ export default function VacanciesPage() {
                   }
                   className="w-full p-2 border rounded dark:bg-gray-700"
                 />
+                
 
                 {currentVacancy?.vacancyDetails.map((detail, index) => (
                   <div
@@ -307,6 +325,15 @@ export default function VacanciesPage() {
                       }
                       className="w-full p-1 border rounded dark:bg-gray-600"
                     />
+                    <input
+                      type="text"
+                      placeholder="Links"
+                      value={detail.links}
+                      onChange={(e) =>
+                        handleVacancyDetailChange(index, "links", e.target.value)
+                      }
+                      className="w-full p-1 border rounded dark:bg-gray-600"
+                    />
                   </div>
                 ))}
                 <button
@@ -327,35 +354,49 @@ export default function VacanciesPage() {
                   className="w-full p-2 border rounded dark:bg-gray-700 h-24"
                 />
 
+                <div className="p-6 overflow-y-auto">
+              <form id="vacancy-form" onSubmit={handleSave} className="space-y-4">
+                {/* ... (existing form fields) ... */}
                 <h3 className="font-semibold pt-2">Important Links</h3>
-                <input
-                  type="url"
-                  placeholder="Apply Online Link"
-                  value={currentVacancy?.applyUrl || ""}
-                  onChange={(e) =>
-                    setCurrentVacancy({ ...currentVacancy, applyUrl: e.target.value })
-                  }
-                  className="w-full p-2 border rounded dark:bg-gray-700"
-                />
-                <input
-                  type="url"
-                  placeholder="Download Notification Link"
-                  value={currentVacancy?.notificationUrl || ""}
-                  onChange={(e) =>
-                    setCurrentVacancy({ ...currentVacancy, notificationUrl: e.target.value })
-                  }
-                  className="w-full p-2 border rounded dark:bg-gray-700"
-                />
-                <input
-                  type="url"
-                  placeholder="Official Website Link"
-                  value={currentVacancy?.detailsUrl || ""}
-                  onChange={(e) =>
-                    setCurrentVacancy({ ...currentVacancy, detailsUrl: e.target.value })
-                  }
-                  className="w-full p-2 border rounded dark:bg-gray-700"
-                  required
-                />
+                {currentVacancy?.importantLinks.map((link, index) => (
+                  <div key={index} className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      placeholder="Link Name (e.g., Apply Now)"
+                      value={link.name}
+                      onChange={(e) =>
+                        handleLinkChange(index, "name", e.target.value)
+                      }
+                      className="w-full p-2 border rounded dark:bg-gray-700"
+                    />
+                    <input
+                      type="url"
+                      placeholder="URL"
+                      value={link.url}
+                      onChange={(e) =>
+                        handleLinkChange(index, "url", e.target.value)
+                      }
+                      className="w-full p-2 border rounded dark:bg-gray-700"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeLinkRow(index)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
+                ))}
+                <button
+                  type="button"
+                  onClick={addLinkRow}
+                  className="text-sm text-blue-500 hover:underline"
+                >
+                  + Add Link
+                </button>
+              </form>
+            </div>
+
               </form>
             </div>
             

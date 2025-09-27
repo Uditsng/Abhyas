@@ -4,6 +4,7 @@ import { db } from "@/lib/firebaseConfig";
 import { doc, setDoc, arrayUnion, getDoc, updateDoc } from "firebase/firestore";
 import crypto from "crypto";
 import { NextResponse } from "next/server";
+import { updateAdminMonthlyRevenue } from "@/lib/superAdminRevenueService";
 
 export async function POST(req) {
   try {
@@ -82,6 +83,7 @@ export async function POST(req) {
       const bundleSnap = await getDoc(bundleRef);
       const createdBy = bundleSnap.exists() ? bundleSnap.data().createdBy : null;
 
+    // This creates the order document      
       await setDoc(orderRef, {
         userId: user.uid,
         bundleId: item.id,
@@ -98,6 +100,12 @@ export async function POST(req) {
         commissionAmount,
         adminEarning,
       });
+
+      
+    // This call will now succeed
+    if (createdBy) {
+      await updateAdminMonthlyRevenue(createdBy, adminEarning);
+    }
 
       if (userSnap.exists()) {
         await updateDoc(userRef, { purchasedBundles: arrayUnion(item.id) });

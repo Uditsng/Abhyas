@@ -1,5 +1,5 @@
+//app/superAdmin/admins/page.jsx
 "use client";
-
 import React, { useEffect, useState } from "react";
 import {
   getAllAdmins,
@@ -23,6 +23,8 @@ import {
 } from "@chakra-ui/react";
 import { FiDelete, FiDownload, FiLock, FiUnlock } from "react-icons/fi";
 import Pagination from "../../../components/Pagination";
+import { db } from "@/lib/firebaseConfig";
+import { collection, getDocs } from "firebase/firestore";
 
 export default function SuperAdminAdminsPage() {
   const [admins, setAdmins] = useState([]);
@@ -30,6 +32,7 @@ export default function SuperAdminAdminsPage() {
   const [selectedAdmin, setSelectedAdmin] = useState(null);
   const [search, setSearch] = useState("");
   const [adminStats, setAdminStats] = useState(null);
+  const [monthlyRevenue, setMonthlyRevenue] = useState({});
   const [loading, setLoading] = useState(true);
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [currentPage, setCurrentPage] = useState(1);
@@ -47,6 +50,43 @@ export default function SuperAdminAdminsPage() {
     }
     fetchAdmins();
   }, []);
+
+    useEffect(() => {
+    const fetchMonthlyRevenue = async () => {
+      const revenueData = {};
+      for (const admin of admins) {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth() + 1;
+        const monthString = `${year}-${month.toString().padStart(2, "0")}`;
+
+        const revenueRef = collection(
+          db,
+          "adminMonthlyRevenue",
+          admin.id,
+          "revenue"
+        );
+        const querySnapshot = await getDocs(revenueRef);
+        let totalEarnings = 0;
+        let earningMonth = "";
+        querySnapshot.forEach((doc) => {
+          if (doc.id === monthString) {
+            totalEarnings = doc.data().totalEarnings;
+            earningMonth = doc.data().month;
+          }
+        });
+        revenueData[admin.id] = {
+          earnings: totalEarnings,
+          month: earningMonth,};
+      }
+      setMonthlyRevenue(revenueData);
+    };
+
+    if (admins.length > 0) {
+      fetchMonthlyRevenue();
+    }
+  }, [admins]);
+
 
   useEffect(() => {
     let sortedAdmins = [...admins].sort((a, b) => {
@@ -181,10 +221,13 @@ export default function SuperAdminAdminsPage() {
                     Email
                   </th>
                   <th className="px-4 py-2 border dark:border-gray-700">
+                    Monthly Revenue
+                  </th>
+                  <th className="px-4 py-2 border dark:border-gray-700">
                     Status
                   </th>
                   <th className="px-4 py-2 border dark:border-gray-700">
-                    Joined
+                    Earning Month
                   </th>
                   <th className="px-4 py-2 border dark:border-gray-700">
                     Actions
@@ -205,10 +248,13 @@ export default function SuperAdminAdminsPage() {
                       {admin.email}
                     </td>
                     <td className="px-4 py-2 border dark:border-gray-700">
+                      ₹{monthlyRevenue[admin.id]?.earnings?.toFixed(2) || '0.00'}
+                    </td>
+                    <td className="px-4 py-2 border dark:border-gray-700">
                       {admin.status || "active"}
                     </td>
                     <td className="px-4 py-2 border dark:border-gray-700">
-                      {admin.createdAt?.toDate?.().toLocaleDateString()}
+                      {monthlyRevenue[admin.id]?.month || 'N/A'}
                     </td>
                     <td
                       className="px-4 py-2 border dark:border-gray-700"

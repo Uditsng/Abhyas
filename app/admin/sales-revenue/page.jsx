@@ -9,7 +9,6 @@ import {
   getUsersByIds,
 } from "@/lib/salesService";
 import { useAuth } from "@/components/AuthContext";
-import { format } from "date-fns";
 import Pagination from '@/components/Pagination'
 
 const BUNDLES_PER_PAGE = 5;
@@ -168,9 +167,9 @@ export default function SalesRevenuePage() {
               <span className="border border-gray-200 rounded-lg px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-red-200">
                 Units Sold: {bundle.sold}
               </span>
-              <span className="border border-gray-200 rounded-lg px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-red-200">
+              {/* <span className="border border-gray-200 rounded-lg px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-red-200">
                 Total Paid by Users: ₹{bundle.totalRevenue.toFixed(2)}
-              </span>
+              </span> */}
               <span className="border border-gray-200 rounded-lg px-3 py-1 bg-blue-100 dark:bg-blue-900 text-blue-600 dark:text-red-200">
                 Your Earning (after all deductions): ₹
                 {bundle.adminEarning.toFixed(2)}
@@ -198,7 +197,7 @@ export default function SalesRevenuePage() {
                       <td className="px-4 py-2 border">
                         {buyer.date.toLocaleDateString()}
                       </td>
-                      <td className="px-4 py-2 border">₹{buyer.amount}</td>
+                      <td className="px-4 py-2 border">₹{bundle.price}</td>
                     </tr>
                   ))}
                 </tbody>
