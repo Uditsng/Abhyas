@@ -10,6 +10,8 @@ import {
 } from "@/lib/salesService";
 import { useAuth } from "@/components/AuthContext";
 import Pagination from '@/components/Pagination'
+import { getPayoutsForAdmin } from "@/lib/superAdminRevenueService";
+
 
 const BUNDLES_PER_PAGE = 5;
 const BUYERS_PER_PAGE = 5;
@@ -21,13 +23,22 @@ export default function SalesRevenuePage() {
   const [selectedBundleTitle, setSelectedBundleTitle] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const [buyerPages, setBuyerPages] = useState({});
+  const [payoutHistory, setPayoutHistory] = useState([]);
 
     useEffect(() => {
     if (!user?.uid) return;
 
     const fetchData = async () => {
       setLoading(true);
-      const bundles = await getBundlesByAdmin(user.uid);
+
+      const [bundles, payouts] = await Promise.all([
+          getBundlesByAdmin(user.uid),
+          getPayoutsForAdmin(user.uid)
+      ]);
+
+      setPayoutHistory(payouts);
+
+      // const bundles = await getBundlesByAdmin(user.uid);
       const allOrders = [];
       const userIds = new Set();
 
@@ -118,7 +129,39 @@ export default function SalesRevenuePage() {
         Sales Revenue
       </h1>
 
-      {/* Filter by Bundle Title */}
+      <div className="mb-10 p-5 border border-gray-300 rounded-lg shadow-sm bg-white dark:bg-gray-800">
+        <h2 className="text-xl font-semibold mb-4">My Payout History</h2>
+        {payoutHistory.length === 0 ? (
+          <p className="text-gray-500">No payouts received yet.</p>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="min-w-full border border-gray-200 text-sm">
+              <thead className="bg-gray-100 dark:bg-gray-700">
+                <tr>
+                  <th className="text-left px-4 py-2 border">Date</th>
+                  <th className="text-left px-4 py-2 border">Amount</th>
+                  <th className="text-left px-4 py-2 border">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {payoutHistory.map((payout) => (
+                  <tr key={payout.id} className="even:bg-gray-50 dark:even:bg-gray-700/50">
+                    <td className="px-4 py-2 border">{payout.date}</td>
+                    <td className="px-4 py-2 border">₹{payout.amount.toFixed(2)}</td>
+                    <td className="px-4 py-2 border">
+                      <span className="px-2 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                        Received
+                      </span>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <h2 className="text-2xl font-bold mb-4">Bundle Sales Details</h2>
       <div className="mb-6">
         <label className="block mb-2 font-semibold">
           Filter by Bundle Title

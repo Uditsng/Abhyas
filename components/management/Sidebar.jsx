@@ -1,41 +1,29 @@
-"use client";
+//components/management/Sidebar.jsx
+
+'use client';
 
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import {
-  FiHome,
-  FiUser,
-  FiChevronLeft,
-  FiChevronRight,
-  FiMessageSquare,
-  FiBookOpen,
-  FiPieChart,
-  FiUserPlus,
-  FiFileText,
-  FiPackage,
-  FiCreditCard
-} from 'react-icons/fi';
+import {  FiChevronRight, FiChevronLeft, FiMessageSquare, FiPackage, FiBookOpen, FiUserPlus, FiUser} from 'react-icons/fi';
 import { FaRupeeSign, FaNewspaper } from 'react-icons/fa';
 
+
 const navItems = [
-  { name: 'Dashboard', path: '/superAdmin', icon: FiHome },
-  { name: 'Admins', path: '/superAdmin/admins', icon: FiUserPlus },
-  { name: 'Communication', path: '/superAdmin/communication', icon: FiMessageSquare },
-  { name: 'Exams', path: '/superAdmin/exams', icon: FiBookOpen },
-  { name: 'Expenses', path: '/superAdmin/expenses', icon: FiPieChart },
-  { name: 'Invoices', path: '/superAdmin/invoices', icon: FiFileText } ,
-  { name: 'Packages', path: '/superAdmin/packages', icon: FiPackage },
-  { name: 'Package Revenue', path: '/superAdmin/package-revenue', icon: FiCreditCard},
-  { name: 'Revenue', path: '/superAdmin/revenue', icon: FaRupeeSign },
-  { name: 'Users', path: '/superAdmin/users', icon: FiUser },
-  // { name: 'Vacancies', path: '/superAdmin/vacancies', icon: FaNewspaper },
+  { name: 'Admins', path: '/management/admins', icon: FiUserPlus },  
+  { name: 'Communication', path: '/management/communication', icon: FiMessageSquare },
+  { name: 'Exams', path: '/management/exams', icon: FiBookOpen },
+  { name: 'Packages', path: '/management/packages', icon: FiPackage },
+  { name: 'Payouts', path: '/management/payouts', icon: FaRupeeSign },
+  { name: 'Users', path: '/management/users', icon: FiUser },
+  { name: 'Vacancies', path: '/management/vacancies', icon: FaNewspaper },
+  
 ];
 
-export default function Sidebar({ isCollapsed, setIsCollapsed }) {
+export default function ManagerSidebar({ isCollapsed, setIsCollapsed }) {
   const pathname = usePathname();
 
-    useEffect(() => {
+  useEffect(() => {
     const handleResize = () => {
       if (typeof window !== 'undefined') {
         const isMobile = window.innerWidth < 768;
@@ -47,7 +35,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }) {
     return () => window.removeEventListener('resize', handleResize);
   }, [setIsCollapsed]);
 
-return (
+  return (
     <aside
       className={`fixed top-[64px] left-0 h-[calc(100vh-64px)] z-10 transition-all duration-300 border-r
         dark:border-gray-700 ${isCollapsed ? 'w-[60px]' : 'w-[240px]'} 
@@ -55,7 +43,7 @@ return (
     >
       {/* Sidebar header with toggle */}
       <div className={`flex items-center px-4 pt-16 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
-        {!isCollapsed && <span className="text-lg font-bold text-gray-800 dark:text-white">SuperAdmin Panel</span>}
+        {!isCollapsed && <span className="text-lg font-bold text-gray-800 dark:text-white">Management Panel</span>}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"

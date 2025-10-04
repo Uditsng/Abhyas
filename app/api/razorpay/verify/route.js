@@ -1,10 +1,11 @@
 //api/razorpay/verify/route.js
 
 import { db } from "@/lib/firebaseConfig";
-import { doc, setDoc, arrayUnion, getDoc, updateDoc } from "firebase/firestore";
+import { doc, setDoc, arrayUnion, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
 import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { updateAdminMonthlyRevenue } from "@/lib/superAdminRevenueService";
+import { useCartStore } from "@/lib/cartStore";
 
 export async function POST(req) {
   try {
@@ -14,8 +15,14 @@ export async function POST(req) {
       razorpay_signature,
       user,
       item, // Using a generic 'item' to handle both bundles and packages
-      amount,
+      // amount,
     } = await req.json();
+
+    const { discount } = useCartStore.getState();
+    const finalAmount = total - discount; 
+    const amount = Math.round(finalAmount * 100);
+
+
 
     if (!item || !item.id || !item.title || !item.price || !item.itemType) {
       console.error("Invalid item data:", item);
@@ -54,6 +61,8 @@ export async function POST(req) {
     const orderRef = doc(db, "orders", razorpay_payment_id);
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
+
+
 
     if (item.itemType === 'package') {
       await setDoc(orderRef, {

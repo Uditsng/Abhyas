@@ -1,25 +1,24 @@
-//app/superAdmin/layout.jsx
+// //app/management/layout.jsx
 
 'use client';
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Box, Spinner, Center } from '@chakra-ui/react';
-import Sidebar from '../../components/SuperAdmin/Sidebar';
+import ManagerSidebar from '../../components/management/Sidebar';
 import { useAuth } from '../../components/AuthContext';
 import { useRouter } from 'next/navigation';
 
-export default function SuperDashboardLayout({ children }) {
+export default function ManagementLayout({ children }) {
   const { user, loading } = useAuth();
   const router = useRouter();
-  const [isCollapsed, setIsCollapsed] = useState(false); 
-
+  const [isCollapsed, setIsCollapsed] = useState(false);
 
   useEffect(() => {
     if (!loading) {
       if (!user) {
         router.replace('/auth/login');
-      } else if (user.role !== 'superAdmin') {
-          router.replace('/dashboard');
-        }
+      } else if (user.role !== 'management') {
+        router.replace('/dashboard');
+      }
     }
   }, [user, loading, router]);
 
@@ -30,22 +29,22 @@ export default function SuperDashboardLayout({ children }) {
       </Center>
     );
   }
-  if (user.role !== 'superAdmin') {
-    return null; 
+  
+  if (user.role !== 'management') {
+    return null; // Prevents flash of unauthorized content
   }
 
   return (
-    <Box position="relative" minH="100vh" pt="64px" >
-      <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed}/>
-      {/* Main content */}
-      <Box 
-        flex={1} 
+    <Box position="relative" minH="100vh" pt="64px">
+      <ManagerSidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
+      <Box
+        flex={1}
         p={6}
-        minH="100vh" 
+        minH="100vh"
         className={`transition-all duration-300 ${isCollapsed ? 'ml-[60px]' : 'ml-[240px]'}`}
       >
         {children}
       </Box>
     </Box>
   );
-} 
+}

@@ -5,12 +5,11 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore";
-import { db } from "@/lib/firebaseConfig";
+import { db, auth } from "@/lib/firebaseConfig";
 import { useCartStore } from "@/lib/cartStore";
 import FloatingCartIcon from "@/components/FloatingCartIcon";
 import { motion } from "framer-motion";
 import { FaCartPlus, FaShoppingBag } from "react-icons/fa";
-import { auth } from "@/lib/firebaseConfig";
 import { useAuthState } from "react-firebase-hooks/auth";
 
 export default function BundleDescriptionPage() {

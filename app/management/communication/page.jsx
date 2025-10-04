@@ -1,5 +1,5 @@
+//management/communication/page.jsx
 
-//superAdmin/communication/page.jsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -7,15 +7,6 @@ import { format } from "date-fns";
 import { FiTrash2 } from "react-icons/fi";
 import { Toaster, toast } from "react-hot-toast";
 import dynamic from "next/dynamic";
-import {
-  Modal,
-  ModalOverlay,
-  ModalContent,
-  ModalHeader,
-  ModalBody,
-  ModalCloseButton,
-  useDisclosure,
-} from "@chakra-ui/react";
 
 import {
   getAllNotifications,
@@ -42,8 +33,6 @@ export default function CommunicationPage() {
   const [loading, setLoading] = useState(true);
   const [selectedNotificationId, setSelectedNotificationId] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { isOpen, onOpen, onClose } = useDisclosure();
-  const [selectedMessage, setSelectedMessage] = useState("");
 
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
@@ -66,11 +55,6 @@ export default function CommunicationPage() {
   const handleDeleteClick = (id) => {
     setSelectedNotificationId(id);
     setIsModalOpen(true);
-  };
-
-  const handleMouseOver = (message) => {
-    setSelectedMessage(message);
-    onOpen();
   };
 
   const confirmDelete = async () => {
@@ -171,12 +155,8 @@ export default function CommunicationPage() {
                   <td className="px-4 py-2 text-xs">
                     {n.to === "all" ? n.role : n.to}
                   </td>
-                  <td className="px-4 py-2 text-xs max-w-xs cursor-pointer"
-                    onMouseEnter={() => handleMouseOver(n.message)}
-                    onMouseLeave={onClose}
-                  >
-                    <div className="overflow-x-auto whitespace-nowrap "
-                        style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                  <td className="px-4 py-2 text-xs max-w-xs">
+                    <div className="overflow-x-auto whitespace-nowrap">
                       {n.message}
                     </div>
                   </td>
@@ -294,19 +274,6 @@ export default function CommunicationPage() {
           </div>
         )}
       </div>
-
-      <Modal isOpen={isOpen} onClose={onClose} isCentered>
-        <ModalOverlay 
-          bg="blackAlpha.300"
-          backdropFilter="blur(10px)"
-        />
-        <ModalContent>
-          <ModalBody>
-            <p>{selectedMessage}</p>
-          </ModalBody>
-        </ModalContent>
-      </Modal>
-
     </div>
   );
 }

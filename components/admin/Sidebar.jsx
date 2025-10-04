@@ -1,4 +1,4 @@
-
+//components/admin/Sidebar.jsx
 
 'use client';
 
@@ -7,13 +7,15 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { FiHome, FiFileText, FiUsers, FiFilePlus, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { FaRupeeSign } from 'react-icons/fa';
+import { BiSolidOffer } from "react-icons/bi";
 
 const navItems = [
   { name: 'Dashboard', path: '/admin', icon: FiHome },
-  { name: 'Tests', path: '/admin/tests', icon: FiFileText },
+  { name: 'Coupons', path: '/admin/coupons', icon: BiSolidOffer },
   { name: 'Create-Bundle', path: '/admin/create-bundle', icon: FiFilePlus },
-  { name: 'Users', path: '/admin/users', icon: FiUsers },
   { name: 'Sales Revenue', path: '/admin/sales-revenue', icon: FaRupeeSign },
+  { name: 'Tests', path: '/admin/tests', icon: FiFileText },
+  { name: 'Users', path: '/admin/users', icon: FiUsers },
 ];
 
 export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
@@ -27,7 +29,7 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
         setIsCollapsed(isMobile);
       }
     };
-    handleResize(); // initial
+    handleResize(); 
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
   }, [setIsCollapsed]);
@@ -39,8 +41,8 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
         bg-white dark:bg-gray-900 border-gray-200 pb-24`}
     >
       {/* Sidebar header with toggle */}
-      <div className={`flex items-center px-4 pt-8 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
-        {!isCollapsed && <span className="text-lg font-semibold text-gray-800 dark:text-white">Admin Panel</span>}
+      <div className={`flex items-center px-4 pt-16 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>
+        {!isCollapsed && <span className="text-lg font-bold text-gray-800 dark:text-white">Admin Panel</span>}
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="p-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 transition"

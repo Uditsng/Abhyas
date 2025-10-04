@@ -107,6 +107,27 @@ service cloud.firestore {
       allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
     }
 
+    function isManagement() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'management';
+    }
+
+    // Rules for payouts
+    match /payouts/{payoutId} {
+      allow create: if isManagement();
+      allow read: if isManagement() || isSuperAdmin() || (isAdmin() && resource.data.adminId == request.auth.uid);
+      allow update, delete: if false; // Payouts are immutable
+    }
+
+     // Rules for the new coupons collection
+    match /coupons/{couponId} {
+      // Allow any authenticated user to read a coupon (to verify it)
+      allow read: if request.auth != null;
+      
+      // Only allow users with an 'admin' or 'superAdmin' custom claim to create, update, or delete
+      allow write: if isAdmin();
+    }
+
+
     // Default deny
     match /{document=**} {
       allow read, write: if false;

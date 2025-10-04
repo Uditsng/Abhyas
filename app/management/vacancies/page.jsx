@@ -115,18 +115,16 @@ export default function VacanciesPage() {
 
   return (
     <div className="p-6">
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900 dark:text-white">
+       <h1 className="text-3xl sm:text-4xl font-extrabold text-center mb-6 sm:mb-8 text-blue-600 dark:text-blue-400">
           Manage Vacancies
         </h1>
         <button
           onClick={() => handleOpenModal()}
-          className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+          className="flex items-center gap-2 px-4 py-2 mb-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
         >
           <FaPlusCircle className="h-5 w-5" />
           Create New
         </button>
-      </div>
 
       {isLoading ? (
         <p>Loading vacancies...</p>

@@ -1,4 +1,4 @@
-//app/superAdmin/users/page.jsx
+//app/management/users/page.jsx
 
 "use client";
 import React, { useEffect, useState } from "react";
@@ -262,7 +262,6 @@ export default function SuperAdminUsersPage() {
           onPageChange={setCurrentPage}
         />
 
-        {/* Modal Section */}
         <Modal isOpen={isOpen} onClose={onClose} size="2xl" isCentered>
           <ModalOverlay />
           <ModalContent className="bg-white dark:bg-gray-800 rounded-lg">
@@ -285,7 +284,7 @@ export default function SuperAdminUsersPage() {
                     </div>
                   </div>
 
-                  {/* Section 1: Account Information */}
+                  {/* Section 1*/}
                   <SectionTitle icon={<FiUser className="text-blue-500" />} title="Account Information" />
                   <div className="grid grid-cols-2 gap-4 mt-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                     <DetailItem label="Role" value={selectedUser.role} />
@@ -293,7 +292,7 @@ export default function SuperAdminUsersPage() {
                     <DetailItem label="Joined On" value={selectedUser.createdAt?.toDate ? selectedUser.createdAt.toDate().toLocaleString() : "N/A"} />
                   </div>
 
-                  {/* Section 2: User Activity */}
+                  {/* Section 2*/}
                   <SectionTitle icon={<FiActivity className="text-green-500" />} title="User Activity" />
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2 p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                     {userStats ? (

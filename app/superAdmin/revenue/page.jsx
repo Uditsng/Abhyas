@@ -9,10 +9,12 @@ import {
   getEarningsAndCommission,
   getMonthlyRevenue,
   getAllPayouts,
-  markPayoutAsPaid,
   getPlatformCommissionRate,
 } from "../../../lib/superAdminRevenueService";
 import { getAllExpenses } from "../../../lib/superAdminExpensesService";
+import Pagination from "../../../components/Pagination";
+
+const ITEMS_PER_PAGE = 5;
 
 export default function SuperAdminRevenuePage() {
   const [stats, setStats] = useState({
@@ -22,9 +24,13 @@ export default function SuperAdminRevenuePage() {
   const [monthly, setMonthly] = useState({});
   const [payouts, setPayouts] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [actionLoading, setActionLoading] = useState(false);
   const [expenses, setExpenses] = useState([]);
   const [platformCommission, setPlatformCommission] = useState(0);
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [filteredPayouts, setFilteredPayouts] = useState([]);
+  const [monthlyCurrentPage, setMonthlyCurrentPage] = useState(1)
+  const [payoutsCurrentPage, setPayoutsCurrentPage] = useState(1)
 
   useEffect(() => {
     async function fetchData() {
@@ -40,6 +46,7 @@ export default function SuperAdminRevenuePage() {
       setStats(earnings);
       setMonthly(monthlyRev);
       setPayouts(allPayouts);
+      setFilteredPayouts(allPayouts); 
       setExpenses(allExpenses);
       setPlatformCommission(commissionRate);
       setLoading(false);
@@ -47,16 +54,29 @@ export default function SuperAdminRevenuePage() {
     fetchData();
   }, []);
 
-  const handleMarkPaid = async (payoutId) => {
-    setActionLoading(true);
-    await markPayoutAsPaid(payoutId);
-    setPayouts(
-      payouts.map((p) =>
-        p.id === payoutId ? { ...p, status: "paid", paidAt: new Date() } : p
-      )
-    );
-    setActionLoading(false);
-  };
+    useEffect(() => {
+    let filtered = payouts;
+    if (startDate) {
+      filtered = filtered.filter(p => new Date(p.date) >= new Date(startDate));
+    }
+    if (endDate) {
+      filtered = filtered.filter(p => new Date(p.date) <= new Date(endDate));
+    }
+    setFilteredPayouts(filtered);
+  }, [startDate, endDate, payouts]);
+
+  const monthlyTotalPages = Math.ceil(Object.keys(monthly).length / ITEMS_PER_PAGE)
+  const payoutsTotalPages = Math.ceil(filteredPayouts.length / ITEMS_PER_PAGE);
+  
+  const monthlyItems = Object.entries(monthly).slice(
+    (monthlyCurrentPage - 1) * ITEMS_PER_PAGE,
+    monthlyCurrentPage * ITEMS_PER_PAGE
+  )
+
+  const payoutItems = filteredPayouts.slice(
+    (payoutsCurrentPage - 1) * ITEMS_PER_PAGE,
+      payoutsCurrentPage * ITEMS_PER_PAGE
+  )
 
   return (
     <div className="p-4 mt-2">
@@ -108,10 +128,10 @@ export default function SuperAdminRevenuePage() {
             <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg">
               <h2 className="text-lg font-bold text-blue-600 dark:text-blue-500 mb-4">
                 <span className="bg-yellow-100 dark:bg-yellow-900 border border-yellow-400 dark:border-yellow-700 text-yellow-700 dark:text-yellow-300 px-2 py-1 rounded">
-                  Platform Commission
+                  Platform Commission %
                 </span>
               </h2>
-              <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex flex-col sm:flex-col gap-2">
                 <input
                   type="number"
                   value={platformCommission}
@@ -134,9 +154,10 @@ export default function SuperAdminRevenuePage() {
           </div>
 
           <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg mb-8">
-            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-300 mb-6">
+            <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-300 mb-2">
               Monthly Revenue
             </h3>
+            <p className="text-xs text-yellow-500 dark:text-yellow-100">*Included the PACKAGES revenue</p>
             <div className="overflow-x-auto">
               <table className="min- divide-y divide-gray-300 w-full text-left border">
                 <thead className="bg-gray-50  dark:bg-gray-700">
@@ -170,17 +191,17 @@ export default function SuperAdminRevenuePage() {
                 <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200">
                   {Object.entries(monthly).map(([month, value]) => (
                     <tr key={month} className="border-t">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 dark:text-gray-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 dark:text-gray-300 border">
                         {month}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300 border">
                         {value.sales.toFixed(2)}
                       </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300 border">
                         {value.commission.toFixed(2)}
                       </td>
                       {/**18% GST is calc on price on bundle Price, taken from user. 20% Platform commission is calc on bundle price, taken from Admin */}
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300 border">
                         {value.gst.toFixed(2)}
                       </td>
                     </tr>
@@ -188,84 +209,81 @@ export default function SuperAdminRevenuePage() {
                 </tbody>
               </table>
             </div>
+            <Pagination
+              currentPage={monthlyCurrentPage}
+              totalPages={monthlyTotalPages}
+              onPageChange={setMonthlyCurrentPage}
+            />            
           </div>
 
+          {/* Payout History --- */}
           <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg overflow-x-auto">
             <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-300 mb-4">
-              Payout Requests
+              Monthly Payout History
             </h3>
+
+            <div className="flex space-x-4 mb-4 overflow-x-auto scroller-none">
+            <input
+              type="text"
+              placeholder="Start Date"
+              onFocus={(e) => (e.target.type = 'date')}
+              onBlur={(e) => (e.target.value ? null : (e.target.type = 'text'))}
+              value={startDate}
+              onChange={(e) => setStartDate(e.target.value)}
+              className="p-2 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-md"
+            />
+            <input
+              type="text"
+              placeholder="End Date"
+              onFocus={(e) => (e.target.type = 'date')}
+              onBlur={(e) => (e.target.value ? null : (e.target.type = 'text'))}
+              value={endDate}
+              onChange={(e) => setEndDate(e.target.value)}
+              className="p-2 bg-gray-100 dark:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-md"
+            />
+          </div>
+
             <div className="overflow-x-auto">
               <table className="w-full text-left border">
                 <thead>
-                  <tr className="bg-gray-50  dark:bg-gray-700">
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      Admin ID
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      Amount (₹)
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      Requested At
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      Paid At
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                      Actions
-                    </th>
+                  <tr className="bg-gray-50 dark:bg-gray-700">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Admin Name</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount (₹)</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Payment Date</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {payouts.length === 0 ? (
+                  {filteredPayouts.length === 0 ? (
                     <tr>
-                      <td colSpan="6" className="text-center p-4 text-gray-500">
-                        No payout requests found.
+                      <td colSpan="4" className="text-center p-4 text-gray-500">
+                  No payouts have been recorded for the selected date range.
                       </td>
                     </tr>
                   ) : (
-                    payouts.map((p) => (
+                    filteredPayouts.map((p) => (
                       <tr key={p.id} className="border-t">
-                        <td className="p-2 border">{p.adminId}</td>
-                        <td className="p-2 border">{p.amount}</td>
+                        <td className="p-2 border">{p.adminName}</td>
+                        <td className="p-2 border">{p.amount.toFixed(2)}</td>
                         <td className="p-2 border">
-                          <span
-                            className={`px-2 py-1 rounded text-white text-sm ${
-                              p.status === "paid"
-                                ? "bg-green-500"
-                                : "bg-yellow-500"
-                            }`}
-                          >
-                            {p.status === "paid" ? "Paid" : "Pending"}
+                          <span className="px-2 py-1 rounded text-white text-sm bg-green-500">
+                            Paid
                           </span>
                         </td>
-                        <td className="p-2 border">
-                          {p.createdAt?.toDate?.().toLocaleString() || ""}
-                        </td>
-                        <td className="p-2 border">
-                          {p.paidAt?.toDate?.().toLocaleString() || ""}
-                        </td>
-                        <td className="p-2 border">
-                          {p.status !== "paid" && (
-                            <button
-                              className="bg-green-600 text-white px-3 py-1 text-sm rounded"
-                              onClick={() => handleMarkPaid(p.id)}
-                              disabled={actionLoading}
-                            >
-                              {actionLoading ? "Loading..." : "Mark as Paid"}
-                            </button>
-                          )}
-                        </td>
+                        <td className="p-2 border">{p.date}</td>
                       </tr>
                     ))
                   )}
                 </tbody>
               </table>
             </div>
+            <Pagination
+              currentPage={payoutsCurrentPage}
+              totalPages={payoutsTotalPages}
+              onPageChange={setPayoutsCurrentPage}
+            />
           </div>
-         <div>< h6 className="text-yellow-100"> **18% GST is calculated on bundle Price, taken from user at time of purchase. 20% Platform commission is calculated on bundle price, taken from Admin*</h6></div>
+          <div><h6 className=" mt-2 text-yellow-500 dark:text-yellow-100"> **18% GST is calculated on bundle Price, taken from user at time of purchase. 20% Platform commission is calculated on bundle price, taken from Admin*</h6></div>
         </>
       )}
     </div>

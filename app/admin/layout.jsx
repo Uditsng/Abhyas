@@ -1,3 +1,5 @@
+//app/admin/layout.jsx
+
 'use client';
 
 import { useEffect, useState } from 'react';
@@ -28,11 +30,9 @@ export default function AdminLayout({ children }) {
       try {
         const userDoc = await getDoc(doc(db, "users", user.uid));
         const data = userDoc.exists() ? userDoc.data() : {};
-        // Check if user has admin or superAdmin role
-        if (data.role === "superAdmin") {
-          setIsAdmin(true);
-        } else if (data.role === "admin") {
-          if(pathname.startsWith('/dashboard') || pathname.startsWith('/my-purchases')){
+
+        if (data.role === "admin") {
+           if(pathname.startsWith('/dashboard') || pathname.startsWith('/my-purchases')){
             router.replace('/admin')
           }
 
@@ -82,7 +82,6 @@ export default function AdminLayout({ children }) {
 
     if (!authLoading) {
       if (!user) {
-        // Not logged in, redirect to login
         router.push('/auth/login');
       } else {
         checkAdminRole();
@@ -116,7 +115,7 @@ export default function AdminLayout({ children }) {
   }
 
   if (!isAdmin) {
-    return null; // Will redirect in useEffect
+    return null;
   }
 
   return (

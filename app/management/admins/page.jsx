@@ -1,4 +1,4 @@
-//app/superAdmin/admins/page.jsx
+//app/management/admins/page.jsx
 "use client";
 import React, { useEffect, useState } from "react";
 import {

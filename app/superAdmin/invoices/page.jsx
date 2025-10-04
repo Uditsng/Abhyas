@@ -48,8 +48,8 @@ export default function SuperAdminInvoicesPage() {
     return (
         <div className="p-4 sm:p-6 lg:p-8 bg-gray-50 dark:bg-gray-900 min-h-screen text-gray-800 dark:text-gray-200">
             <div className="max-w-7xl mx-auto">
-                 <h1 className="text-3xl font-bold mb-6 text-gray-900 dark:text-gray-100">
-                    Invoices Management
+                 <h1 className="text-3xl sm:text-4xl font-extrabold text-center mb-6 sm:mb-8 text-blue-600 dark:text-blue-400">
+                    Invoice Management
                 </h1>
                 <div className="border-b border-gray-200 dark:border-gray-700">
                     <nav className="-mb-px flex space-x-6" aria-label="Tabs">

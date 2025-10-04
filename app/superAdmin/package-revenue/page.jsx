@@ -66,7 +66,7 @@ export default function PackageRevenuePage() {
   return (
     <div className="p-4 md:p-6">
       <Toast message={error} show={!!error} />
-      <SectionHeader title="Detailed Package Revenue" />
+      <h1 className="text-3xl sm:text-4xl font-extrabold text-center mb-6 sm:mb-8 text-blue-600 dark:text-blue-400">Package Revenue</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         <FinancialStatCard title="Total Revenue (incl. GST)" value={`₹${totalRevenue.toFixed(2)}`} icon={<FiTrendingUp />} color="text-blue-500" />
