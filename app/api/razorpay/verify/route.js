@@ -5,7 +5,6 @@ import { doc, setDoc, arrayUnion, getDoc, updateDoc, serverTimestamp } from "fir
 import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { updateAdminMonthlyRevenue } from "@/lib/superAdminRevenueService";
-import { useCartStore } from "@/lib/cartStore";
 
 export async function POST(req) {
   try {
@@ -15,14 +14,10 @@ export async function POST(req) {
       razorpay_signature,
       user,
       item, // Using a generic 'item' to handle both bundles and packages
-      // amount,
+      amount,
+      discount,
+      coupon,
     } = await req.json();
-
-    const { discount } = useCartStore.getState();
-    const finalAmount = total - discount; 
-    const amount = Math.round(finalAmount * 100);
-
-
 
     if (!item || !item.id || !item.title || !item.price || !item.itemType) {
       console.error("Invalid item data:", item);
@@ -46,12 +41,8 @@ export async function POST(req) {
     }
 
     // 2. Get commission rate from platformSettings
-    const commissionSnap = await getDoc(
-      doc(db, "platformSettings", "commission")
-    );
-    const commissionRate = commissionSnap.exists()
-      ? commissionSnap.data().rate
-      : 20;
+    const commissionSnap = await getDoc(doc(db, "platformSettings", "commission"));
+    const commissionRate = commissionSnap.exists()? commissionSnap.data().rate : 20;
 
     const actualAmount = amount / 100;
     const basePrice = actualAmount / 1.18;
@@ -61,7 +52,6 @@ export async function POST(req) {
     const orderRef = doc(db, "orders", razorpay_payment_id);
     const userRef = doc(db, "users", user.uid);
     const userSnap = await getDoc(userRef);
-
 
 
     if (item.itemType === 'package') {
@@ -108,6 +98,8 @@ export async function POST(req) {
         commissionRate,
         commissionAmount,
         adminEarning,
+        disccount: discount || 0,
+        couponCode: coupon?.code || null,
       });
 
       

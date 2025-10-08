@@ -22,7 +22,7 @@ import PerformanceChart from "@/components/PerformanceChart";
 import BundleProgressList from "@/components/BundleProgressList";
 import SmartSuggestions from "@/components/SmartSuggestions";
 import VacancyAlerts from '@/components/VacancyAlerts';
-
+import  FloatingCouponCard from '@/components/FloatingCouponCard'
 // Define slider settings
 const sliderSettings = {
   dots: true,
@@ -143,6 +143,7 @@ export default function DashboardPage() {
 
   return (
     <div className="container mx-auto p-8 pt-24 bg-gray-100 dark:bg-gray-900 min-h-screen pb-12 transition-colors duration-200">
+      
       {/* Welcome banner */}
       <section className="bg-indigo-600 text-white rounded-xl p-8 mb-10 text-center">
         <h2 className="text-4xl font-bold mb-2">
@@ -174,6 +175,9 @@ export default function DashboardPage() {
 
       {/* Resource component  */}
       <ResourceCards />
+
+       {/** coupon card */}
+       <FloatingCouponCard />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8 pt-8">
         <StatCard title="Tests Taken" value={stats.testsTaken} />

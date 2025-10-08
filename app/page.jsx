@@ -26,7 +26,7 @@ import PartnerWithUsSection from '@/components/(LandingPage)/PartnerWithUsSectio
 import FAQsSection from '@/components/(LandingPage)/FAQsSection';
 import { motion } from 'framer-motion';
 import VacancyAlerts from '@/components/VacancyAlerts';
-
+import FloatingCouponCard from '@/components/FloatingCouponCard'
 // Animation variants
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
@@ -120,6 +120,10 @@ export default function HomePage() {
 
   return (
     <div className="container mx-auto px-4 pt-20 md:px-8 lg:px-12 xl:px-24 w-full">
+       
+       {/** coupon card */}
+       <FloatingCouponCard />
+      
       {/* Banner Carousel */}
       <div className="w-full">
         <Slider {...bannerCarouselSettings}>

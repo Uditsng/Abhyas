@@ -8,7 +8,7 @@ import { Spinner, Center, Text, Button } from '@chakra-ui/react';
 
 export default function InvoicePage() {
   const params = useParams();
-  const {orderId }= params;
+  const { orderId } = params;
 
   const [invoice, setInvoice] = useState(null);
   const [template, setTemplate] = useState(null);
@@ -49,9 +49,16 @@ export default function InvoicePage() {
     );
   }
 
+  const discount = invoice.disccount || 0; 
+  const taxAmount = invoice.taxAmount || 0;
+  const totalAmount = invoice.amount || 0;
+  // This calculates the original price before tax and discount
+  const originalSubtotal = totalAmount - taxAmount + discount; 
+  
   return (
     <div className="bg-gray-100 min-h-screen p-8 pt-24" style={{ fontFamily: template.font }}>
-      <div className="max-w-4xl mx-auto bg-white shadow-lg rounded-lg p-8 printable-area">
+      <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8 printable-area">
+
         <div className="flex justify-between items-start mb-8">
           <div>
             <img src={template.logoUrl} alt="Company Logo" className="h-16 mb-4" />
@@ -73,7 +80,6 @@ export default function InvoicePage() {
             </p>
           </div>
         </div>
-
         <div className="mb-8">
           <h3 className="font-bold border-b-2 pb-2 mb-2" style={{ borderColor: template.primaryColor }}>
             Bill To:
@@ -85,22 +91,44 @@ export default function InvoicePage() {
         <table className="w-full mb-8">
           <thead>
             <tr style={{ backgroundColor: template.secondaryColor, color: template.primaryColor }}>
-              <th className="p-2 text-left">Description</th>
-              <th className="p-2 text-right">Amount</th>
+              <th className="p-3 text-left font-semibold">Description</th>
+              <th className="p-3 text-right font-semibold">Amount</th>
             </tr>
           </thead>
           <tbody>
             <tr className="border-b">
-              <td className="p-2">{(invoice.bundleInfo || invoice.packageInfo)?.title }</td>
-              <td className="p-2 text-right">₹{invoice.amount.toFixed(2)}</td>
+              <td className="p-3">{(invoice.bundleInfo || invoice.packageInfo)?.title }</td>
+              <td className="p-3 text-right">₹{originalSubtotal.toFixed(2)}</td>
             </tr>
           </tbody>
         </table>
 
-        <div className="text-right">
-          <p className="text-xl font-bold">Total: ₹{invoice.amount.toFixed(2)}</p>
+        <div className="flex justify-end mt-8">
+            <div className="w-full sm:w-1/2 md:w-2/5 space-y-2">
+                <div className="flex justify-between">
+                    <p>Subtotal (Original Price):</p>
+                    <p>₹{originalSubtotal.toFixed(2)}</p>
+                </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-red-500">
+                      <p>Discount ({invoice.couponCode}):</p>
+                      <p>- ₹{discount.toFixed(2)}</p>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                    <p>Tax (GST):</p>
+                    <p>+ ₹{taxAmount.toFixed(2)}</p>
+                </div>
+                <div 
+                  className="flex justify-between font-bold text-xl mt-2 border-t-2 pt-2" 
+                  style={{borderColor: template.primaryColor, color: template.primaryColor}}
+                >
+                    <p>Total Amount Paid:</p>
+                    <p>₹{totalAmount.toFixed(2)}</p>
+                </div>
+            </div>
         </div>
-
+        
         <div className="mt-12 text-center text-gray-500 text-sm">
           <p>{template.footerNote}</p>
         </div>

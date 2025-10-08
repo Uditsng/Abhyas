@@ -144,6 +144,8 @@ const handleApplyCoupon = async () => {
               // Send the entire object from the cart under a single 'item' key
               item: item,
               amount,
+              discount: discount,
+              coupon: coupon,
             }),
           });
 

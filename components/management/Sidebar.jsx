@@ -7,11 +7,12 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {  FiChevronRight, FiChevronLeft, FiMessageSquare, FiPackage, FiBookOpen, FiUserPlus, FiUser} from 'react-icons/fi';
 import { FaRupeeSign, FaNewspaper } from 'react-icons/fa';
-
+import { BiSolidOffer } from "react-icons/bi";
 
 const navItems = [
   { name: 'Admins', path: '/management/admins', icon: FiUserPlus },  
   { name: 'Communication', path: '/management/communication', icon: FiMessageSquare },
+    { name: 'Coupons', path: '/management/coupons', icon: BiSolidOffer },
   { name: 'Exams', path: '/management/exams', icon: FiBookOpen },
   { name: 'Packages', path: '/management/packages', icon: FiPackage },
   { name: 'Payouts', path: '/management/payouts', icon: FaRupeeSign },
