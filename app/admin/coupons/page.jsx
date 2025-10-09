@@ -1,37 +1,71 @@
 // app/admin/coupons/page.jsx
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
+import {
+  Box,
+  Button,
+  Input,
+  Select,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalBody,
+  ModalFooter,
+  useDisclosure,
+  FormControl,
+  FormLabel,
+  useToast,
+  Checkbox,
+  IconButton,
+  Flex,
+} from "@chakra-ui/react";
 import { useAuth } from "@/components/AuthContext";
-import { createCoupon, getCoupons, updateCouponStatus } from '@/lib/couponService';
-import { getAllBundles } from '@/lib/bundleService'; 
-
+import {
+  createCoupon,
+  getCoupons,
+  updateCouponStatus,
+  deleteCoupon,
+} from "@/lib/couponService";
+import { getAllBundles } from "@/lib/bundleService";
+import { FiPlus, FiTrash2 } from "react-icons/fi";
 
 const CouponManagementPage = () => {
-  const {user} = useAuth();
-  const [coupons, setCoupons] = useState([]);
-  const [bundles, setBundles] = useState([]); 
-  const [selectedBundles, setSelectedBundles] = useState([]); 
-  
-  const [newCoupon, setNewCoupon] = useState({
-    code: '',
-    type: 'percentage',
-    value: '', 
-    expiryDate: '',
-  });
+  const { user } = useAuth();
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const toast = useToast();
 
-  // Fetch both coupons and the admin's bundles
+  const [coupons, setCoupons] = useState([]);
+  const [bundles, setBundles] = useState([]);
+  const [selectedBundles, setSelectedBundles] = useState([]);
+  const [newCoupon, setNewCoupon] = useState({
+    code: "",
+    type: "percentage",
+    value: "",
+    expiryDate: "",
+  });
+  const [loading, setLoading] = useState(true);
+
   const fetchData = async () => {
     if (!user) return;
     try {
+      setLoading(true);
       const [couponsData, bundlesData] = await Promise.all([
         getCoupons(user.uid),
-        getAllBundles(user.uid) 
+        getAllBundles(user.uid),
       ]);
       setCoupons(couponsData);
       setBundles(bundlesData);
     } catch (error) {
-            alert('Failed to fetch coupons.');
+      toast({
+        title: "Failed to fetch data.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -43,21 +77,32 @@ const CouponManagementPage = () => {
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewCoupon(prev => ({ ...prev, [name]: value }));
+    setNewCoupon((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleBundleSelection = (bundleId) => {
-    setSelectedBundles(prev => 
-      prev.includes(bundleId) 
-        ? prev.filter(id => id !== bundleId) 
+    setSelectedBundles((prev) =>
+      prev.includes(bundleId)
+        ? prev.filter((id) => id !== bundleId)
         : [...prev, bundleId]
     );
   };
 
   const handleCreateCoupon = async (e) => {
     e.preventDefault();
-    if (!newCoupon.code || !newCoupon.value || !newCoupon.expiryDate || selectedBundles.length === 0) {
-            alert('Please fill all required fields.');
+    if (
+      !newCoupon.code ||
+      !newCoupon.value ||
+      !newCoupon.expiryDate ||
+      selectedBundles.length === 0
+    ) {
+      toast({
+        title:
+          "Please fill all required fields and select at least one bundle.",
+        status: "warning",
+        duration: 3000,
+        isClosable: true,
+      });
       return;
     }
     try {
@@ -65,96 +110,91 @@ const CouponManagementPage = () => {
         ...newCoupon,
         value: Number(newCoupon.value),
         expiryDate: new Date(newCoupon.expiryDate),
-        bundleIds: selectedBundles, 
+        bundleIds: selectedBundles,
         createdBy: user.uid,
         createdAt: new Date(),
       });
-            alert('Coupon created successfully!');
-      setNewCoupon({ code: '', type: 'percentage', value: '', expiryDate: '' });
+      toast({
+        title: "Coupon created successfully!",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      setNewCoupon({ code: "", type: "percentage", value: "", expiryDate: "" });
       setSelectedBundles([]);
-      fetchData(); 
+      fetchData();
+      onClose();
     } catch (error) {
-            alert('Failed to create coupon.');
+      toast({
+        title: "Failed to create coupon.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
   const handleToggleStatus = async (couponId, currentStatus) => {
     try {
       await updateCouponStatus(couponId, !currentStatus);
-            alert('Coupon status updated successfully!');
+      toast({
+        title: "Coupon status updated successfully!",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
       fetchData();
     } catch (error) {
-            alert('Failed to update coupon status.');
+      toast({
+        title: "Failed to update coupon status.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
   };
 
-    const formatDate = (date) => {
-    if (!date) return 'Invalid Date';
-    // Firestore Timestamps have a toDate() method, JS Dates do not.
-    if (date.toDate) {
-      return date.toDate().toLocaleDateString();
+  const handleDeleteCoupon = async (couponId) => {
+    try {
+      await deleteCoupon(couponId);
+      toast({
+        title: "Coupon deleted successfully!",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      fetchData();
+    } catch (error) {
+      toast({
+        title: "Failed to delete coupon.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
     }
-    // Handle JS Date object or a date string
-    return new Date(date).toLocaleDateString();
-  }
+  };
+
+  const formatDate = (date) => {
+    if (!date) return "Invalid Date";
+    return date.toDate
+      ? date.toDate().toLocaleDateString()
+      : new Date(date).toLocaleDateString();
+  };
 
   return (
-    <div className="container mx-auto p-4 md:p-8 text-gray-800 dark:text-white">
-      <h1 className="text-3xl font-bold mb-6">Coupon Management</h1>
-
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md mb-8">
-        <h2 className="text-2xl font-semibold mb-4">Create New Coupon</h2>
-        <form onSubmit={handleCreateCoupon} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-           
-            <div>
-              <label className="block text-sm font-medium mb-1">Coupon Code</label>
-              <input type="text" name="code" value={newCoupon.code} onChange={handleInputChange} placeholder="e.g., DIWALI25" className="w-full input bg-gray-100 dark:bg-gray-700 p-2 rounded border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500" />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Coupon Type</label>
-              <select name="type" value={newCoupon.type} onChange={handleInputChange} className="w-full input bg-gray-100 dark:bg-gray-700 p-2 rounded border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500">
-                <option value="percentage">Percentage (%)</option>
-                <option value="fixed">Fixed Amount (₹)</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Discount Value</label>
-              <input type="number" name="value" value={newCoupon.value} onChange={handleInputChange} placeholder="e.g., 25 or 250" className="w-full input bg-gray-100 dark:bg-gray-700 p-2 rounded border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500" />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-1">Expiry Date</label>
-              <input type="date" name="expiryDate" value={newCoupon.expiryDate} onChange={handleInputChange} className="w-full input bg-gray-100 dark:bg-gray-700 p-2 rounded border border-gray-300 dark:border-gray-600 focus:ring-2 focus:ring-blue-500" />
-            </div>
-          </div>
-          
-          <div>
-            <label className="block text-sm font-medium mb-2">Applicable Bundles (Select at least one)</label>
-            <div className="w-full p-3 border border-gray-300 dark:border-gray-600 rounded-lg max-h-48 overflow-y-auto space-y-2">
-              {bundles.length > 0 ? bundles.map(bundle => (
-                <label key={bundle.id} className="flex items-center space-x-3 cursor-pointer">
-                  <input 
-                    type="checkbox"
-                    checked={selectedBundles.includes(bundle.id)}
-                    onChange={() => handleBundleSelection(bundle.id)}
-                    className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-                  />
-                  <span>{bundle.title}</span>
-                </label>
-              )) : (
-                <p className="text-gray-500">You have not created any bundles yet.</p>
-              )}
-            </div>
-          </div>
-
-          <button type="submit" className="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition-colors">
-            Create Coupon
-          </button>
-        </form>
-      </div>
+    <Box p={8}>
+      <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-center mb-6 sm:mb-8 text-blue-600 dark:text-blue-400">
+        Coupon Management
+      </h1>
+      <div className='flex items-center justify-center'>
+        <button
+          onClick={onOpen}
+          className="flex items-center justify-center gap-2 px-4 py-2 font-semibold text-white bg-blue-600 rounded-md shadow-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors mb-2"
+        >
+          <FiPlus />
+          Create Coupon
+        </button>
+        </div>
 
       <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
         <h2 className="text-2xl font-semibold mb-4">Existing Coupons</h2>
@@ -171,22 +211,52 @@ const CouponManagementPage = () => {
               </tr>
             </thead>
             <tbody>
-              {coupons.map(coupon => (
-                <tr key={coupon.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+              {coupons.map((coupon) => (
+                <tr
+                  key={coupon.id}
+                  className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                >
                   <td className="p-3 font-mono font-bold">{coupon.code}</td>
                   <td className="p-3 capitalize">{coupon.type}</td>
-                  <td className="p-3">{coupon.type === 'percentage' ? `${coupon.value}%` : `₹${coupon.value}`}</td>
+                  <td className="p-3">
+                    {coupon.type === "percentage"
+                      ? `${coupon.value}%`
+                      : `₹${coupon.value}`}
+                  </td>
                   <td className="p-3">{formatDate(coupon.expiryDate)}</td>
                   <td className="p-3">
-                    <span className={`px-2 py-1 text-xs font-semibold rounded-full ${coupon.isActive ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'}`}>
-                      {coupon.isActive ? 'Active' : 'Inactive'}
+                    <span
+                      className={`px-2 py-1 text-xs font-semibold rounded-full ${
+                        coupon.isActive
+                          ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                          : "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200"
+                      }`}
+                    >
+                      {coupon.isActive ? "Active" : "Inactive"}
                     </span>
                   </td>
                   <td className="p-3">
-                    <button onClick={() => handleToggleStatus(coupon.id, coupon.isActive)}
-                      className={`py-1 px-3 rounded text-white text-sm ${coupon.isActive ? 'bg-red-500 hover:bg-red-600' : 'bg-green-500 hover:bg-green-600'}`}>
-                      {coupon.isActive ? 'Deactivate' : 'Activate'}
+                    <button
+                      onClick={() =>
+                        handleToggleStatus(coupon.id, coupon.isActive)
+                      }
+                      className={`py-1 px-3 rounded text-white text-sm ${
+                        coupon.isActive
+                          ? "bg-red-500 hover:bg-red-600"
+                          : "bg-green-500 hover:bg-green-600"
+                      }`}
+                    >
+                      {coupon.isActive ? "Deactivate" : "Activate"}
                     </button>
+                    <IconButton
+                      aria-label="Delete coupon"
+                      icon={<FiTrash2 />}
+                      size="sm"
+                      colorScheme="red"
+                      variant="ghost"
+                      onClick={() => handleDeleteCoupon(coupon.id)}
+                      ml={2}
+                    />
                   </td>
                 </tr>
               ))}
@@ -194,7 +264,91 @@ const CouponManagementPage = () => {
           </table>
         </div>
       </div>
-    </div>
+
+      <Modal isOpen={isOpen} onClose={onClose}>
+        <ModalOverlay />
+        <ModalContent>
+          <ModalHeader>Create New Coupon</ModalHeader>
+          <ModalBody>
+            <form onSubmit={handleCreateCoupon}>
+              <FormControl isRequired mb={4}>
+                <FormLabel>Coupon Code</FormLabel>
+                <Input
+                  name="code"
+                  value={newCoupon.code}
+                  onChange={handleInputChange}
+                  placeholder="e.g., DIWALI25"
+                />
+              </FormControl>
+
+              <FormControl isRequired mb={4}>
+                <FormLabel>Coupon Type</FormLabel>
+                <Select
+                  name="type"
+                  value={newCoupon.type}
+                  onChange={handleInputChange}
+                >
+                  <option value="percentage">Percentage (%)</option>
+                  <option value="fixed">Fixed Amount (₹)</option>
+                </Select>
+              </FormControl>
+
+              <FormControl isRequired mb={4}>
+                <FormLabel>Discount Value</FormLabel>
+                <Input
+                  name="value"
+                  type="number"
+                  value={newCoupon.value}
+                  onChange={handleInputChange}
+                  placeholder="e.g., 25 or 250"
+                />
+              </FormControl>
+
+              <FormControl isRequired mb={4}>
+                <FormLabel>Expiry Date</FormLabel>
+                <Input
+                  name="expiryDate"
+                  type="date"
+                  value={newCoupon.expiryDate}
+                  onChange={handleInputChange}
+                />
+              </FormControl>
+
+              <FormControl isRequired mb={4}>
+                <FormLabel>Applicable Bundles (Select at least one)</FormLabel>
+                <Box
+                  border="1px"
+                  borderColor="gray.200"
+                  p={2}
+                  borderRadius="md"
+                  maxHeight="150px"
+                  overflowY="auto"
+                >
+                  {bundles.map((bundle) => (
+                    <Checkbox
+                      key={bundle.id}
+                      isChecked={selectedBundles.includes(bundle.id)}
+                      onChange={() => handleBundleSelection(bundle.id)}
+                    >
+                      {bundle.title}
+                    </Checkbox>
+                  ))}
+                </Box>
+              </FormControl>
+            </form>
+          </ModalBody>
+
+          <ModalFooter>
+            <Button colorScheme="blue" mr={3} onClick={handleCreateCoupon}>
+              Create
+            </Button>
+            <Button variant="ghost" onClick={onClose}>
+              Cancel
+            </Button>
+          </ModalFooter>
+        </ModalContent>
+      </Modal>
+    </Box>
   );
 };
 

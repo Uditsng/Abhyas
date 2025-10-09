@@ -122,7 +122,7 @@ export default function PayoutsPage() {
       </div>
 
       <h2 className="text-2xl font-bold mt-12 mb-4">Payout History</h2>
-      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md">
+      <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md overflow-x-auto">
         <table className="min-w-full divide-y divide-gray-200">
           <thead className="bg-gray-100 dark:bg-gray-700">
             <tr>

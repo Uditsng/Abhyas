@@ -98,13 +98,13 @@ export default function SuperAdminPackagesPage() {
 
     return (
         <Box p={{ base: 4, md: 8 }} className="min-h-screen">
-            <Flex justify="space-between" align="center" mb={8} direction={{base: "column", md: "row"}} gap={4}>
                 {/* <Text fontSize={{ base: "2xl", md: "3xl" }} fontWeight="extrabold" className="text-gray-800 dark:text-gray-100">Manage Packages</Text> */}
                 <h1 className="text-3xl sm:text-4xl font-extrabold text-center mb-6 sm:mb-8 text-blue-600 dark:text-blue-400">Manage Packages</h1>
+                <div className='flex items-center justify-center mb-2'>
                 <Button bg="blue.500" color="white" _hover={{bg: "blue.600"}} leftIcon={<FaPlus />} onClick={handleOpenCreateModal} shadow="md">
                     Create New Package
                 </Button>
-            </Flex>
+                </div>
 
             <Box className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-x-auto">
                 <Table variant="simple">

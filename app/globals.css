@@ -103,3 +103,27 @@ body {
     display: none !important;
   }
 }
+
+
+.invoice-container {
+  position: relative; /* This is the positioning context for the watermark */
+  overflow: hidden;
+}
+
+.text-watermark {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  /* Center, then rotate the text */
+  transform: translate(-50%, -50%) rotate(-45deg);
+  z-index: 0; /* Place it behind the content */
+  
+  /* Style the text */
+  font-size: 5rem; /* Large font size */
+  font-weight: bold;
+  color: rgba(0, 0, 0, 0.07); /* Very faint color */
+  
+  white-space: nowrap; /* Prevent text from breaking into two lines */
+  pointer-events: none; /* Make it unclickable */
+  user-select: none; /* Prevent text selection */
+}
