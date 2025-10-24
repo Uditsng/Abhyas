@@ -105,25 +105,36 @@ body {
 }
 
 
-.invoice-container {
-  position: relative; /* This is the positioning context for the watermark */
-  overflow: hidden;
-}
-
-.text-watermark {
+/*container for the watermark grid */
+.watermark-grid-container {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  /* Center, then rotate the text */
-  transform: translate(-50%, -50%) rotate(-45deg);
+  inset: 0; /* Cover the entire parent (the invoice-container) */
   z-index: 0; /* Place it behind the content */
   
-  /* Style the text */
-  font-size: 5rem; /* Large font size */
-  font-weight: bold;
-  color: rgba(0, 0, 0, 0.07); /* Very faint color */
+  /* Create a 3-column grid */
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); 
   
-  white-space: nowrap; /* Prevent text from breaking into two lines */
-  pointer-events: none; /* Make it unclickable */
-  user-select: none; /* Prevent text selection */
+  grid-auto-rows: 200px; /* Adjust row height as needed */
+  
+  gap: 30px; /* Space between watermarks */
+  overflow: hidden;
+  pointer-events: none; /* Make the grid unclickable */
+  user-select: none; /* Prevent selection */
+}
+
+.text-watermark-item {
+  /* Text styles */
+  font-size: 2.5rem; /* Smaller font for tiling */
+  font-weight: 900; /* Bolder */
+  color: rgba(0, 0, 0, 0.05); /* Even lighter */
+  white-space: nowrap;
+  
+  /* Apply rotation to each item */
+  transform: rotate(-45deg);
+  
+  /* Center text within its grid cell */
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

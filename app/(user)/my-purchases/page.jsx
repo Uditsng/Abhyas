@@ -4,7 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import { Box, Input, InputGroup, InputLeftElement, SimpleGrid, Spinner, Center, Text, Container, useToast } from '@chakra-ui/react';
-import { SearchIcon } from '@chakra-ui/icons';
+import { SearchIcon,StarIcon } from '@chakra-ui/icons';
 import BundleCard from '@/components/BundleCard';
 import PackageCard from '@/components/PackageCard'; 
 import SectionHeader from '@/components/SectionHeader';
@@ -13,6 +13,72 @@ import { getPackagesByIds } from '@/lib/packageService';
 import { auth, db } from '@/lib/firebaseConfig';
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
+import { submitRating, getUserRating } from '@/lib/ratingService';
+
+//Star Rating Component
+const StarRating = ({ itemId, itemType, userId }) => {
+  const [rating, setRating] = useState(0);
+  const [hover, setHover] = useState(0);
+  const [isRated, setIsRated] = useState(false);
+  const toast = useToast();
+
+  useEffect(() => {
+    const fetchRating = async () => {
+      const userRating = await getUserRating({ userId, itemId, itemType });
+      if (userRating) {
+        setRating(userRating);
+        setIsRated(true);
+      }
+    };
+    fetchRating();
+  }, [userId, itemId, itemType]);
+
+  const handleClick = async (newRating) => {
+    try {
+      await submitRating({ userId, itemId, itemType, rating: newRating });
+      setRating(newRating);
+      setIsRated(true);
+      toast({
+        title: "Rating submitted!",
+        description: `You rated this ${itemType} ${newRating} stars.`,
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      console.error("Failed to submit rating:", error);
+      toast({
+        title: "Rating failed",
+        description: "Could not submit your rating. Please try again.",
+        status: "error",
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+  
+  return (
+    <div className="flex items-center justify-center space-x-1 mt-2 pb-4">
+      {[...Array(5)].map((_, index) => {
+        const ratingValue = index + 1;
+        return (
+          <button
+            key={ratingValue}
+            onClick={() => handleClick(ratingValue)}
+            onMouseEnter={() =>setHover(ratingValue)}
+            onMouseLeave={() =>setHover(0)}
+            className="transition-colors cursor-pointer"
+          >
+            <StarIcon
+              boxSize={5}
+              color={ratingValue <= (hover || rating) ? "yellow.400" : "gray.300"}
+            />
+          </button>
+        );
+      })}
+    </div>
+  );
+};
 
 export default function MyPurchasesPage() {
 
@@ -137,23 +203,29 @@ export default function MyPurchasesPage() {
               if (item.itemType === 'package') {
                 const orderForPackage = orders.find(o => o.packageId === item.id);
                 return (
+                  <div key={item.id}>
                   <PackageCard
-                    key={item.id}
+                    // key={item.id}
                     pkg={item}
                     isPurchased={true} 
                     showInvoiceButton={true}
                     order={orderForPackage}
                   />
+                  <StarRating itemId={item.id} itemType="package" userId={user.uid} />
+                </div>
                 );
               } else { 
                 const orderForBundle = orders.find(o => o.bundleId === item.id);
                 return (
+            <div key={item.id} className="pb-12">      
                   <BundleCard
-                    key={item.id}
+                    // key={item.id}
                     bundle={item}
                     showInvoiceButton={true}
                     order={orderForBundle}
                   />
+                  <StarRating itemId={item.id} itemType="bundle" userId={user.uid} />
+                  </div>
                 );
               }
             })}

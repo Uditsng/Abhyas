@@ -70,7 +70,7 @@ export default function PackageCard({ pkg, isPurchased = false, showInvoiceButto
 
   return (
     <>
-      <div className="relative w-full h-full mx-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl dark:hover:shadow-blue-500/30 transition-all duration-300 flex flex-col backdrop-blur-md cursor-pointer">
+      <div className="relative max-w-sm w-full h-full mx-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl overflow-hidden shadow-lg hover:shadow-2xl dark:hover:shadow-blue-500/30 transition-all duration-300 flex flex-col backdrop-blur-md cursor-pointer">
         <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-blue-500 rounded-2xl blur opacity-0 group-hover:opacity-75 transition duration-500"></div>
         
         <Link href={`/packages/${pkg.id}`} className="relative z-10 flex flex-col h-full bg-white dark:bg-gray-800 rounded-t-2xl no-underline">

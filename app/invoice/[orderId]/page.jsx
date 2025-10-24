@@ -1,20 +1,10 @@
 // app/invoice/[orderId]/page.jsx
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
-import { getInvoice, getInvoiceTemplate } from '@/lib/invoiceService';
-import { Spinner, Center, Text, Button, Tag } from '@chakra-ui/react';
-
-// function generateCustomInvoiceId(orderId, date) {
-//   if (!orderId || !date) return '';
-//   const invoiceDate = new Date(date.seconds * 1000);
-//   const year = invoiceDate.getFullYear();
-//   const month = String(invoiceDate.getMonth() + 1).padStart(2, '0'); // Ensures two digits, e.g., 09
-//   const uniquePart = orderId.slice(-5).toUpperCase(); // Last 5 chars of orderId
-
-//   return `WG-${year}/${month}-${uniquePart}`;
-// }
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
+import { getInvoice, getInvoiceTemplate } from "@/lib/invoiceService";
+import { Spinner, Center, Text, Button, Tag } from "@chakra-ui/react";
 
 export default function InvoicePage() {
   const params = useParams();
@@ -35,7 +25,7 @@ export default function InvoicePage() {
         setInvoice(invoiceData);
         setTemplate(templateData);
       } catch (error) {
-        console.error('Error fetching invoice data:', error);
+        console.error("Error fetching invoice data:", error);
       } finally {
         setLoading(false);
       }
@@ -63,89 +53,159 @@ export default function InvoicePage() {
   const taxAmount = invoice.taxAmount || 0;
   const totalAmount = invoice.amount || 0;
   const originalSubtotal = totalAmount - taxAmount + discount;
-  
-  const itemDetails = invoice.itemType === 'bundle'
-    ? {
-        type: 'Bundle',
-        id: invoice.bundleId,
-        title: invoice.bundleInfo?.title || 'Bundle Title',
-      }
-    : {
-        type: 'Package',
-        id: invoice.packageId,
-        title: invoice.packageInfo?.name || 'Package Title',
-      };
 
-  // const customInvoiceId = generateCustomInvoiceId(invoice.orderId, invoice.date);
+  const itemDetails =
+    invoice.itemType === "bundle"
+      ? {
+          type: "Bundle",
+          id: invoice.bundleId,
+          title: invoice.bundleInfo?.title || "Bundle Title",
+        }
+      : {
+          type: "Package",
+          id: invoice.packageId,
+          title: invoice.packageInfo?.name || "Package Title",
+        };
 
   return (
-    <div className="bg-gray-100 min-h-screen p-8 pt-24" style={{ fontFamily: template.font }}>
-      <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8 printable-area invoice-container">
+    <div
+      className="bg-gray-100 dark:bg-gray-900 min-h-screen p-4 md:p-8 lg:p-24 pt-24"
+      style={{ fontFamily: template.font }}
+    >
+      <div className="max-w-3xl mx-auto bg-white dark:bg-gray-800 shadow-lg rounded-lg p-4 sm:p-6 md:p-8 printable-area invoice-container">
 
-        <div className="text-watermark">WG ABHYAS</div>
+        {template.watermarkText && (
+          <div className="watermark-grid-container" aria-hidden="true">
+            {Array(15)
+              .fill(0)
+              .map((_, index) => (
+                <div key={index} className="text-watermark-item">
+                  {template.watermarkText}
+                </div>
+              ))}
+          </div>
+        )}
 
-        <div style={{ position: 'relative', zIndex: 1 }}>
-          <div className="flex justify-between items-start mb-8">
-            <div>
-              <img src={template.logoUrl} alt="Company Logo" className="h-16 mb-4" />
-              <h1 className="text-2xl font-bold" style={{ color: template.primaryColor }}>
-                {template.companyName}
-              </h1>
-              <p>{template.address}</p>
-              <p>{template.phone}</p>
-              <p>{template.email}</p>
-            </div>
-            <div className="text-right">
-              <h2 className="text-3xl font-bold uppercase" style={{ color: template.primaryColor }}>
+        {/* Content with z-index to ensure it's above watermark */}
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <div className="flex flex-col sm:flex-row justify-between items-start mb-8 gap-4">
+
+            <img
+              src={template.logoUrl}
+              alt="Company Logo"
+              className="h-16 mb-4"
+            />
+            <h1
+              className="text-2xl font-bold"
+              style={{ color: template.primaryColor }}
+            >
+              {template.companyName}
+            </h1>
+
+            <div className="text-left sm:text-right w-full sm:w-auto">
+              <h2
+                className="text-3xl font-bold uppercase tracking-wider"
+                style={{ color: template.primaryColor }}
+              >
                 Invoice
               </h2>
-              {/* <p><strong>Invoice No:</strong> {customInvoiceId}</p> */}
-              <p><strong>PaymentID: </strong>
-              {invoice.invoiceId || invoice.orderId}</p>
-              <p>
-                <strong>order Date:</strong>{' '}
-                {new Date(invoice.date.seconds * 1000).toLocaleDateString()}
+              <p className="text-gray-500 dark:text-gray-400 font-mono text-sm">
+                <strong>PaymentID: </strong>
+                {invoice.invoiceId || invoice.orderId}
               </p>
-              <Tag size="lg" colorScheme="green" mt={2}>
+              <p className="text-sm">
+                <strong>order Date:</strong>{" "}
+                {new Date(invoice.date.seconds * 1000).toLocaleDateString(
+                  "en-GB"
+                )}
+              </p>
+              <Tag size="md" colorScheme="green" mt={2} variant="solid">
                 PAID
               </Tag>
             </div>
           </div>
 
-          <div className="mb-8">
-            <h3 className="font-bold border-b-2 pb-2 mb-2" style={{ borderColor: template.primaryColor }}>
-              Bill To:
-            </h3>
-            <p>{invoice.userInfo.name}</p>
-            <p>{invoice.userInfo.email}</p>
+          <div className="w-full sm:w-1/2">
+
+            {/* <img
+              src={template.logoUrl}
+              alt="Company Logo"
+              className="h-16 mb-4"
+            />
+            <h1
+              className="text-2xl font-bold"
+              style={{ color: template.primaryColor }}
+            >
+              {template.companyName}
+            </h1> */}
+
+            <p className="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-line">
+              {template.address}
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {template.phone}
+            </p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {template.email}
+            </p>
+            {template.gstNumber && (
+              <p className="text-sm mt-1">
+                <strong>GSTIN:</strong> {template.gstNumber}
+              </p>
+            )}
           </div>
 
-          <table className="w-full mb-8">
+          <div className="mb-8">
+            <h3
+              className="font-bold border-b-2 pb-1 mb-2 text-gray-600 dark:text-gray-300"
+              style={{ borderColor: template.primaryColor }}
+            >
+              Bill To:
+            </h3>
+            <p className="font-semibold">{invoice.userInfo.name}</p>
+            <p className="text-sm text-gray-600 dark:text-gray-400">
+              {invoice.userInfo.email}
+            </p>
+          </div>
+<div className="overflow-x-auto">
+          <table className="w-full mb-8 text-sm">
             <thead>
-              <tr style={{ backgroundColor: template.secondaryColor, color: template.primaryColor }}>
-                <th className="p-3 text-left font-semibold">Description</th>
+              <tr
+                style={{
+                  backgroundColor: template.secondaryColor,
+                  color: template.primaryColor,
+                }}
+              >
+                <th className="p-3 text-left font-semibold rounded-l-lg">Description</th>
                 <th className="p-3 text-left font-semibold">Product ID</th>
                 <th className="p-3 text-right font-semibold">Quantity</th>
-                <th className="p-3 text-right font-semibold">Amount</th>
+                <th className="p-3 text-right font-semibold rounded-l-lg">Amount</th>
               </tr>
             </thead>
-            <tbody>
-              <tr className="border-b">
+            <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
+              <tr>
                 <td className="p-3">
                   {itemDetails.title}
-                  <span className="text-gray-500 text-sm block">({itemDetails.type})</span>
+                  <span className="text-gray-500 dark:text-gray-400 text-xs block">
+                    ({itemDetails.type})
+                  </span>
                 </td>
-                <td className="p-3 text-left font-mono text-sm">{itemDetails.id}</td>
+                <td className="p-3 text-left font-mono text-xs">
+                  {itemDetails.id}
+                </td>
                 <td className="p-3 text-right">1</td>
-                <td className="p-3 text-right">₹{originalSubtotal.toFixed(2)}</td>
+                <td className="p-3 text-right font-medium">
+                  ₹{originalSubtotal.toFixed(2)}
+                </td>
               </tr>
             </tbody>
           </table>
+          </div>
 
-          <div className="flex justify-end mt-8">
-            <div className="w-full sm:w-1/2 md:w-2/5 space-y-2">
-              <div className="flex justify-between">
-                <p>Subtotal:</p>
+          <div className="flex justify-end mt-4">
+            <div className="w-full max-w-xs space-y-2 text-sm">
+              <div className="flex justify-between text-gray-700 dark:text-gray-300">
+                <span>Subtotal:</span>
                 <p>₹{originalSubtotal.toFixed(2)}</p>
               </div>
               {discount > 0 && (
@@ -154,24 +214,33 @@ export default function InvoicePage() {
                   <p>- ₹{discount.toFixed(2)}</p>
                 </div>
               )}
-              <div className="flex justify-between">
+              <div className="flex justify-between text-gray-700 dark:text-gray-300">
                 <p>Tax (GST):</p>
                 <p>+ ₹{taxAmount.toFixed(2)}</p>
               </div>
               <div
                 className="flex justify-between font-bold text-xl mt-2 border-t-2 pt-2"
-                style={{ borderColor: template.primaryColor, color: template.primaryColor }}
+                style={{
+                  borderColor: template.primaryColor,
+                  color: template.primaryColor,
+                }}
               >
-                <p>Total Paid:</p>
-                <p>₹{totalAmount.toFixed(2)}</p>
+                <div className="border-t border-gray-300 dark:border-gray-600 my-2"></div>
+                <div
+                  className="flex justify-between items-center text-lg font-bold"
+                  style={{ color: template.primaryColor }}
+                >
+                  <span className="px-3">Total Paid</span>
+                  <span className="text-xl font-bold text-gray-900 dark:text-gray-100">
+                    ₹{totalAmount.toFixed(2)}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="mt-12 text-gray-500 text-sm">
-             <h4 className="font-bold mb-2">Notes & Terms</h4>
-             <p>{template.footerNote}</p>
-             <p>Thank you for your business!</p>
+          <div className="mt-12 text-center text-gray-500 dark:text-gray-400 text-xs">
+            <p>{template.footerNote}</p>
           </div>
 
           <Center mt={8} className="no-print">

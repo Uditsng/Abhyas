@@ -54,6 +54,7 @@ export default function AdminTestsPage() {
     testName: "",
     duration: 0,
     totalQuestions: 0,
+    difficulty: "Easy",
   });
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [editTest, setEditTest] = useState(null);
@@ -121,7 +122,7 @@ export default function AdminTestsPage() {
     });
 
     setFilteredAndSortedTests(processedTests);
-    setCurrentPage(1); // Reset to first page whenever filters change
+    setCurrentPage(1); 
   }, [searchQuery, sortOrder, tests]);
 
 
@@ -142,7 +143,7 @@ export default function AdminTestsPage() {
   };
 
   const handleCreateTest = async () => {
-    const { testName, subject, duration, totalQuestions } = newTest;
+    const { testName, subject, duration, totalQuestions, difficulty } = newTest;
     if (!testName.trim() || !subject.trim()) {
       toast({
         title: "Error",
@@ -171,6 +172,7 @@ export default function AdminTestsPage() {
         subject,
         duration,
         totalQuestions,
+        difficulty,
         createdBy: user.uid,
         createdAt: new Date().toISOString(),
         updatedAt: null,
@@ -181,6 +183,7 @@ export default function AdminTestsPage() {
         title: "",
         duration: 0,
         totalQuestions: 0,
+        difficulty: "Easy",
         courseId: "",
       });
       toast({
@@ -251,6 +254,7 @@ export default function AdminTestsPage() {
         subject: editTest.subject,
         duration: editTest.duration,
         totalQuestions: editTest.totalQuestions,
+        difficulty: editTest.difficulty,
         updatedAt: new Date().toISOString(),
       });
       setTests((prevTests) =>
@@ -413,6 +417,18 @@ export default function AdminTestsPage() {
               />
             </FormControl>
             <FormControl mb={4}>
+                <FormLabel>Difficulty Level</FormLabel>
+                <Select
+                    name="difficulty"
+                    value={newTest.difficulty}
+                    onChange={handleInputChange}
+                >
+                    <option value="Easy">Easy</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Hard">Hard</option>
+                </Select>
+            </FormControl>
+            <FormControl mb={4}>
               <FormLabel>Duration (minutes)</FormLabel>
               <Input
                 name="duration"
@@ -467,6 +483,18 @@ export default function AdminTestsPage() {
                 value={editTest?.testName || ""}
                 onChange={handleEditInputChange}
               />
+            </FormControl>
+            <FormControl mb={4}>
+                <FormLabel>Difficulty Level</FormLabel>
+                <Select
+                    name="difficulty"
+                    value={editTest?.difficulty || 'Easy'}
+                    onChange={handleEditInputChange}
+                >
+                    <option value="Easy">Easy</option>
+                    <option value="Medium">Medium</option>
+                    <option value="Hard">Hard</option>
+                </Select>
             </FormControl>
             <FormControl mb={4}>
               <FormLabel>Duration (minutes)</FormLabel>

@@ -77,8 +77,9 @@ service cloud.firestore {
     // Bundles collection - allow authenticated users to read live bundles, admins to write
     match /bundles/{bundleId} {
       allow read: if request.auth != null && 
-        (resource.data.status == "live" || 
-         resource.data.createdBy == request.auth.uid || 
+      (
+        (resource.data.status == "live" && resource.data.publishDate <= request.time) ||
+         (resource.data.createdBy == request.auth.uid) || 
          isAdmin());
       allow write: if isAdmin() || 
         (request.auth != null && 

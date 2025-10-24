@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react';
 import SectionHeader from '@/components/SectionHeader';
 import { getPackageRevenueData } from '@/lib/superAdminRevenueService';
 import { FiDollarSign, FiPackage,FiShield, FiPercent, FiTrendingUp } from 'react-icons/fi';
+import { StarIcon } from '@chakra-ui/icons';
 
 function Toast({ message, show }) {
   if (!show) return null;
@@ -27,6 +28,26 @@ function FinancialStatCard({ title, value, icon, color }) {
       </div>
     );
 }
+
+// --- NEW COMPONENT ---
+const DisplayRating = ({ rating = 0, count = 0 }) => {
+  const fullStars = Math.floor(rating);
+  const halfStar = rating % 1 >= 0.5;
+  const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+
+  return (
+    <div className="flex items-center gap-1 mt-2">
+      {[...Array(fullStars)].map((_, i) => (
+        <StarIcon key={`full-${i}`} color="yellow.400" boxSize={4} />
+      ))}
+      {halfStar && <StarIcon key="half" color="yellow.400" style={{ clipPath: 'inset(0 50% 0 0)' }} boxSize={4} />}
+      {[...Array(emptyStars)].map((_, i) => (
+        <StarIcon key={`empty-${i}`} color="gray.300" boxSize={4} />
+      ))}
+      <span className="text-xs text-gray-500 ml-1">({count} ratings)</span>
+    </div>
+  );
+};
 
 export default function PackageRevenuePage() {
   // Initialize state with all the properties that will be fetched.
@@ -95,6 +116,7 @@ export default function PackageRevenuePage() {
                   <tr key={sale.id}>
                     <td className="px-6 py-4 align-top">
                         <p className="font-bold text-gray-900 dark:text-white">{sale.packageName}</p>
+                        <DisplayRating rating={sale.averageRating} count={sale.ratingCount} />
                         <p className="text-sm text-gray-600 dark:text-gray-400">{sale.buyerName}</p>
                         <p className="text-xs text-gray-400">{new Date(sale.date.seconds * 1000).toLocaleString()}</p>
                     </td>

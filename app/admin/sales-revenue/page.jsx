@@ -11,10 +11,30 @@ import {
 import { useAuth } from "@/components/AuthContext";
 import Pagination from '@/components/Pagination'
 import { getPayoutsForAdmin } from "@/lib/superAdminRevenueService";
-
+import { StarIcon } from '@chakra-ui/icons'; 
 
 const BUNDLES_PER_PAGE = 5;
 const BUYERS_PER_PAGE = 5;
+
+// A small component to display stars
+const DisplayRating = ({ rating = 0, count = 0 }) => {
+  const fullStars = Math.floor(rating);
+  const halfStar = rating % 1 >= 0.5;
+  const emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+
+  return (
+    <div className="flex items-center gap-1">
+      {[...Array(fullStars)].map((_, i) => (
+        <StarIcon key={`full-${i}`} color="yellow.400" />
+      ))}
+      {halfStar && <StarIcon key="half" color="yellow.400" style={{ clipPath: 'inset(0 50% 0 0)' }} />}
+      {[...Array(emptyStars)].map((_, i) => (
+        <StarIcon key={`empty-${i}`} color="gray.300" />
+      ))}
+      <span className="text-xs text-gray-500 ml-1">({count} ratings)</span>
+    </div>
+  );
+};
 
 export default function SalesRevenuePage() {
   const { user } = useAuth();
@@ -62,6 +82,8 @@ export default function SalesRevenuePage() {
           salesByBundle[bundle.id] = {
             bundleTitle: bundle.title,
             price: bundle.price,
+            averageRating: bundle.averageRating || 0, 
+            ratingCount: bundle.ratingCount || 0,
             sold: 0,
             totalRevenue: 0,
             totalTaxCollected: 0,
@@ -189,13 +211,8 @@ export default function SalesRevenuePage() {
       {/* Revenue Sections */}
       {paginatedBundles.map((bundle, idx) => {
         const currentBuyerPage = buyerPages[idx] || 1;
-        const totalBuyerPages = Math.ceil(
-          bundle.buyers.length / BUYERS_PER_PAGE
-        );
-        const buyerSlice = bundle.buyers.slice(
-          (currentBuyerPage - 1) * BUYERS_PER_PAGE,
-          currentBuyerPage * BUYERS_PER_PAGE
-        );
+        const totalBuyerPages = Math.ceil(bundle.buyers.length / BUYERS_PER_PAGE);
+        const buyerSlice = bundle.buyers.slice((currentBuyerPage - 1) * BUYERS_PER_PAGE, currentBuyerPage * BUYERS_PER_PAGE);
 
         return (
           <div
@@ -217,6 +234,7 @@ export default function SalesRevenuePage() {
                 Your Earning (after all deductions): ₹
                 {bundle.adminEarning.toFixed(2)}
               </span>
+              <DisplayRating rating={bundle.averageRating} count={bundle.ratingCount} />
             </div>
 
             {/* Buyers Table */}
@@ -226,9 +244,7 @@ export default function SalesRevenuePage() {
                   <tr>
                     <th className="text-left px-4 py-2 border">User</th>
                     <th className="text-left px-4 py-2 border">Email</th>
-                    <th className="text-left px-4 py-2 border">
-                      Purchase Date
-                    </th>
+                    <th className="text-left px-4 py-2 border">Purchase Date</th>
                     <th className="text-left px-4 py-2 border">Amount</th>
                   </tr>
                 </thead>
@@ -237,9 +253,7 @@ export default function SalesRevenuePage() {
                     <tr key={i} className="even:bg-gray-50">
                       <td className="px-4 py-2 border">{buyer.name}</td>
                       <td className="px-4 py-2 border">{buyer.email}</td>
-                      <td className="px-4 py-2 border">
-                        {buyer.date.toLocaleDateString()}
-                      </td>
+                      <td className="px-4 py-2 border">{buyer.date.toLocaleDateString()}</td>
                       <td className="px-4 py-2 border">₹{bundle.price}</td>
                     </tr>
                   ))}
@@ -271,24 +285,11 @@ export default function SalesRevenuePage() {
         );
       })}
 
-      {/* Page Pagination */}
-      {totalPages > 1 && (
-        <div className="flex justify-center mt-6 gap-2">
-          {Array.from({ length: totalPages }, (_, i) => (
-            <button
-              key={i}
-              className={`px-4 py-2 rounded border ${
-                currentPage === i + 1
-                  ? "bg-blue-500 text-white"
-                  : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-200"
-              }`}
-              onClick={() => setCurrentPage(i + 1)}
-            >
-              {i + 1}
-            </button>
-          ))}
-        </div>
-      )}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={setCurrentPage}
+      />
     </div>
   );
 }

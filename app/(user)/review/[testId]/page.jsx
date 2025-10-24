@@ -197,7 +197,6 @@ export default function TestReviewPage() {
         );
         const bookmarkData = {
           testId: testData.id,
-          // ✅ **THE FIX IS HERE**: Changed testData.title to testData.testName
           testTitle: testData.testName || testData.title || "Untitled Test",
           courseId: testData.category || testData.subject || "general",
           questionId: questionId,
@@ -256,26 +255,6 @@ export default function TestReviewPage() {
   const bookmarkKey = `${testData.id}_${currentQuestion.id}`;
   const isBookmarked = bookmarkedQuestions[bookmarkKey] !== undefined;
 
-  // const fetchAIExplanation = async () => {
-  //   setLoadingAI(true);
-  //   setAiExplanation(null);
-  //   try {
-  //     const res = await fetch("/api/ai-explanation", {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({
-  //         question: currentQuestion.question,
-  //         correctAnswer: correctAnswerString,
-  //       }),
-  //     });
-  //     const data = await res.json();
-  //     setAiExplanation(data.explanation);
-  //   } catch (error) {
-  //     setAiExplanation("Error fetching AI explanation.");
-  //   } finally {
-  //     setLoadingAI(false);
-  //   }
-  // };
 
   const fetchAIExplanation = async () => {
   setLoadingAI(true);

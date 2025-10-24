@@ -1,53 +1,3 @@
-// import { NextResponse } from "next/server";
-// import { GoogleGenerativeAI } from "@google/generative-ai";
-
-// export async function POST(req) {
-//   try {
-//     const { question, correctAnswer } = await req.json();
-
-//     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-//     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-
-//     const prompt = `
-// You are an expert teacher explaining multiple-choice questions to students.
-// Provide a clear and structured explanation in the following format:
-
-// **Step 1: Restate the question in simple terms**
-// [your explanation here]
-
-// **Step 2: Analyze the options**
-// [go through each option briefly]
-
-// **Step 3: Why the correct answer is correct**
-// [explain reasoning]
-
-// **Step 4: Why the wrong answers are wrong**
-// [briefly explain]
-
-// **Final Tip:**
-// [give a quick study tip or trick to remember this concept]
-
-// Question: ${question}
-// Correct Answer: ${correctAnswer}
-// `;
-
-//     const result = await model.generateContent({
-//       contents: [{ role: "user", parts: [{ text: prompt }] }],
-//     });
-//     const response = result.response;
-//     const text = response.text();
-
-//     return NextResponse.json({ explanation: text });
-//   } catch (err) {
-//     console.error("AI explanation error:", err);
-//     return NextResponse.json(
-//       { error: "Failed to generate explanation" },
-//       { status: 500 }
-//     );
-//   }
-// }
-
-
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function POST(req) {
@@ -55,7 +5,7 @@ export async function POST(req) {
     const { question, correctAnswer, options } = await req.json();
 
     const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" }); //update the model name with new one
 
     const prompt = `
 You are an expert teacher explaining multiple-choice questions to students.
@@ -81,7 +31,6 @@ Correct Answer: ${correctAnswer}
 Options: ${options}
 `;
 
-    // 🔑 use streaming
     const result = await model.generateContentStream({
       contents: [{ role: "user", parts: [{ text: prompt }] }],
     });
