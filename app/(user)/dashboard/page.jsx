@@ -159,13 +159,18 @@ export default function DashboardPage() {
       <div className="mt-4">
         <SectionHeader title="🔥 Featured Bundles" />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          {trendingBundles.slice(0, 3).map((bundle) => (
+          {trendingBundles
+                .filter(bundle => bundle.promotionStatus === 'active') 
+                .slice(0, 3) // take the first 3
+                .map((bundle) => (
             <div
               key={bundle.id || bundle.bundleId} 
               className="bg-white dark:bg-gray-800 p-4 rounded-lg shadow-md hover:shadow-xl transition">
               <h4 className="text-lg font-semibold mb-2">{bundle.title}</h4>
               <p className="text-sm text-gray-500 mb-2">{bundle.subject}</p>
-              <button className="text-sm px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
+              <button 
+                onClick={() => router.push(`/bundles/${bundle.id || bundle.bundleId}`)} 
+                className="text-sm px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600">
                 View Bundle
               </button>
             </div>
