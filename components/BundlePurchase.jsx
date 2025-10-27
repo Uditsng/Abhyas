@@ -9,6 +9,11 @@ export default function BundlePurchase({ bundle }) {
   return (
     <div className="w-full max-w-sm mx-auto bg-white dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-md overflow-hidden shadow hover:shadow-lg transition-all duration-200 flex flex-col backdrop-blur-md">
       
+      {bundle.promotionStatus === "active" && bundle.promotionRate > 0 && (
+        <span className="absolute top-2 left-2 z-10 bg-purple-600 text-white text-xs font-bold px-2 py-1 rounded-md" >
+          Featured</span>
+      )}
+      
       <div className="aspect-video bg-gray-100 dark:bg-gray-800">
         <img
           src={bundle.imageUrl}

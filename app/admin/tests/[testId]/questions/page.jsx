@@ -451,7 +451,7 @@ export default function QuestionsPage() {
                 fontSize={{ base: "sm", md: "md" }}
                 alignSelf={{ base: "flex-start", md: "center" }}
               >
-                Total Questions: {questions.length}
+                <span className="font-bold text-gray-600 dark:text-gray-400">Total Questions: {questions.length}</span>
               </Text>
               <Button
                 leftIcon={<AddIcon />}

@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebaseConfig';
-import { createInvoice, getInvoice } from '@/lib/invoiceService';
+import { getInvoice } from '@/lib/invoiceService';
 import { useState } from "react";
 
 export default function BundleCard({ bundle, showInvoiceButton = false, order }) {
@@ -50,7 +50,7 @@ export default function BundleCard({ bundle, showInvoiceButton = false, order })
               title: bundle.title,
             },
           };
-          invoice = await createInvoice(invoiceData);
+          invoice = await getInvoice(invoiceData);
         }
         // Open invoice in a new tab
         window.open(`/invoice/${order.id}`, '_blank');

@@ -22,6 +22,16 @@ import { motion, AnimatePresence } from "framer-motion";
 import { getTestDetails } from "@/lib/adminTestsService";
 import { saveTestResult } from "@/lib/testResultService";
 import { useAuth } from "@/components/AuthContext";
+import { db } from "@/lib/firebaseConfig";
+import {
+  collection,
+  addDoc,
+  deleteDoc,
+  query,
+  where,
+  getDocs,
+  serverTimestamp,
+} from "firebase/firestore";
 
 export default function TestPage() {
   const params = useParams();
@@ -161,13 +171,94 @@ export default function TestPage() {
     setMarkedForReview((prev) => ({ ...prev, [questionId]: false }));
   };
 
-  // Mark for review toggle
-  const toggleMarkForReview = (questionId) => {
+  const toggleMarkForReview = async (questionId) => {
+    if (!user || !testId || !currentQuestion) return;
+
+    const isMarking = !markedForReview[questionId]; 
+    const currentQuestionText = currentQuestion.question;
+    const userId = user.uid;
+
     setMarkedForReview((prev) => ({
       ...prev,
-      [questionId]: !prev[questionId],
+      [questionId]: isMarking,
     }));
+
+    // Update Firestore database
+    const reviewCollectionRef = collection(db, "questionsForReview");
+    const q = query(
+      reviewCollectionRef,
+      where("userId", "==", userId),
+      where("questionId", "==", questionId),
+      where("testId", "==", testId)
+    );
+
+    if (isMarking) {
+      try {
+        const existingDocs = await getDocs(q);
+        if (existingDocs.empty) {
+          await addDoc(reviewCollectionRef, {
+            userId: userId,
+            testId: testId,
+            questionId: questionId,
+            questionText: currentQuestionText,
+            timestamp: serverTimestamp(),
+            status: 'pending',
+          });
+          toast({
+            title: 'Question marked for admin review',
+            status: 'info',
+            duration: 2000,
+            isClosable: true,
+          });
+        }
+      } catch (error) {
+        console.error("Error marking question for review:", error);
+        toast({
+          title: 'Could not mark for review',
+          description: 'Please try again.',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        setMarkedForReview((prev) => ({
+          ...prev,
+          [questionId]: false,
+        }));
+      }
+    } else {
+      try {
+        const querySnapshot = await getDocs(q);
+        if (!querySnapshot.empty) {
+          const deletePromises = [];
+          querySnapshot.forEach((doc) => {
+            deletePromises.push(deleteDoc(doc.ref));
+          });
+          await Promise.all(deletePromises);
+          
+          toast({
+            title: 'Removed from admin review',
+            status: 'info',
+            duration: 2000,
+            isClosable: true,
+          });
+        }
+      } catch (error) {
+        console.error("Error removing question from review:", error);
+        toast({
+          title: 'Could not unmark review',
+          description: 'Please try again.',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+        setMarkedForReview((prev) => ({
+          ...prev,
+          [questionId]: true,
+        }));
+      }
+    }
   };
+
 
   const goToNextQuestion = () => {
     if (currentQuestionIndex < testData.questions.length - 1) {

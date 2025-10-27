@@ -5,7 +5,7 @@
 import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { FiHome, FiFileText, FiUsers, FiFilePlus, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
+import { FiHome, FiFileText, FiUsers, FiFilePlus, FiChevronLeft, FiChevronRight, FiHelpCircle } from 'react-icons/fi';
 import { FaRupeeSign } from 'react-icons/fa';
 import { BiSolidOffer } from "react-icons/bi";
 
@@ -13,6 +13,7 @@ const navItems = [
   { name: 'Dashboard', path: '/admin', icon: FiHome },
   { name: 'Coupons', path: '/admin/coupons', icon: BiSolidOffer },
   { name: 'Create-Bundle', path: '/admin/create-bundle', icon: FiFilePlus },
+  { name: 'Review Questions', path: '/admin/review-questions', icon: FiHelpCircle },
   { name: 'Sales Revenue', path: '/admin/sales-revenue', icon: FaRupeeSign },
   { name: 'Tests', path: '/admin/tests', icon: FiFileText },
   { name: 'Users', path: '/admin/users', icon: FiUsers },
@@ -38,7 +39,7 @@ export default function AdminSidebar({ isCollapsed, setIsCollapsed }) {
     <aside
       className={`fixed top-[64px] left-0 h-[calc(100vh-64px)] z-10 transition-all duration-300 border-r
         dark:border-gray-700 ${isCollapsed ? 'w-[60px]' : 'w-[240px]'} 
-        bg-white dark:bg-gray-900 border-gray-200 pb-24`}
+        bg-white dark:bg-gray-900 border-gray-200 pb-24 overflow-y-auto`}
     >
       {/* Sidebar header with toggle */}
       <div className={`flex items-center px-4 pt-16 ${isCollapsed ? 'justify-center' : 'justify-between'}`}>

@@ -1,143 +1,9 @@
-// //api/razorpay/verify/route.js
-
-// import { db } from "@/lib/firebaseConfig";
-// import { doc, setDoc, arrayUnion, getDoc, updateDoc, serverTimestamp } from "firebase/firestore";
-// import crypto from "crypto";
-// import { NextResponse } from "next/server";
-// import { updateAdminMonthlyRevenue } from "@/lib/superAdminRevenueService";
-
-// export async function POST(req) {
-//   try {
-//     const {
-//       razorpay_payment_id,
-//       razorpay_order_id,
-//       razorpay_signature,
-//       user,
-//       item, // Using a generic 'item' to handle both bundles and packages
-//       amount,
-//       discount,
-//       coupon,
-//     } = await req.json();
-
-//     if (!item || !item.id || !item.title || !item.price || !item.itemType) {
-//       console.error("Invalid item data:", item);
-//       return NextResponse.json(
-//         { success: false, message: "Invalid item data" },
-//         { status: 400 }
-//       );
-//     }
-
-//     // 1. Verify signature
-//     const generatedSignature = crypto
-//       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-//       .update(razorpay_order_id + "|" + razorpay_payment_id)
-//       .digest("hex");
-
-//     if (generatedSignature !== razorpay_signature) {
-//       return NextResponse.json(
-//         { success: false, message: "Invalid signature" },
-//         { status: 400 }
-//       );
-//     }
-
-//     // 2. Get commission rate from platformSettings
-//     const commissionSnap = await getDoc(doc(db, "platformSettings", "commission"));
-//     const commissionRate = commissionSnap.exists()? commissionSnap.data().rate : 20;
-
-//     const actualAmount = amount / 100;
-//     const basePrice = actualAmount / 1.18;
-//     const taxAmount = actualAmount - basePrice;
-
-//     // 3. Save payment and order to Firestore
-//     const orderRef = doc(db, "orders", razorpay_payment_id);
-//     const userRef = doc(db, "users", user.uid);
-//     const userSnap = await getDoc(userRef);
-
-
-//     if (item.itemType === 'package') {
-//       await setDoc(orderRef, {
-//         userId: user.uid,
-//         packageId: item.id,
-//         itemType: "package",
-//         createdBy: "superAdmin",
-//         amount: actualAmount,
-//         basePrice,
-//         taxAmount,
-//         status: "paid",
-//         paymentID: razorpay_payment_id,
-//         orderId: razorpay_order_id,
-//         date: new Date(),
-//       });
-
-//       if (userSnap.exists()) {
-//         await updateDoc(userRef, { purchasedPackages: arrayUnion(item.id) });
-//       } else {
-//         await setDoc(userRef, { purchasedPackages: [item.id] });
-//       }
-//     } else if (item.itemType === 'bundle') {
-//       const commissionAmount = (commissionRate / 100) * basePrice;
-//       const adminEarning = basePrice - commissionAmount;
-
-//       const bundleRef = doc(db, "bundles", item.id);
-//       const bundleSnap = await getDoc(bundleRef);
-//       const createdBy = bundleSnap.exists() ? bundleSnap.data().createdBy : null;
-
-//     // This creates the order document      
-//       await setDoc(orderRef, {
-//         userId: user.uid,
-//         bundleId: item.id,
-//         itemType: "bundle",
-//         createdBy,
-//         amount: actualAmount,
-//         basePrice,
-//         taxAmount,
-//         status: "paid",
-//         paymentID: razorpay_payment_id,
-//         orderId: razorpay_order_id,
-//         date: new Date(),
-//         commissionRate,
-//         commissionAmount,
-//         adminEarning,
-//         disccount: discount || 0,
-//         couponCode: coupon?.code || null,
-//       });
-
-      
-//     // This call will now succeed
-//     if (createdBy) {
-//       await updateAdminMonthlyRevenue(createdBy, adminEarning);
-//     }
-
-//       if (userSnap.exists()) {
-//         await updateDoc(userRef, { purchasedBundles: arrayUnion(item.id) });
-//       } else {
-//         await setDoc(userRef, { purchasedBundles: [item.id] });
-//       }
-//     } else {
-//       // Handle unknown item types if necessary
-//         return NextResponse.json(
-//             { success: false, message: "Invalid item type" },
-//             { status: 400 }
-//         );
-//     }
-
-//     return NextResponse.json({ success: true });
-//   } catch (error) {
-//     console.error("Error in POST handler:", error);
-//     return NextResponse.json(
-//       { success: false, message: "Internal server error" },
-//       { status: 500 }
-//     );
-//   }
-// }
-
 // api/razorpay/verify/route.js
 import { db } from "@/lib/firebaseConfig";
-import { doc, setDoc, arrayUnion, getDoc, updateDoc } from "firebase/firestore";
+import { doc, setDoc, arrayUnion, getDoc, updateDoc, runTransaction, increment, serverTimestamp } from "firebase/firestore";
 import crypto from "crypto";
 import { NextResponse } from "next/server";
 import { updateAdminMonthlyRevenue } from "@/lib/superAdminRevenueService";
-
 import { getInvoiceTemplate } from "@/lib/invoiceService"; 
 
 export async function POST(req) {
@@ -153,29 +19,63 @@ export async function POST(req) {
       coupon,
     } = await req.json();
 
-    // ... (Signature verification logic remains the same) ...
+// 1. Verify signature
+    const generatedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(razorpay_order_id + "|" + razorpay_payment_id)
+      .digest("hex");
 
+    if (generatedSignature !== razorpay_signature) {
+      return NextResponse.json(
+        { success: false, message: "Invalid signature" },
+        { status: 400 }
+      );
+    }
     
+    //Snapshot Invoice Template
     const currentTemplate = await getInvoiceTemplate();
+    const invoiceTemplateSnapshot = { 
+        companyName: currentTemplate.companyName,
+        logoUrl: currentTemplate.logoUrl,
+        address: currentTemplate.address,
+        phone: currentTemplate.phone,
+        email: currentTemplate.email,
+        gstNumber: currentTemplate.gstNumber,
+        footerNote: currentTemplate.footerNote,
+        watermarkText: currentTemplate.watermarkText,
+    };
 
-    // 2. Prepare denormalized user info (if not already fully in 'user' object)
     const userInfoSnapshot = {
         name: user.displayName || 'N/A',
         email: user.email || 'N/A',
         // Add any other user details needed on the invoice
     };
 
-    // 3. Prepare denormalized item info
     const itemInfoSnapshot = {
         id: item.id,
-        title: item.title || item.name, // Handle both bundle/package naming
+        title: item.title || item.name, 
         type: item.itemType,
         // Add any other item details needed
     };
-    // --- End of Snapshotting/Denormalization Prep ---
 
 
-    // Get commission rate etc.
+    // Add Invoice Number Logic
+    const counterRef = doc(db, "counters", "invoiceCounter");
+    let newInvoiceNumber;
+
+    await runTransaction(db, async (transaction) => {
+      const counterDoc = await transaction.get(counterRef);
+      if (!counterDoc.exists()) {
+        transaction.set(counterRef, { currentNumber: 1 });
+        newInvoiceNumber = 1;
+      } else {
+        const newNumber = counterDoc.data().currentNumber + 1;
+        transaction.update(counterRef, { currentNumber: newNumber });
+        newInvoiceNumber = newNumber;
+      }
+    });
+    
+    // 2 Get commission rate etc.
     const commissionSnap = await getDoc(doc(db, "platformSettings", "commission"));
     const commissionRate = commissionSnap.exists()? commissionSnap.data().rate : 20;
 
@@ -186,79 +86,86 @@ export async function POST(req) {
     const orderRef = doc(db, "orders", razorpay_payment_id);
     const userRef = doc(db, "users", user.uid);
 
-    // Prepare base order data
+    // base order data
     let orderData = {
       userId: user.uid,
       itemType: item.itemType,
       amount: actualAmount,
       basePrice,
       taxAmount,
+      invoiceNumber: `INV-${newInvoiceNumber}`,
       status: "paid",
       paymentID: razorpay_payment_id,
       orderId: razorpay_order_id,
-      date: new Date(), // Use Firestore ServerTimestamp preferably if possible server-side
+      date: new Date(), 
       discount: discount || 0,
       couponCode: coupon?.code || null,
-
-      // --- Add Snapshotted/Denormalized Data ---
       userInfoSnapshot: userInfoSnapshot,
       itemInfoSnapshot: itemInfoSnapshot,
-      invoiceTemplateSnapshot: { // Save relevant template fields
-          companyName: currentTemplate.companyName,
-          logoUrl: currentTemplate.logoUrl,
-          address: currentTemplate.address,
-          phone: currentTemplate.phone,
-          email: currentTemplate.email,
-          gstNumber: currentTemplate.gstNumber,
-          footerNote: currentTemplate.footerNote,
-          watermarkText: currentTemplate.watermarkText, // Include watermark
-          // Only include fields needed for the invoice display
-          // No need to store colors or font here usually
-      }
-      // --- End Snapshotted Data ---
+      invoiceTemplateSnapshot: invoiceTemplateSnapshot
     };
 
-    // Add item-specific fields (bundleId/packageId) and calculate earnings
+    // 3 Handle logic based on item type 
     if (item.itemType === 'package') {
       orderData.packageId = item.id;
-      // Package earnings might be distributed differently or go fully to superAdmin
-      orderData.createdBy = "superAdmin"; // Example
-      // No commission calculation needed here for packages in this structure
+      orderData.createdBy = "superAdmin"; 
     } else if (item.itemType === 'bundle') {
       orderData.bundleId = item.id;
 
-      const commissionAmount = (commissionRate / 100) * basePrice;
-      const adminEarning = basePrice - commissionAmount;
-
-      // Get the admin who created the bundle
+      
+      // 1. Fetch the bundle to check its promotion status
       const bundleRef = doc(db, "bundles", item.id);
       const bundleSnap = await getDoc(bundleRef);
-      const createdBy = bundleSnap.exists() ? bundleSnap.data().createdBy : null;
+      const bundleData = bundleSnap.exists() ? bundleSnap.data() : {};
+      const createdBy = bundleData.createdBy || null;
+      
+      //2 Check if promotion is active
+      const isPromoted = bundleData.promotionStatus === "active" && bundleData.promotionRate > 0;
 
+      let promotionFee = 0;
+      let finalAdminEarning = 0;
+
+      // 3 Calculate base commission (always on basePrice)
+      const baseCommission = (commissionRate / 100) * basePrice;
+
+      // 4 Calculate Admin's Sub-Total (their share before promotion)
+      const adminSubTotal = basePrice - baseCommission;
+
+      // 5. Apply promotion fee if active 
+      if (isPromoted){
+        promotionFee = adminSubTotal * (bundleData.promotionRate / 100)
+        finalAdminEarning = adminSubTotal - promotionFee;
+      } else {
+        finalAdminEarning = adminSubTotal;
+      }
+      // 6. Add new data to the order document
       orderData.createdBy = createdBy;
       orderData.commissionRate = commissionRate;
-      orderData.commissionAmount = commissionAmount;
-      orderData.adminEarning = adminEarning;
+      orderData.commissionAmount = baseCommission;
+      orderData.adminEarning = finalAdminEarning;
+      orderData.promotionRate = isPromoted ? bundleData.promotionRate : 0;
+      orderData.promotionFee = promotionFee;
 
-      // Update admin's monthly revenue (can still be done)
+      // 7 Update admin's monthly revenue 
       if (createdBy) {
-        await updateAdminMonthlyRevenue(createdBy, adminEarning);
+        await updateAdminMonthlyRevenue(createdBy, finalAdminEarning);
       }
+
     } else {
        return NextResponse.json({ success: false, message: "Invalid item type" }, { status: 400 });
     }
 
-    // --- Save the complete order document ---
+    // 4 Save the complete order document
     await setDoc(orderRef, orderData);
 
 
-    // --- Update user's purchased items (remains the same) ---
+// 5. Update user's purchased items list
     const userSnap = await getDoc(userRef);
     const fieldToUpdate = item.itemType === 'package' ? 'purchasedPackages' : 'purchasedBundles';
     if (userSnap.exists()) {
       await updateDoc(userRef, { [fieldToUpdate]: arrayUnion(item.id) });
     } else {
-      await setDoc(userRef, { [fieldToUpdate]: [item.id] }); // Create user doc if not exists
+      await setDoc(userRef, { [fieldToUpdate]: [item.id] }); 
     }
 
 

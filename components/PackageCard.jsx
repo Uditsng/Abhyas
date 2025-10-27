@@ -7,7 +7,7 @@ import { FiBox, FiStar, FiCheckCircle } from "react-icons/fi";
 import { useState } from "react";
 import { useAuthState } from 'react-firebase-hooks/auth';
 import { auth } from '@/lib/firebaseConfig';
-import { createInvoice, getInvoice } from '@/lib/invoiceService';
+import {getInvoice } from '@/lib/invoiceService';
 
 export default function PackageCard({ pkg, isPurchased = false, showInvoiceButton = false, order }) {
   const [user] = useAuthState(auth);

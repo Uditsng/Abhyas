@@ -49,7 +49,7 @@ export default function InvoicePage() {
     );
   }
 
-  const discount = invoice.disccount || 0;
+  const discount = invoice.discount || 0;
   const taxAmount = invoice.taxAmount || 0;
   const totalAmount = invoice.amount || 0;
   const originalSubtotal = totalAmount - taxAmount + discount;
@@ -104,16 +104,25 @@ export default function InvoicePage() {
 
             <div className="text-left sm:text-right w-full sm:w-auto">
               <h2
-                className="text-3xl font-bold uppercase tracking-wider"
+                className="text-xl font-bold uppercase tracking-wider"
                 style={{ color: template.primaryColor }}
               >
                 Invoice
               </h2>
+
+             
+                <p className="text-gray-500 dark:text-gray-400 font-mono text-sm">
+                  {/* <strong>Invoice: </strong> */}
+                  {invoice.invoiceNumber}
+                </p>
+             
+                 <p className="text-gray-500 dark:text-gray-400 font-mono text-sm">
+                  <strong>PaymentID: </strong>
+                  {invoice.paymentID || invoice.orderId}
+                </p>
+             
+
               <p className="text-gray-500 dark:text-gray-400 font-mono text-sm">
-                <strong>PaymentID: </strong>
-                {invoice.invoiceId || invoice.orderId}
-              </p>
-              <p className="text-sm">
                 <strong>order Date:</strong>{" "}
                 {new Date(invoice.date.seconds * 1000).toLocaleDateString(
                   "en-GB"
@@ -211,7 +220,7 @@ export default function InvoicePage() {
               {discount > 0 && (
                 <div className="flex justify-between text-red-500">
                   <p>Discount ({invoice.couponCode}):</p>
-                  <p>- ₹{discount.toFixed(2)}</p>
+                  <p>- ₹{(discount || 0).toFixed(2)}</p>
                 </div>
               )}
               <div className="flex justify-between text-gray-700 dark:text-gray-300">

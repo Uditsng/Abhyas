@@ -7,7 +7,6 @@ import { useRef, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth, db } from "@/lib/firebaseConfig";
-import { doc, getDoc } from 'firebase/firestore'
 import { getCouponByCode } from '@/lib/couponService';
 
 import {
@@ -66,18 +65,14 @@ const handleApplyCoupon = async () => {
   }
 
   try {
-    // 1. Fetch the coupon using the correct service function
     const couponData = await getCouponByCode(couponCode.trim());
-
-    // 2. Handle the case where the coupon doesn't exist
     if (!couponData) {
       console.error("Invalid coupon code.");
       return;
     }
 
-    // 3. Validate the coupon's status and expiry date
     const now = new Date();
-    const expiryDate = new Date(couponData.expiresAt.seconds * 1000);
+    const expiryDate = new Date(couponData.expiryDate.seconds * 1000);
 
     if (!couponData.isActive) {
       console.error("This coupon is no longer active.");
@@ -89,7 +84,6 @@ const handleApplyCoupon = async () => {
       return;
     }
 
-    // 4. If all checks pass, apply the coupon
     applyCoupon(couponData); 
     
     console.log("Coupon applied successfully!");
@@ -168,14 +162,6 @@ const handleApplyCoupon = async () => {
       console.error("Payment error:", error);
     }
   };
-  // if (loading) {
-  //   return (
-  //     <div className="flex items-center justify-center min-h-[300px]">
-  //       <Spinner className="mr-2" />
-  //       <span>Loading user info...</span>
-  //     </div>
-  //   );
-  // }
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-24 px-4 flex justify-center">
@@ -286,7 +272,7 @@ const handleApplyCoupon = async () => {
                     Discount:
                   </span>
                   <span className="text-gray-400">
-                    - ₹{discount.toFixed(2)}
+                    - ₹{(discount || 0).toFixed(2)}
                   </span>
                 </div>
 
