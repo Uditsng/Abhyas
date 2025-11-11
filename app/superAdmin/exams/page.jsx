@@ -7,7 +7,7 @@ import {
   deleteExam,
 } from "../../../lib/superAdminExamsService";
 import { FiEdit, FiDelete } from "react-icons/fi";
-import Pagination from "@/components/Pagination";
+import Pagination from "../../../components/Pagination";
 
 export default function SuperAdminExamsPage() {
   const [exams, setExams] = useState([]);
